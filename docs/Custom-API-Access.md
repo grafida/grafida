@@ -1,6 +1,9 @@
 # Custom API access for non-Super-Users
 
-By default, Joomla only allows API access to and mints API tokens for Super Users. If you want to use a non-Super-User account with Grafida you will need to follow the guide below to configure your site and Grafida itself.
+> [!WARNING]
+> **As of Joomla 5.4.8 and 6.1.3, Joomla no longer lets users without the "Access Administration Interface" permission create or edit content through the API, and this affects Grafida.** In practice, only Managers, Administrators and Super Users can use Grafida without weakening your site's security. Authors, Editors and Publishers cannot, unless you give them back-end access, which you should not do lightly. Read [Joomla 5.4.8 and 6.1.3 and later](#joomla-548-and-613-and-later) below before you follow the instructions on this page.
+
+By default, Joomla only allows API access to and mints API tokens for Super Users. If you want to use a non-Super-User account with Grafida you will need to follow the guide below to configure your site and Grafida itself. Per the warning above, these instructions only make sense for accounts that are Managers or higher.
 
 First, we need to create a special group called API Access. This will allow us to give Joomla API application access to non-Super-User accounts. This must be carried out be a Super User.
 
@@ -24,6 +27,22 @@ Now, we need to tell Joomla it is allowed to mint API tokens for our API Access 
 You can now edit your non-Super-User user accounts who need access to Grafida and add them to the API Access user group _in addition to_ their normal user group (e.g. Author). 
 
 Your users will now be able to log into your site, go to their profile, edit it, and enable (and see) their Joomla! API Token. They can use that token in Grafida.
+
+## Joomla 5.4.8 and 6.1.3 and later
+
+Joomla's API application uses one base controller (`ApiController`) for every component, in Joomla itself and in third party extensions. Since Joomla 5.4.8 and 6.1.3 it refuses to create, edit or delete **any** record unless the user also has the **Access Administration Interface** (`core.manage`) permission on that component, on top of the usual Create, Edit or Delete permission. Before that, Create, Edit or Delete was enough.
+
+This applies even when the same user can do the same thing without that permission through the site's front-end. An Author who can submit an article from a front-end form now gets an _Access Denied_ error when Grafida creates the very same article through the API.
+
+Granting Access Administration Interface is **not a safe workaround**. It lets the user into the Joomla back-end, and back-end access comes with non-obvious security considerations: component screens, options and tools that were never designed for, or reviewed against, a low-privilege user. This is a Joomla design decision, not something Grafida can work around, and it is not a Grafida bug.
+
+What this means for you:
+
+* **Super Users, Administrators and Managers** can use Grafida. They already have back-end access, so nothing changes for them.
+* **Authors, Editors, Publishers and any other group without back-end access cannot use Grafida** on a site running Joomla 5.4.8 / 6.1.3 or later, and the instructions on this page do not fix that. They will see _Access Denied_ when they publish.
+* If you decide to accept the risk and grant Access Administration Interface to such a group anyway, set it per component (Articles, Tags, Fields and Media, as needed) and no wider. You do so at your own risk.
+
+If you run an older Joomla release, the instructions above are enough for Authors and above, but you are strongly encouraged to update your site: those releases contain security fixes.
 
 ## Caveats
 

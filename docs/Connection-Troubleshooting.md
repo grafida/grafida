@@ -174,8 +174,10 @@ purpose, because the fix is elsewhere.
 
 ## Things that look like connection problems but are not
 
-**“Access denied” when publishing.** The connection is fine; Joomla is refusing the operation. A
-non-Super-User account is limited by its own user groups: an Author, for instance, cannot change an
+**“Access denied” when publishing.** The connection is fine; Joomla is refusing the operation. On
+Joomla 5.4.8, 6.1.3 and later, an account without the **Access Administration Interface** permission
+(an Author, Editor or Publisher, for instance) cannot create or edit anything through the API at all.
+Otherwise, a non-Super-User account is limited by its own user groups: an Author cannot change an
 article's publishing state or edit an already-published article. See
 [Custom API access](Custom-API-Access).
 

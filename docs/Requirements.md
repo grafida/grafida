@@ -16,4 +16,4 @@ On Windows you need the Microsoft Edge WebView2 Runtime. It is part of Windows 1
 
 ## Server
 
-On the server side, you need a Joomla **5.4, or 6.x** site, and a Joomla API token for a user account that is allowed to use these features. Super User accounts can do this out of the box. For anything else, please read the [Custom API access](Custom-API-Access) page.
+On the server side, you need a Joomla **5.4, or 6.x** site, and a Joomla API token for a user account that is allowed to use these features. Super User accounts can do this out of the box. On Joomla 5.4.8, 6.1.3 and later only Managers, Administrators and Super Users can create or edit content through the API; Authors, Editors and Publishers cannot, unless you give them back-end access, which has security implications. Please read the [Custom API access](Custom-API-Access) page.

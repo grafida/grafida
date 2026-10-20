@@ -8,6 +8,8 @@ You can connect multiple sites to Grafida by repeating this process for each sit
 
 > [!IMPORTANT]
 > If you are not a Super User on the site you are connecting to, please ask a Super User to follow the instructions in this documentation section _as well as_ those in the [Custom API Access](Custom-API-Access).
+>
+> **Joomla 5.4.8, 6.1.3 and later only let Managers, Administrators and Super Users create or edit content through the API.** Authors, Editors and Publishers cannot use Grafida on such sites without being given back-end access, which has security implications. See [Custom API Access](Custom-API-Access).
 
 Make sure the necessary plugins are published on your site.
 
