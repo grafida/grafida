@@ -34,6 +34,15 @@ executable. So a failing case is a question about which output is right, never a
 regenerate. The format — and the seven rules a case has to obey — is documented in
 `.claude/rules/media-and-publish.md`.
 
+### Testing as something other than a Super User
+
+`tests/Unit/Support/FakeTransport` answers whatever URL it is told to, so a test built on it
+silently plays a user who may do anything. `tests/Unit/Support/JoomlaSiteTransport` is keyed on the
+API *route* instead and starts from a role: `AUTHOR` (the default) answers 403 on
+`config/application` and `templates/styles/site`, `SUPER_USER` serves them. Anything else a token's
+user may or may not do depends on the site's permission set, so a test denies it explicitly with
+`->deny('POST', 'tags')`. See `AuthorTokenReferenceTest` and `AuthorTokenPublishTest`.
+
 ### Why there is a JavaScript suite
 
 The AI provider call **runs in the SPA's JavaScript**, not in PHP — that is what makes streaming
