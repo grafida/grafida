@@ -201,50 +201,63 @@
 	====================================================================================================
 	-->
 
-	<target name="git-macos-arm" depends="prepare,prepare-sfx" description="Compile the macOS (Apple Silicon) binary">
+	<target name="pack" depends="prepare" description="Pack the application PHAR once, for every platform target to reuse">
+		<exec executable="php" dir="${dirs.root}" passthru="true" checkreturn="true">
+			<arg value="${compile.target.script}" />
+			<arg value="--pack-only" />
+		</exec>
+	</target>
+
+	<target name="git-macos-arm" depends="pack,prepare-sfx" description="Compile the macOS (Apple Silicon) binary">
 		<exec executable="php" dir="${dirs.root}" passthru="true" checkreturn="true">
 			<arg value="${compile.target.script}" />
 			<arg value="--type=macos" />
 			<arg value="--arch=arm64" />
+			<arg value="--no-pack" />
 		</exec>
 	</target>
 
-	<target name="git-macos-x86" depends="prepare,prepare-sfx" description="Compile the macOS (Intel) binary">
+	<target name="git-macos-x86" depends="pack,prepare-sfx" description="Compile the macOS (Intel) binary">
 		<exec executable="php" dir="${dirs.root}" passthru="true" checkreturn="true">
 			<arg value="${compile.target.script}" />
 			<arg value="--type=macos" />
 			<arg value="--arch=amd64" />
+			<arg value="--no-pack" />
 		</exec>
 	</target>
 
-	<target name="git-win-x86" depends="prepare,prepare-sfx" description="Compile the Windows (x64) binary">
+	<target name="git-win-x86" depends="pack,prepare-sfx" description="Compile the Windows (x64) binary">
 		<exec executable="php" dir="${dirs.root}" passthru="true" checkreturn="true">
 			<arg value="${compile.target.script}" />
 			<arg value="--type=windows" />
 			<arg value="--arch=amd64" />
+			<arg value="--no-pack" />
 		</exec>
 	</target>
 
-	<target name="git-linux-x86" depends="prepare,prepare-sfx" description="Compile the Linux (x64) binary">
+	<target name="git-linux-x86" depends="pack,prepare-sfx" description="Compile the Linux (x64) binary">
 		<exec executable="php" dir="${dirs.root}" passthru="true" checkreturn="true">
 			<arg value="${compile.target.script}" />
 			<arg value="--type=linux" />
 			<arg value="--arch=amd64" />
+			<arg value="--no-pack" />
 		</exec>
 	</target>
 
-	<target name="git-linux-arm" depends="prepare,prepare-sfx" description="Compile the Linux (ARM64) binary">
+	<target name="git-linux-arm" depends="pack,prepare-sfx" description="Compile the Linux (ARM64) binary">
 		<exec executable="php" dir="${dirs.root}" passthru="true" checkreturn="true">
 			<arg value="${compile.target.script}" />
 			<arg value="--type=linux" />
 			<arg value="--arch=arm64" />
+			<arg value="--no-pack" />
 		</exec>
 	</target>
 
-	<target name="git-phar" depends="prepare" description="Compile the cross-platform PHAR">
+	<target name="git-phar" depends="pack" description="Compile the cross-platform PHAR">
 		<exec executable="php" dir="${dirs.root}" passthru="true" checkreturn="true">
 			<arg value="${compile.target.script}" />
 			<arg value="--type=phar" />
+			<arg value="--no-pack" />
 		</exec>
 	</target>
 

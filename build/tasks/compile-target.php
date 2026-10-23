@@ -26,6 +26,12 @@ declare(strict_types=1);
  *   php build/tasks/compile-target.php --type=linux   --arch=arm64
  *   php build/tasks/compile-target.php --type=phar
  *   php build/tasks/compile-target.php --all
+ *   php build/tasks/compile-target.php --pack-only            (just build build/.temp/grafida.phar)
+ *   php build/tasks/compile-target.php --type=... --no-pack   (compile, reusing that PHAR)
+ *
+ * The application PHAR is identical for every target, so build.xml packs it once (--pack-only,
+ * the `pack` target) and each platform target then passes --no-pack to reuse it. Without either
+ * flag the script packs and compiles in one go, as before.
  *
  * The `phar` target carries no architecture, so --arch is omitted for it.
  * --all keeps every target (scripts/build-all.sh uses it) — it still goes
@@ -46,19 +52,21 @@ $root = \dirname(__DIR__, 2);
 // ---------------------------------------------------------------------------
 // Parse --type / --arch arguments
 // ---------------------------------------------------------------------------
-$options = \getopt('', ['type:', 'arch::', 'config::', 'all']);
+$options = \getopt('', ['type:', 'arch::', 'config::', 'all', 'pack-only', 'no-pack']);
 $all     = isset($options['all']);
+$packOnly = isset($options['pack-only']);
+$noPack   = isset($options['no-pack']);
 $type    = isset($options['type']) ? (string) $options['type'] : '';
 $arch    = isset($options['arch']) ? (string) $options['arch'] : '';
 $config  = isset($options['config']) ? (string) $options['config'] : ($root . '/boson.json');
 
-if (!$all && $type === '')
+if (!$all && !$packOnly && $type === '')
 {
     \fwrite(\STDERR, "ERROR: the --type argument is required (macos|windows|linux|phar), or pass --all.\n");
     exit(2);
 }
 
-if (!$all && $type !== 'phar' && $arch === '')
+if (!$all && !$packOnly && $type !== 'phar' && $arch === '')
 {
     \fwrite(\STDERR, "ERROR: the --arch argument is required for the '{$type}' target.\n");
     exit(2);
@@ -81,7 +89,7 @@ if (!\is_array($json) || !isset($json['target']) || !\is_array($json['target']))
     exit(1);
 }
 
-$matches = $all ? $json['target'] : \array_values(
+$matches = ($all || $packOnly) ? $json['target'] : \array_values(
     \array_filter(
         $json['target'],
         static function (array $target) use ($type, $arch): bool {
@@ -159,7 +167,7 @@ if (!\is_dir($tempDir) && !\mkdir($tempDir, 0755, true) && !\is_dir($tempDir))
     exit(1);
 }
 
-$label    = $all ? 'all' : ($type === 'phar' ? 'phar' : "{$type}-{$arch}");
+$label    = $packOnly ? 'pack' : ($all ? 'all' : ($type === 'phar' ? 'phar' : "{$type}-{$arch}"));
 $tempFile = $tempDir . '/boson.' . $label . '.json';
 
 \file_put_contents(
@@ -171,7 +179,9 @@ $tempFile = $tempDir . '/boson.' . $label . '.json';
 // are older than the config it last saw; building target after target with the same
 // cache can silently pack a stale inclusion list. Drop the cache before each compile
 // (mirrors scripts/build-all.sh). The downloaded *.sfx runtimes are left in place.
-foreach (['box.json', 'entrypoint.php', 'grafida.phar'] as $stale)
+// With --no-pack the PHAR (and the box config it came from) is the product of an earlier
+// --pack-only run and is exactly what we want to compile, so it must survive.
+foreach ($noPack ? [] : ['box.json', 'entrypoint.php', 'grafida.phar'] as $stale)
 {
     if (\is_file($tempDir . '/' . $stale))
     {
@@ -186,7 +196,7 @@ foreach (['box.json', 'entrypoint.php', 'grafida.phar'] as $stale)
 // leftovers it did not create — notably the Grafida.app bundle (which contains
 // symlinks) assembled there by scripts/make-macos-app.sh after a previous
 // build — and then aborts the whole compile.
-foreach ($json['target'] as $target)
+foreach ($packOnly ? [] : $json['target'] as $target)
 {
     $targetType = (string) ($target['type'] ?? '');
 
@@ -212,13 +222,15 @@ if (!\is_file($boson))
     exit(1);
 }
 
-\fwrite(\STDOUT, "==> Compiling Boson target: {$label}\n");
+\fwrite(\STDOUT, ($packOnly ? "==> Packing the application PHAR" : "==> Compiling Boson target: {$label}") . "\n");
 
 $command = \sprintf(
-    '%s %s compile --config=%s',
+    '%s %s %s --config=%s%s',
     \escapeshellarg(\PHP_BINARY),
     \escapeshellarg($boson),
-    \escapeshellarg($tempFile)
+    $packOnly ? 'pack' : 'compile',
+    \escapeshellarg($tempFile),
+    $noPack ? ' --no-pack' : ''
 );
 
 \passthru($command, $exitCode);

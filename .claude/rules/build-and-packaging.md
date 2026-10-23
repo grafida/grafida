@@ -151,8 +151,12 @@ globally-installed command** (`phing` on the PATH; it is deliberately
 shells out to `build/tasks/compile-target.php`, which filters the master `boson.json` down to the one
 requested `--type`/`--arch` at runtime (pinning an explicit `root` so the throwaway single-target config
 can live in `build/.temp/`), drops the stale box/entrypoint cache, then runs `boson compile
---config=<temp>`. All six depend on a guarded `prepare` (sub-targets `prepare-composer` +
-`prepare-icons` + `prepare-assets`) that, only when their output is missing, runs `composer install`
+--config=<temp>`. **The application PHAR is the same for every target, so it is packed once**: the
+`pack` target runs `compile-target.php --pack-only` (`boson pack`), every `git-*` target depends on it
+and passes `--no-pack` (`boson compile --no-pack`, which also tells the script *not* to drop the PHAR it
+is about to compile). Phing runs a shared dependency once per invocation; running the script without
+either flag still packs and compiles in one go (what `build-all.sh --all` uses). `pack` depends on a guarded `prepare`
+(sub-targets `prepare-composer` + `prepare-icons` + `prepare-assets`) that, only when their output is missing, runs `composer install`
 (so a fresh `git clone … && phing` bootstraps itself — and since Composer's post-install-cmd runs
 `vendor:assets`, that also vendors the front-end libraries), re-rasterises the icons, and vendors the
 front-end libraries (force a re-vendor with `-Drefresh.assets=1`); Phing runs `prepare` once per
