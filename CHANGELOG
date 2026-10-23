@@ -1,5 +1,6 @@
 Grafida 1.0
 ================================================================================
+~ Connection test no longer tries the never-valid /index.php/api URL
 ~ The Windows build no longer enables opcache, matching every other platform
 ~ Documentation: Joomla 5.4.8/6.1.3+ lets only Managers and above create or edit content via the API
 ~ `phing git` packs the application PHAR once instead of once per platform

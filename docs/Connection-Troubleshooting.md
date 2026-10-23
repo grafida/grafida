@@ -20,12 +20,11 @@ first one that answers like a Joomla API.
 
 Given a site URL of `https://www.example.com`, the candidates are, in order:
 
-1. `https://www.example.com/index.php/api`
-2. `https://www.example.com/api/index.php`
-3. `https://www.example.com/api`
+1. `https://www.example.com/api/index.php`
+2. `https://www.example.com/api`
 
 The first is tried first because it works without any URL rewriting and is therefore the most
-reliable. The last one needs rewriting to be enabled and configured for the API application.
+reliable. The second needs rewriting to be enabled and configured for the API application.
 
 **Test connection** reports only the verdict. **Diagnose Connection** reports every attempt: the
 full request, its headers, the status that came back, and the response body. Your API token is

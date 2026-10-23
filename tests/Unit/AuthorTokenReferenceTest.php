@@ -48,13 +48,13 @@ final class AuthorTokenReferenceTest extends TestCase
         $pdo->prepare(
             'INSERT INTO sites (title, base_url, api_base, insecure_token, created_at, updated_at)'
             . ' VALUES (?, ?, ?, ?, ?, ?)'
-        )->execute(['Site', 'https://example.com', 'https://example.com/index.php/api', 'tok', $now, $now]);
+        )->execute(['Site', 'https://example.com', 'https://example.com/api/index.php', 'tok', $now, $now]);
 
         return new Site(
             (int) $pdo->lastInsertId(),
             'Site',
             'https://example.com',
-            'https://example.com/index.php/api',
+            'https://example.com/api/index.php',
             null,
             true,
         );
@@ -74,7 +74,7 @@ final class AuthorTokenReferenceTest extends TestCase
 
         $site = $sites->create('Site', 'https://example.com', 'tok', allowInsecure: true);
 
-        self::assertSame('https://example.com/index.php/api', $site->apiBase);
+        self::assertSame('https://example.com/api/index.php', $site->apiBase);
     }
 
     public function testATokenTheSiteRejectsIsReportedAsAnAuthenticationFailure(): void

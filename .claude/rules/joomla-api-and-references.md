@@ -115,8 +115,9 @@ what we cache about a site, and the API contracts that govern reading it. Verbat
 
 ## Key Joomla API facts (verified against Joomla 5.4 source)
 
-- API base is reliably `{siteRoot}/index.php/api`; the rewrite form `{siteRoot}/api` needs
-  server rules. `ApiClient` normalises any pasted URL to the bare root and **probes** to find
+- API base is reliably `{siteRoot}/api/index.php`; the rewrite form `{siteRoot}/api` needs
+  server rules. (`{siteRoot}/index.php/api` never works — the API application lives in `/api` — so
+  it is not probed, though `normaliseRoot()` still strips it from a pasted URL.) `ApiClient` normalises any pasted URL to the bare root and **probes** to find
   the working base, persisting it per site.
 - Auth header: `Authorization: Bearer <token>` (also sends `X-Joomla-Token`). User needs `core.login.api`.
 - **A token-bearing user is not necessarily a Super User.** `plg_user_token`'s `allowedUserGroups`

@@ -41,7 +41,7 @@ final class StorageServiceTest extends TestCase
         );
 
         return (new FakeTransport())
-            ->on('https://example.com/index.php/api/v1/users/levels', $ok);
+            ->on('https://example.com/api/index.php/v1/users/levels', $ok);
     }
 
     /**

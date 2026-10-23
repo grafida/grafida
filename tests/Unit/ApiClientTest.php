@@ -38,12 +38,11 @@ final class ApiClientTest extends TestCase
         self::assertSame($expected, ApiClient::normaliseRoot($input));
     }
 
-    public function testCandidateBasesPrefersIndexPhpApi(): void
+    public function testCandidateBasesPrefersApiIndexPhp(): void
     {
         $bases = ApiClient::candidateBases('https://example.com');
 
         self::assertSame([
-            'https://example.com/index.php/api',
             'https://example.com/api/index.php',
             'https://example.com/api',
         ], $bases);
@@ -54,15 +53,15 @@ final class ApiClientTest extends TestCase
         $jsonApi = ['Content-Type' => 'application/vnd.api+json'];
         $transport = new FakeTransport();
         // First candidate fails at transport level, second works.
-        $transport->throwFor('https://example.com/index.php/api/v1/users/levels');
+        $transport->throwFor('https://example.com/api/index.php/v1/users/levels');
         $transport->on(
-            'https://example.com/api/index.php/v1/users/levels',
+            'https://example.com/api/v1/users/levels',
             new HttpResponse(200, '{"data":[{"type":"levels","id":"1","attributes":{"title":"Public"}}]}', $jsonApi)
         );
 
         $client = new ApiClient($transport);
 
-        self::assertSame('https://example.com/api/index.php', $client->probeApiBase('https://example.com', 'tok'));
+        self::assertSame('https://example.com/api', $client->probeApiBase('https://example.com', 'tok'));
     }
 
     public function testProbeReportsAuthError(): void

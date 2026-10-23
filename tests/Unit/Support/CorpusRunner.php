@@ -52,7 +52,7 @@ final class CorpusRunner
 
     public const BASE_URL = 'https://example.com';
 
-    public const API_BASE = self::BASE_URL . '/index.php/api';
+    public const API_BASE = self::BASE_URL . '/api/index.php';
 
     /**
      * The draft attributes every case starts from, before its own optional

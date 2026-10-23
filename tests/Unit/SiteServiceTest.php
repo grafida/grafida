@@ -35,7 +35,7 @@ final class SiteServiceTest extends TestCase
         $ok = new HttpResponse(200, '{"data":[{"type":"levels","id":"1","attributes":{"title":"Public"}}]}', ['Content-Type' => 'application/vnd.api+json']);
 
         return (new FakeTransport())
-            ->on('https://example.com/index.php/api/v1/users/levels', $ok);
+            ->on('https://example.com/api/index.php/v1/users/levels', $ok);
     }
 
     public function testCreateStoresTokenInSecureStore(): void
@@ -46,7 +46,7 @@ final class SiteServiceTest extends TestCase
         $site = $service->create('My Site', 'https://example.com', 'secret-token');
 
         self::assertNotNull($site->id);
-        self::assertSame('https://example.com/index.php/api', $site->apiBase);
+        self::assertSame('https://example.com/api/index.php', $site->apiBase);
         self::assertFalse($site->isInsecure());
         self::assertContains('secret-token', array_values($store->secrets));
         self::assertSame('secret-token', $service->tokenFor($site));

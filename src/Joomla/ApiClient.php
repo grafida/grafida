@@ -88,8 +88,10 @@ final class ApiClient
     /**
      * Candidate API base URLs to probe, in preference order.
      *
-     * "/index.php/api" works without server URL rewriting and is therefore the
-     * most reliable, so it is tried first; the rewrite-only "/api" form is last.
+     * Joomla's API application lives in the "/api" folder, so there is no
+     * "/index.php/api" form. "/api/index.php" works without server URL rewriting
+     * and is therefore the most reliable, so it is tried first; the rewrite-only
+     * "/api" form is last.
      *
      * @return list<string>
      */
@@ -98,7 +100,6 @@ final class ApiClient
         $root = self::normaliseRoot($root);
 
         return [
-            $root . '/index.php/api',
             $root . '/api/index.php',
             $root . '/api',
         ];

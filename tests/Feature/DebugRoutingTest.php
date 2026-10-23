@@ -106,7 +106,7 @@ final class DebugRoutingTest extends TestCase
     private function kernelWithWorkingSite(): Kernel
     {
         $fake = (new FakeTransport())->on(
-            'https://example.test/index.php/api/v1/users/levels',
+            'https://example.test/api/index.php/v1/users/levels',
             new HttpResponse(200, '{"data":[]}', ['content-type' => 'application/vnd.api+json'])
         );
 

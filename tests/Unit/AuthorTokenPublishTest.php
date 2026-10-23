@@ -44,7 +44,7 @@ use Joomla\Database\DatabaseInterface;
  */
 final class AuthorTokenPublishTest extends TestCase
 {
-    private const API = 'https://example.com/index.php/api';
+    private const API = 'https://example.com/api/index.php';
 
     private DatabaseInterface $db;
     private DraftRepository $drafts;

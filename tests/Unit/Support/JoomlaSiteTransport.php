@@ -46,7 +46,7 @@ final class JoomlaSiteTransport implements Transport
 
     public function __construct(
         string $role = self::AUTHOR,
-        private readonly string $apiBase = 'https://example.com/index.php/api',
+        private readonly string $apiBase = 'https://example.com/api/index.php',
     ) {
         $this->routes = [
             'GET users/levels'              => self::collection([[1, ['title' => 'Public']]]),
