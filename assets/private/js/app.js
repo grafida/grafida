@@ -9702,12 +9702,22 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             if (link.classList.contains('disabled')) return;
             const screen = link.dataset.screen;
-            showScreen(screen);
-            if (screen === 'articles') loadArticlesScreen();
-            if (screen === 'media') loadMediaScreen();
-            if (screen === 'settings') renderSettingsScreen();
-            if (screen === 'help') loadHelpScreen();
-            if (screen === 'requestlog') renderRequestLogScreen();
+            const go = () => {
+                showScreen(screen);
+                if (screen === 'articles') loadArticlesScreen();
+                if (screen === 'media') loadMediaScreen();
+                if (screen === 'settings') renderSettingsScreen();
+                if (screen === 'help') loadHelpScreen();
+                if (screen === 'requestlog') renderRequestLogScreen();
+            };
+
+            // Leaving an open article for any other screen goes through the same
+            // save / keep editing / discard prompt as the Back button (gh-80).
+            if (State.activeScreen === 'editor') {
+                handleEditorBack(go);
+                return;
+            }
+            go();
         });
     });
 
