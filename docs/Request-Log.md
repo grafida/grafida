@@ -4,7 +4,7 @@ The Request Log records the most recent requests Grafida has sent to your site, 
 It is a troubleshooting tool: when something does not work and the error message is not enough, this
 is what tells you — or whoever is helping you — what actually went over the wire.
 
-It is **off** by default. Switch it on under **Debug** in [Settings](Settings#debug); the sidebar
+It is **off** by default. Switch it on under **Debug** on the **Advanced** tab of [Settings](Settings#debug); the sidebar
 then grows a **Request Log** item.
 
 ![The Request Log](images/request-log.png)

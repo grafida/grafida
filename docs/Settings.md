@@ -4,7 +4,20 @@ The Settings view holds everything that applies to Grafida as a whole, rather th
 one article. Settings are saved the moment you change them; there is no Save button on this page
 except where one is explicitly shown.
 
-![The Settings view](images/settings.png)
+The settings are grouped into four tabs:
+
+- **General** — [Interface language](#interface-language) and [Display mode](#display-mode).
+- **Editor** — [Slash commands](#slash-commands), [Spell checking](#spell-checking),
+  [Close HTML tags for me](#close-html-tags-for-me) and
+  [Normalise AI-generated content](#normalise-ai-generated-content).
+- **AI Assistant** — [AI Services and AI Tools](#ai-services-and-ai-tools).
+- **Advanced** — [Site metadata](#site-metadata), [Debug](#debug), [Local storage](#local-storage)
+  and [Reset local storage](#reset-local-storage).
+
+Grafida remembers the tab you were on until you quit, so leaving Settings and coming back returns
+you to it.
+
+![The Settings view, on its Editor tab](images/settings.png)
 
 > [!TIP]
 > You can reach Settings from anywhere in the application with <kbd>Ctrl</kbd> + <kbd>,</kbd>
@@ -131,7 +144,7 @@ letters correctly are all left where they are.
 
 ## Site metadata
 
-![Site metadata, Debug and Local storage](images/settings-storage.png)
+![The Advanced tab: Site metadata, Debug and Local storage](images/settings-storage.png)
 
 Grafida keeps a local copy of each site's categories, tags, access levels, languages and custom
 fields. That copy is what the editor and the [Articles](Articles) filters are drawn from, which is
@@ -182,6 +195,6 @@ item from this computer, returning Grafida to a clean, just-installed state.
 
 ## AI Services and AI Tools
 
-The last two cards configure the optional AI assistant, which is off until you set one up. They
+The **AI Assistant** tab configures the optional AI assistant, which is off until you set one up. They
 have their own pages: [Overview](AI-Overview), [AI Services](AI-Services), [AI Tools](AI-Tools) and
 [Chat](AI-Chat).

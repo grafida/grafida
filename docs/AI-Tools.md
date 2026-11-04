@@ -4,7 +4,7 @@ A **tool** is a saved instruction you can run against the article you have open,
 out. Tools appear in the editor's **AI Tools** drop-down; picking one opens the assistant panel with
 that instruction already sent.
 
-They are configured in the **AI Tools** card at the bottom of [Settings](Settings).
+They are configured in the **AI Tools** card on the **AI Assistant** tab of [Settings](Settings).
 
 ![The AI Tools card](images/ai-tools.png)
 

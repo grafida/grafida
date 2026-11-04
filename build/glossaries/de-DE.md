@@ -183,3 +183,5 @@ Eigennamen (Grafida, Joomla!, API, Markdown, HTML, TinyMCE) werden nicht überse
 | zero-width space | Leerzeichen ohne Breite | U+200B und Verwandte; nimmt keinen Platz ein, reist aber mit dem Text mit. |
 | watermark | Wasserzeichen | Absichtlich eingebettete, unsichtbare Kennzeichnung von KI-Text. |
 | screen reader | Screenreader | Vorlesesoftware; liest die unsichtbaren Zeichen mit vor — der Barrierefreiheitsgrund für diese Einstellung. |
+| general (settings tab) | Allgemein | Settings-screen tab for app-wide basics (language, display mode). GRAFIDA_LBL_SETTINGS_TAB_GENERAL. |
+| advanced (settings tab) | Erweitert | Settings-screen tab for metadata cache, debug and local storage. GRAFIDA_LBL_SETTINGS_TAB_ADVANCED. |

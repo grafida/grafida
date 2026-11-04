@@ -182,3 +182,5 @@ Proper nouns kept as-is: Grafida, Joomla!, API, Markdown, HTML, TinyMCE.
 | zero-width space | διάστημα μηδενικού πλάτους | U+200B και συγγενικοί· δεν πιάνει χώρο, αλλά ταξιδεύει μαζί με το κείμενο. |
 | watermark | υδατογράφημα | Σκόπιμα ενσωματωμένη, αόρατη σήμανση κειμένου από ΤΝ. |
 | screen reader | αναγνώστης οθόνης | Λογισμικό ανάγνωσης οθόνης· εκφωνεί και τους αόρατους χαρακτήρες — ο λόγος προσβασιμότητας πίσω από τη ρύθμιση. |
+| general (settings tab) | Γενικά | Settings-screen tab for app-wide basics (language, display mode). GRAFIDA_LBL_SETTINGS_TAB_GENERAL. |
+| advanced (settings tab) | Για προχωρημένους | Settings-screen tab for metadata cache, debug and local storage. GRAFIDA_LBL_SETTINGS_TAB_ADVANCED. |

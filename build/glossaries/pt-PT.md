@@ -175,3 +175,5 @@ Proper nouns kept as-is: Grafida, Joomla!, API, Markdown, HTML, TinyMCE.
 | zero-width space | espaço de largura zero | U+200B e afins; não ocupa espaço, mas viaja com o texto. |
 | watermark | marca de água | Marcação invisível incorporada de propósito no texto de uma IA. |
 | screen reader | leitor de ecrã | Software de leitura de ecrã; anuncia também os caracteres invisíveis — a razão de acessibilidade desta definição. |
+| general (settings tab) | Geral | Settings-screen tab for app-wide basics (language, display mode). GRAFIDA_LBL_SETTINGS_TAB_GENERAL. |
+| advanced (settings tab) | Avançado | Settings-screen tab for metadata cache, debug and local storage. GRAFIDA_LBL_SETTINGS_TAB_ADVANCED. |

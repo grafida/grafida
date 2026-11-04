@@ -2659,8 +2659,73 @@ body.resizing-col {
 /*  Settings screen                                                    */
 /* ------------------------------------------------------------------ */
 
+/* Tab strip + one panel per group. Both are capped at 960px so a very wide
+   window does not stretch a one-line select across the whole screen. The
+   strip reuses the Articles screen's .articles-tabs look; the .screen's own
+   20px flex gap already separates it from the panel. */
+#settings-screen .settings-tabs,
+#settings-screen .settings-panel {
+    width: 100%;
+    max-width: 960px;
+}
+
+#settings-screen .settings-tabs {
+    margin-bottom: 0;
+}
+
+/* The cards flow into as many columns as fit (two at the 960px cap, one in
+   a narrow window); min() keeps a single column from overflowing a window
+   narrower than the minimum track. Cards in one row share its height. */
+#settings-screen .settings-panel {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+    gap: 16px;
+}
+
 #settings-screen .settings-card {
-    max-width: 480px;
+    min-width: 0;
+}
+
+/* A long card explanation folded behind its one-line summary. The summary
+   reads like the plain .text-muted paragraph it replaces, plus a chevron
+   that turns over when the details are open. */
+#settings-screen .settings-more {
+    margin: 0 0 12px;
+}
+
+#settings-screen .settings-more > summary {
+    list-style: none;
+    cursor: pointer;
+    color: var(--color-text-muted);
+    font-size: 12px;
+    border-radius: var(--radius);
+}
+
+#settings-screen .settings-more > summary::-webkit-details-marker {
+    display: none;
+}
+
+#settings-screen .settings-more > summary:hover {
+    color: var(--color-text);
+}
+
+#settings-screen .settings-more > summary:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+}
+
+#settings-screen .settings-more > summary i {
+    margin-left: 6px;
+    font-size: 10px;
+    transition: transform var(--transition);
+}
+
+#settings-screen .settings-more[open] > summary i {
+    transform: rotate(180deg);
+}
+
+#settings-screen .settings-more > p {
+    margin: 8px 0 0;
 }
 
 #settings-screen .settings-card .db-path {
@@ -2685,9 +2750,9 @@ body.resizing-col {
     border-color: var(--color-danger);
 }
 
-/* Wide variant for AI settings cards */
+/* Wide variant for AI settings cards: spans every column of the grid */
 #settings-screen .settings-card-wide {
-    max-width: 720px;
+    grid-column: 1 / -1;
 }
 
 /* Header row inside a card: title left, action button right */

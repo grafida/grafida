@@ -634,3 +634,22 @@ ship inside the app.
   shape, so `file_picker_callback`/`browseImageMedia()` need not know which tab a pick came from;
   a Local entry's `url` is used exactly as returned (it already carries its own `rev`
   cache-buster, see `src/Media/LocalMediaUrl` above), unlike the Site tab's `mediaDisplayUrl(f)`.
+  **The Settings screen is tabbed** — General / Editor / AI Assistant / Advanced — and, unlike the
+  Articles and Media Manager tab strips (built in JS by `buildArticlesTabs()`/`buildMediaTabs()`),
+  its strip and panels are **static markup** in `index.html`, so `applyStrings()` localises the
+  labels through the ordinary `data-i18n` pass and every `render*Setting()` keeps finding its
+  `<select>` by id whichever tab is showing (a hidden panel is still in the DOM, so nothing needs
+  re-rendering on a tab switch). `SETTINGS_TABS` in `app.js` is the tab order and the id scheme
+  (`#settings-tab-{id}` / `#settings-panel-{id}`); `applySettingsTab()` only flips `.hidden`,
+  `.active`, `aria-selected` and the roving `tabindex`, and `State.settingsTab` keeps the last tab
+  for the session. It is a real ARIA `tablist` (Left/Right wrap, Home/End), not the Articles
+  screen's plain buttons, because a settings page is navigated by keyboard far more often. Inside a
+  panel the cards are a CSS grid (`repeat(auto-fit, minmax(min(100%, 340px), 1fr))`) capped with
+  the strip at **960px** — two columns at the cap, one in a narrow window — and the two AI cards
+  carry `.settings-card-wide` (`grid-column: 1 / -1`). A new setting goes into the panel whose
+  theme it fits, as one more `.card.settings-card`; no CSS or JS change is needed. An explanation
+  too long for a card is folded into a `<details class="settings-more">`: the `<summary>` carries a
+  one-sentence `…_SUMMARY` string plus a chevron, the body the rest. Where the old paragraph already
+  opened with that sentence (`GRAFIDA_MSG_AUTO_CLOSE_TAGS_INFO`) it was **moved** into the summary
+  key rather than repeated; `CONTENT_NORMALISATION_DISCLAIMER` deliberately stays **outside** the
+  fold, since a notice about legal disclosure duties is not something to hide behind a click.

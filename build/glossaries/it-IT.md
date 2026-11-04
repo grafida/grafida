@@ -181,3 +181,5 @@ I nomi propri non si traducono: Grafida, Joomla!, API, Markdown, HTML, TinyMCE.
 | zero-width space | spazio a larghezza zero | U+200B e affini; non occupa spazio ma viaggia insieme al testo. |
 | watermark | filigrana | Marcatura invisibile inserita di proposito nel testo di un'IA. |
 | screen reader | screen reader | Software di lettura dello schermo; annuncia anche i caratteri invisibili — la ragione di accessibilità di questa impostazione. |
+| general (settings tab) | Generale | Settings-screen tab for app-wide basics (language, display mode). GRAFIDA_LBL_SETTINGS_TAB_GENERAL. |
+| advanced (settings tab) | Avanzate | Settings-screen tab for metadata cache, debug and local storage. GRAFIDA_LBL_SETTINGS_TAB_ADVANCED. |

@@ -1,7 +1,7 @@
 # AI Services
 
 An **AI service** is one connection to one model: a provider, an endpoint, a model name and,
-usually, an API key. You configure them in the **AI Services** card at the bottom of
+usually, an API key. You configure them in the **AI Services** card on the **AI Assistant** tab of
 [Settings](Settings).
 
 ![The AI Services card](images/ai-services.png)

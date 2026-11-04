@@ -107,6 +107,9 @@ const State = {
     draftPaging: { page: 1, totalPages: 1 },
     // Which Articles-page tab is showing: 'drafts' (Local Drafts) or 'remote'.
     articlesTab: 'drafts',
+    // Which Settings-screen tab is showing (see SETTINGS_TABS). Kept for the
+    // session, so leaving Settings and coming back returns to the same tab.
+    settingsTab: 'general',
     references: null,
     // The site `references` was loaded for. `references` is per-site data held
     // in a single slot, so every reader must check this before trusting it
@@ -7498,7 +7501,58 @@ async function replaceDraftFromFile() {
 //  SETTINGS SCREEN
 // ============================================================
 
+// The Settings screen's tabs, in strip order. Each id names a static
+// #settings-tab-{id} button and #settings-panel-{id} panel in index.html.
+const SETTINGS_TABS = ['general', 'editor', 'ai', 'advanced'];
+
+/**
+ * Shows the active Settings panel and marks its tab selected. The strip is
+ * an ARIA tablist with a roving tabindex: only the selected tab is in the
+ * Tab order, the arrow keys move between tabs (see initSettingsTabs()).
+ */
+function applySettingsTab() {
+    if (!SETTINGS_TABS.includes(State.settingsTab)) State.settingsTab = SETTINGS_TABS[0];
+    SETTINGS_TABS.forEach(id => {
+        const active = id === State.settingsTab;
+        const tab = document.getElementById(`settings-tab-${id}`);
+        const panel = document.getElementById(`settings-panel-${id}`);
+        if (tab) {
+            tab.classList.toggle('active', active);
+            tab.setAttribute('aria-selected', active ? 'true' : 'false');
+            tab.tabIndex = active ? 0 : -1;
+        }
+        if (panel) panel.classList.toggle('hidden', !active);
+    });
+}
+
+/** Wires the Settings tab strip's clicks and keyboard navigation, once. */
+function initSettingsTabs() {
+    const select = (id, focus) => {
+        State.settingsTab = id;
+        applySettingsTab();
+        if (focus) document.getElementById(`settings-tab-${id}`)?.focus();
+    };
+    SETTINGS_TABS.forEach((id, index) => {
+        const tab = document.getElementById(`settings-tab-${id}`);
+        if (!tab) return;
+        tab.addEventListener('click', () => select(id, false));
+        tab.addEventListener('keydown', e => {
+            const last = SETTINGS_TABS.length - 1;
+            let next = null;
+            if (e.key === 'ArrowRight') next = index === last ? 0 : index + 1;
+            else if (e.key === 'ArrowLeft') next = index === 0 ? last : index - 1;
+            else if (e.key === 'Home') next = 0;
+            else if (e.key === 'End') next = last;
+            if (next === null) return;
+            e.preventDefault();
+            select(SETTINGS_TABS[next], true);
+        });
+    });
+    applySettingsTab();
+}
+
 function renderSettingsScreen() {
+    applySettingsTab();
     const sel = document.getElementById('settings-language-select');
     if (!sel) return;
     clearNode(sel);
@@ -9822,6 +9876,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnRegenAlias) {
         btnRegenAlias.addEventListener('click', () => regenerateAlias(true));
     }
+
+    initSettingsTabs();
 
     const langSel = document.getElementById('settings-language-select');
     if (langSel) {

@@ -291,99 +291,142 @@
                     </button>
                 </div>
             </div>
-            <div class="card settings-card">
-                <p class="card-title" data-i18n="GRAFIDA_LBL_UI_LANGUAGE">Interface Language</p>
-                <div class="form-group">
-                    <label for="settings-language-select" data-i18n="GRAFIDA_LBL_UI_LANGUAGE">Language</label>
-                    <select id="settings-language-select" class="form-control"></select>
+            <!--
+                Tabbed (one tab strip, one panel per group). The panels hold
+                static markup so applyStrings() localises them like any other;
+                applySettingsTab() only flips .hidden / .active / aria-selected.
+                The cards inside a panel flow into a responsive grid capped at
+                960px (see #settings-screen in app.css).
+            -->
+            <div class="articles-tabs settings-tabs" role="tablist" data-i18n-aria="GRAFIDA_LBL_SETTINGS">
+                <button type="button" class="articles-tab active" role="tab"
+                        id="settings-tab-general" data-settings-tab="general" aria-controls="settings-panel-general"
+                        aria-selected="true" tabindex="0"
+                        data-i18n="GRAFIDA_LBL_SETTINGS_TAB_GENERAL">General</button>
+                <button type="button" class="articles-tab" role="tab"
+                        id="settings-tab-editor" data-settings-tab="editor" aria-controls="settings-panel-editor"
+                        aria-selected="false" tabindex="-1"
+                        data-i18n="GRAFIDA_LBL_SETTINGS_TAB_EDITOR">Editor</button>
+                <button type="button" class="articles-tab" role="tab"
+                        id="settings-tab-ai" data-settings-tab="ai" aria-controls="settings-panel-ai"
+                        aria-selected="false" tabindex="-1"
+                        data-i18n="GRAFIDA_LBL_SETTINGS_TAB_AI">AI Assistant</button>
+                <button type="button" class="articles-tab" role="tab"
+                        id="settings-tab-advanced" data-settings-tab="advanced" aria-controls="settings-panel-advanced"
+                        aria-selected="false" tabindex="-1"
+                        data-i18n="GRAFIDA_LBL_SETTINGS_TAB_ADVANCED">Advanced</button>
+            </div>
+            <div class="settings-panel" id="settings-panel-general" role="tabpanel"
+                 aria-labelledby="settings-tab-general">
+                <div class="card settings-card">
+                    <p class="card-title" data-i18n="GRAFIDA_LBL_UI_LANGUAGE">Interface Language</p>
+                    <div class="form-group">
+                        <label for="settings-language-select" data-i18n="GRAFIDA_LBL_UI_LANGUAGE">Language</label>
+                        <select id="settings-language-select" class="form-control"></select>
+                    </div>
+                </div>
+                <div class="card settings-card">
+                    <p class="card-title" data-i18n="GRAFIDA_LBL_DISPLAY_MODE">Display mode</p>
+                    <div class="form-group">
+                        <label for="settings-display-mode-select" data-i18n="GRAFIDA_LBL_DISPLAY_MODE">Display mode</label>
+                        <select id="settings-display-mode-select" class="form-control"></select>
+                    </div>
                 </div>
             </div>
-            <div class="card settings-card">
-                <p class="card-title" data-i18n="GRAFIDA_LBL_DISPLAY_MODE">Display mode</p>
-                <div class="form-group">
-                    <label for="settings-display-mode-select" data-i18n="GRAFIDA_LBL_DISPLAY_MODE">Display mode</label>
-                    <select id="settings-display-mode-select" class="form-control"></select>
+            <div class="settings-panel hidden" id="settings-panel-editor" role="tabpanel"
+                 aria-labelledby="settings-tab-editor">
+                <div class="card settings-card">
+                    <p class="card-title" data-i18n="GRAFIDA_LBL_SLASH_TOOLS">Slash commands</p>
+                    <p class="text-muted" data-i18n="GRAFIDA_MSG_SLASH_TOOLS_INFO"></p>
+                    <div class="form-group">
+                        <label for="settings-slash-tools-select" data-i18n="GRAFIDA_LBL_SLASH_TOOLS">Slash commands</label>
+                        <select id="settings-slash-tools-select" class="form-control"></select>
+                    </div>
+                </div>
+                <div class="card settings-card">
+                    <p class="card-title" data-i18n="GRAFIDA_LBL_SPELL_CHECK">Spell checking</p>
+                    <p class="text-muted" data-i18n="GRAFIDA_MSG_SPELL_CHECK_INFO"></p>
+                    <div class="form-group">
+                        <label for="settings-spell-check-select" data-i18n="GRAFIDA_LBL_SPELL_CHECK">Spell checking</label>
+                        <select id="settings-spell-check-select" class="form-control"></select>
+                    </div>
+                </div>
+                <div class="card settings-card">
+                    <p class="card-title" data-i18n="GRAFIDA_LBL_AUTO_CLOSE_TAGS">Close HTML tags for me</p>
+                    <details class="settings-more">
+                        <summary><span data-i18n="GRAFIDA_MSG_AUTO_CLOSE_TAGS_SUMMARY"></span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></summary>
+                        <p class="text-muted" data-i18n="GRAFIDA_MSG_AUTO_CLOSE_TAGS_INFO"></p>
+                    </details>
+                    <div class="form-group">
+                        <label for="settings-auto-close-tags-select" data-i18n="GRAFIDA_LBL_AUTO_CLOSE_TAGS">Close HTML tags for me</label>
+                        <select id="settings-auto-close-tags-select" class="form-control"></select>
+                    </div>
+                </div>
+                <div class="card settings-card">
+                    <p class="card-title" data-i18n="GRAFIDA_LBL_CONTENT_NORMALISATION">Normalise AI-generated content</p>
+                    <details class="settings-more">
+                        <summary><span data-i18n="GRAFIDA_MSG_CONTENT_NORMALISATION_SUMMARY"></span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></summary>
+                        <p class="text-muted" data-i18n="GRAFIDA_MSG_CONTENT_NORMALISATION_INFO"></p>
+                    </details>
+                    <div class="form-group">
+                        <label for="settings-content-normalisation-select" data-i18n="GRAFIDA_LBL_CONTENT_NORMALISATION">Normalise AI-generated content</label>
+                        <select id="settings-content-normalisation-select" class="form-control"></select>
+                    </div>
+                    <p class="text-muted" data-i18n="GRAFIDA_MSG_CONTENT_NORMALISATION_DISCLAIMER"></p>
                 </div>
             </div>
-            <div class="card settings-card">
-                <p class="card-title" data-i18n="GRAFIDA_LBL_SLASH_TOOLS">Slash commands</p>
-                <p class="text-muted" data-i18n="GRAFIDA_MSG_SLASH_TOOLS_INFO"></p>
-                <div class="form-group">
-                    <label for="settings-slash-tools-select" data-i18n="GRAFIDA_LBL_SLASH_TOOLS">Slash commands</label>
-                    <select id="settings-slash-tools-select" class="form-control"></select>
+            <div class="settings-panel hidden" id="settings-panel-ai" role="tabpanel"
+                 aria-labelledby="settings-tab-ai">
+                <div class="card settings-card settings-card-wide" id="settings-ai-services-card">
+                    <div class="settings-card-head">
+                        <p class="card-title" data-i18n="GRAFIDA_LBL_AI_SERVICES">AI Services</p>
+                        <div id="settings-ai-services-actions"></div>
+                    </div>
+                    <div id="ai-services-list"></div>
+                </div>
+                <div class="card settings-card settings-card-wide" id="settings-ai-tools-card">
+                    <p class="card-title" data-i18n="GRAFIDA_LBL_AI_TOOLS">AI Tools</p>
+                    <div id="ai-system-prompt-section"></div>
+                    <hr class="divider">
+                    <div id="ai-tools-list"></div>
                 </div>
             </div>
-            <div class="card settings-card">
-                <p class="card-title" data-i18n="GRAFIDA_LBL_SPELL_CHECK">Spell checking</p>
-                <p class="text-muted" data-i18n="GRAFIDA_MSG_SPELL_CHECK_INFO"></p>
-                <div class="form-group">
-                    <label for="settings-spell-check-select" data-i18n="GRAFIDA_LBL_SPELL_CHECK">Spell checking</label>
-                    <select id="settings-spell-check-select" class="form-control"></select>
+            <div class="settings-panel hidden" id="settings-panel-advanced" role="tabpanel"
+                 aria-labelledby="settings-tab-advanced">
+                <div class="card settings-card">
+                    <p class="card-title" data-i18n="GRAFIDA_LBL_METADATA_CACHE">Site metadata</p>
+                    <p class="text-muted" data-i18n="GRAFIDA_MSG_METADATA_CACHE_INFO"></p>
+                    <div class="form-group">
+                        <label for="settings-metadata-ttl-select" data-i18n="GRAFIDA_LBL_METADATA_CACHE_TIME">Cache time</label>
+                        <select id="settings-metadata-ttl-select" class="form-control"></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="settings-metadata-reset-select" data-i18n="GRAFIDA_LBL_METADATA_RESET_ON_START">Reload on startup</label>
+                        <select id="settings-metadata-reset-select" class="form-control"></select>
+                    </div>
+                    <p class="text-muted" data-i18n="GRAFIDA_MSG_METADATA_RESET_ON_START_INFO"></p>
                 </div>
-            </div>
-            <div class="card settings-card">
-                <p class="card-title" data-i18n="GRAFIDA_LBL_AUTO_CLOSE_TAGS">Close HTML tags for me</p>
-                <p class="text-muted" data-i18n="GRAFIDA_MSG_AUTO_CLOSE_TAGS_INFO"></p>
-                <div class="form-group">
-                    <label for="settings-auto-close-tags-select" data-i18n="GRAFIDA_LBL_AUTO_CLOSE_TAGS">Close HTML tags for me</label>
-                    <select id="settings-auto-close-tags-select" class="form-control"></select>
+                <div class="card settings-card">
+                    <p class="card-title" data-i18n="GRAFIDA_LBL_DEBUG">Debug</p>
+                    <p class="text-muted" data-i18n="GRAFIDA_MSG_REQUEST_LOG_INFO"></p>
+                    <div class="form-group">
+                        <label for="settings-request-log-select" data-i18n="GRAFIDA_LBL_REQUEST_LOG">Request log</label>
+                        <select id="settings-request-log-select" class="form-control"></select>
+                    </div>
                 </div>
-            </div>
-            <div class="card settings-card">
-                <p class="card-title" data-i18n="GRAFIDA_LBL_CONTENT_NORMALISATION">Normalise AI-generated content</p>
-                <p class="text-muted" data-i18n="GRAFIDA_MSG_CONTENT_NORMALISATION_INFO"></p>
-                <div class="form-group">
-                    <label for="settings-content-normalisation-select" data-i18n="GRAFIDA_LBL_CONTENT_NORMALISATION">Normalise AI-generated content</label>
-                    <select id="settings-content-normalisation-select" class="form-control"></select>
+                <div class="card settings-card">
+                    <p class="card-title" data-i18n="GRAFIDA_LBL_STORAGE">Local storage</p>
+                    <div class="form-group">
+                        <label data-i18n="GRAFIDA_LBL_DB_LOCATION">Database location</label>
+                        <code id="settings-db-path" class="db-path"></code>
+                    </div>
+                    <div class="settings-actions" id="settings-storage-actions"></div>
                 </div>
-                <p class="text-muted" data-i18n="GRAFIDA_MSG_CONTENT_NORMALISATION_DISCLAIMER"></p>
-            </div>
-            <div class="card settings-card">
-                <p class="card-title" data-i18n="GRAFIDA_LBL_METADATA_CACHE">Site metadata</p>
-                <p class="text-muted" data-i18n="GRAFIDA_MSG_METADATA_CACHE_INFO"></p>
-                <div class="form-group">
-                    <label for="settings-metadata-ttl-select" data-i18n="GRAFIDA_LBL_METADATA_CACHE_TIME">Cache time</label>
-                    <select id="settings-metadata-ttl-select" class="form-control"></select>
+                <div class="card settings-card settings-danger">
+                    <p class="card-title" data-i18n="GRAFIDA_LBL_RESET_STORAGE">Reset local storage</p>
+                    <p class="text-muted" id="settings-reset-desc" data-i18n="GRAFIDA_MSG_RESET_STORAGE_DESC"></p>
+                    <div class="settings-actions" id="settings-reset-actions"></div>
                 </div>
-                <div class="form-group">
-                    <label for="settings-metadata-reset-select" data-i18n="GRAFIDA_LBL_METADATA_RESET_ON_START">Reload on startup</label>
-                    <select id="settings-metadata-reset-select" class="form-control"></select>
-                </div>
-                <p class="text-muted" data-i18n="GRAFIDA_MSG_METADATA_RESET_ON_START_INFO"></p>
-            </div>
-            <div class="card settings-card">
-                <p class="card-title" data-i18n="GRAFIDA_LBL_DEBUG">Debug</p>
-                <p class="text-muted" data-i18n="GRAFIDA_MSG_REQUEST_LOG_INFO"></p>
-                <div class="form-group">
-                    <label for="settings-request-log-select" data-i18n="GRAFIDA_LBL_REQUEST_LOG">Request log</label>
-                    <select id="settings-request-log-select" class="form-control"></select>
-                </div>
-            </div>
-            <div class="card settings-card">
-                <p class="card-title" data-i18n="GRAFIDA_LBL_STORAGE">Local storage</p>
-                <div class="form-group">
-                    <label data-i18n="GRAFIDA_LBL_DB_LOCATION">Database location</label>
-                    <code id="settings-db-path" class="db-path"></code>
-                </div>
-                <div class="settings-actions" id="settings-storage-actions"></div>
-            </div>
-            <div class="card settings-card settings-danger">
-                <p class="card-title" data-i18n="GRAFIDA_LBL_RESET_STORAGE">Reset local storage</p>
-                <p class="text-muted" id="settings-reset-desc" data-i18n="GRAFIDA_MSG_RESET_STORAGE_DESC"></p>
-                <div class="settings-actions" id="settings-reset-actions"></div>
-            </div>
-            <div class="card settings-card settings-card-wide" id="settings-ai-services-card">
-                <div class="settings-card-head">
-                    <p class="card-title" data-i18n="GRAFIDA_LBL_AI_SERVICES">AI Services</p>
-                    <div id="settings-ai-services-actions"></div>
-                </div>
-                <div id="ai-services-list"></div>
-            </div>
-            <div class="card settings-card settings-card-wide" id="settings-ai-tools-card">
-                <p class="card-title" data-i18n="GRAFIDA_LBL_AI_TOOLS">AI Tools</p>
-                <div id="ai-system-prompt-section"></div>
-                <hr class="divider">
-                <div id="ai-tools-list"></div>
             </div>
         </section>
 
