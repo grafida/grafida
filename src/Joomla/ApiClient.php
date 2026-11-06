@@ -243,7 +243,27 @@ final class ApiClient
      */
     public function updateArticle(string $base, string $token, int $id, array $attributes): array
     {
-        $response = $this->send($base, $token, 'PATCH', 'content/articles/' . $id, 'articles', $attributes);
+        try {
+            $response = $this->send($base, $token, 'PATCH', 'content/articles/' . $id, 'articles', $attributes);
+        } catch (ApiException $e) {
+            if ($e->status !== 500
+                || array_key_exists('publish_up', $attributes)
+                || array_key_exists('publish_down', $attributes)) {
+                throw $e;
+            }
+
+            // A user without Edit State (an Author) gets a bare HTTP 500 editing an article that has
+            // ever been published. The PATCH backfills every column we omit from the stored record,
+            // and ArticleModel::getForm() disables publish_up/publish_down for such a user, so the
+            // stored date fails validation ("Invalid field: Start Publishing" — shown only with
+            // Joomla's debug on, hence retrying on the status rather than the message). Sending them
+            // as null stops the backfill, the disabled fields' `unset` filter drops them, and
+            // Table::store() does not write nulls, so the stored dates survive for every user.
+            $response = $this->send($base, $token, 'PATCH', 'content/articles/' . $id, 'articles', $attributes + [
+                'publish_up'   => null,
+                'publish_down' => null,
+            ]);
+        }
 
         return $this->unwrapResource($response);
     }

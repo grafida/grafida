@@ -232,6 +232,111 @@ final class ApiClientTest extends TestCase
         self::assertSame('', $sent['description']);
     }
 
+    public function testUpdateArticleRetriesAServerErrorWithNullPublishingDates(): void
+    {
+        // A user without Edit State gets a bare HTTP 500 when editing an article that has ever been
+        // published: the PATCH backfills the stored publish_up into a field the form disabled for
+        // them, which fails validation. Sending the dates as null avoids it and keeps the stored
+        // values (Table::store() does not write nulls).
+        $url       = 'https://example.com/api/index.php/v1/content/articles/42';
+        $transport = (new FakeTransport())->onSequence(
+            $url,
+            new HttpResponse(500, '{"errors":[{"code":500,"title":"Internal server error"}]}'),
+            new HttpResponse(200, '{"data":{"type":"articles","id":"42","attributes":{"title":"Hello"}}}'),
+        );
+
+        $article = (new ApiClient($transport))
+            ->updateArticle('https://example.com/api/index.php', 'tok', 42, ['title' => 'Hello', 'state' => 1]);
+
+        self::assertSame(42, $article['id']);
+        self::assertCount(2, $transport->requests);
+
+        $first = json_decode((string) $transport->requests[0]['body'], true);
+        self::assertArrayNotHasKey('publish_up', $first);
+        self::assertArrayNotHasKey('publish_down', $first);
+
+        $retry = json_decode((string) $transport->requests[1]['body'], true);
+        self::assertSame('PATCH', $transport->requests[1]['method']);
+        self::assertSame(['title' => 'Hello', 'state' => 1, 'publish_up' => null, 'publish_down' => null], $retry);
+    }
+
+    public function testUpdateArticleReportsAServerErrorTheRetryDoesNotFix(): void
+    {
+        $url       = 'https://example.com/api/index.php/v1/content/articles/42';
+        $transport = (new FakeTransport())->on(
+            $url,
+            new HttpResponse(500, '{"errors":[{"code":500,"title":"Internal server error"}]}')
+        );
+
+        try {
+            (new ApiClient($transport))->updateArticle('https://example.com/api/index.php', 'tok', 42, ['title' => 'Hello']);
+            self::fail('A persistent server error must not read as a success.');
+        } catch (ApiException $e) {
+            self::assertSame(500, $e->status);
+        }
+
+        self::assertCount(2, $transport->requests);
+    }
+
+    public function testUpdateArticleDoesNotRetryAnythingButAServerError(): void
+    {
+        $transport = (new FakeTransport())->on(
+            'https://example.com/api/index.php/v1/content/articles/42',
+            new HttpResponse(403, '{"errors":[{"code":403,"title":"Access Denied"}]}')
+        );
+
+        try {
+            (new ApiClient($transport))->updateArticle('https://example.com/api/index.php', 'tok', 42, ['title' => 'Hello']);
+            self::fail('A 403 must surface.');
+        } catch (ApiException $e) {
+            self::assertSame(403, $e->status);
+        }
+
+        self::assertCount(1, $transport->requests);
+    }
+
+    public function testUpdateArticleDoesNotOverrideDatesTheCallerSent(): void
+    {
+        // The retry exists to stop Joomla backfilling the dates; a caller that sends a date means it,
+        // and nulling it would be overwriting the caller's own value.
+        $transport = (new FakeTransport())->on(
+            'https://example.com/api/index.php/v1/content/articles/42',
+            new HttpResponse(500, '{"errors":[{"code":500,"title":"Internal server error"}]}')
+        );
+
+        try {
+            (new ApiClient($transport))->updateArticle(
+                'https://example.com/api/index.php',
+                'tok',
+                42,
+                ['title' => 'Hello', 'publish_up' => '2026-01-01 00:00:00'],
+            );
+            self::fail('A 500 must surface.');
+        } catch (ApiException $e) {
+            self::assertSame(500, $e->status);
+        }
+
+        self::assertCount(1, $transport->requests);
+    }
+
+    public function testCreateArticleDoesNotRetryAServerError(): void
+    {
+        // Only a PATCH is backfilled, so only an update can fail this way.
+        $transport = (new FakeTransport())->on(
+            'https://example.com/api/index.php/v1/content/articles',
+            new HttpResponse(500, '{"errors":[{"code":500,"title":"Internal server error"}]}')
+        );
+
+        try {
+            (new ApiClient($transport))->createArticle('https://example.com/api/index.php', 'tok', ['title' => 'Hello']);
+            self::fail('A 500 must surface.');
+        } catch (ApiException $e) {
+            self::assertSame(500, $e->status);
+        }
+
+        self::assertCount(1, $transport->requests);
+    }
+
     public function testGetArticleExposesTextAttributeAndRelationships(): void
     {
         // Mirrors Joomla's real article API response: the body is the combined

@@ -24,6 +24,9 @@ final class FakeTransport implements Transport
     /** @var array<string, HttpResponse> */
     private array $byUrl = [];
 
+    /** @var array<string, list<HttpResponse>> URL => responses still to give, in order. */
+    private array $sequences = [];
+
     /** @var array<string, int> URL => cURL errno (0 when unspecified). */
     private array $throwForUrls = [];
 
@@ -40,6 +43,18 @@ final class FakeTransport implements Transport
     public function on(string $url, HttpResponse $response): self
     {
         $this->byUrl[$url] = $response;
+
+        return $this;
+    }
+
+    /**
+     * Answers successive requests to $url with $responses in order; once they run out, the last
+     * one keeps answering. For a client that retries: the first answer is the failure, the next
+     * the outcome of the retry.
+     */
+    public function onSequence(string $url, HttpResponse ...$responses): self
+    {
+        $this->sequences[$url] = array_values($responses);
 
         return $this;
     }
@@ -85,6 +100,12 @@ final class FakeTransport implements Transport
 
         if (array_key_exists($url, $this->throwForUrls)) {
             throw new HttpException('Simulated transport failure for ' . $url, $this->throwForUrls[$url]);
+        }
+
+        if (isset($this->sequences[$url]) && $this->sequences[$url] !== []) {
+            return count($this->sequences[$url]) > 1
+                ? array_shift($this->sequences[$url])
+                : $this->sequences[$url][0];
         }
 
         return $this->byUrl[$url] ?? $this->default;
