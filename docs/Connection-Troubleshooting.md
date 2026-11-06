@@ -175,10 +175,10 @@ purpose, because the fix is elsewhere.
 
 **“Access denied” when publishing.** The connection is fine; Joomla is refusing the operation. On
 Joomla 5.4.8, 6.1.3 and later, an account without the **Access Administration Interface** permission
-(an Author, Editor or Publisher, for instance) cannot create or edit anything through the API at all.
-Otherwise, a non-Super-User account is limited by its own user groups: an Author cannot change an
-article's publishing state or edit an already-published article. See
-[Custom API access](Custom-API-Access).
+on Articles (and on Media and Tags, for images and new tags) cannot create or edit anything through
+the API at all — the API Access group described in [Custom API access](Custom-API-Access) needs it.
+Otherwise, a non-Super-User account is limited by its own user groups: an Author cannot edit someone
+else's article, and an article they publish is saved unpublished instead.
 
 **Categories or tags are missing or out of date.** Grafida is drawing them from its local copy.
 Press **Reload metadata** — on the Sites view, on the Articles view, or in the editor's properties

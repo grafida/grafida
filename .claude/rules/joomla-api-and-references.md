@@ -122,9 +122,34 @@ what we cache about a site, and the API contracts that govern reading it. Verbat
 - Auth header: `Authorization: Bearer <token>` (also sends `X-Joomla-Token`). User needs `core.login.api`.
 - **A token-bearing user is not necessarily a Super User.** `plg_user_token`'s `allowedUserGroups`
   defaults to `"8"` (Super Users), but an administrator can allow a dedicated group to receive tokens
-  and grant it `core.login.api`; see `docs/Custom API access.md`. The user's normal Joomla permissions
+  and grant it `core.login.api`; see `docs/Custom-API-Access.md`. The user's normal Joomla permissions
   still govern every API operation. Treat admin-only routes as optional: they may return 403 for a
-  non-Super-User token, so callers must degrade rather than throw (see `listTemplateStyles()`).
+  non-Super-User token, so callers must degrade rather than throw. Everything below about what such a
+  user may do was **measured, not read off the source**, by `tests/lab/joomla-acl/run.sh` — identical
+  on 5.4.10, 6.1.4 and 6.2.0. Re-run it rather than reasoning afresh when a Joomla release touches
+  the API's access checks.
+  - ⚠️ **Since 5.4.8 / 6.1.3 every API *write* needs `core.manage` (Access Administration Interface)
+    on the component** as well as Create/Edit/Delete — `ApiController::allowAdd()`/`allowEdit()`/
+    `allowDelete()`, and the com_categories/com_fields/com_media overrides. **Reads are not gated at
+    all** (no check in `displayList()`/`displayItem()`), which is why `templates/styles/site` answers an
+    Author; `config/application` is the exception, its own controller demands `core.admin`.
+  - ⚠️ **`core.manage` is not back-end access.** `AdministratorApplication` refuses anyone without
+    `core.login.admin` (Administrator Login) before any component is dispatched, so the documented
+    recipe — an API Access group with `core.login.api` globally and `core.manage` on com_content,
+    com_media and com_tags, no `core.login.admin` — publishes and is still turned away at
+    `/administrator`. Do not let documentation drift back to "Authors need back-end access".
+  - **What such an Author still cannot do:** publish (`state: 1` is saved as `0`, HTTP 200, no error —
+    and `assertArticleSaved()` does not look at `state`, so Grafida reports success); overwrite,
+    rename or delete media (com_media's edit/delete need `core.edit`/`core.delete`, site-wide); edit
+    anyone else's record. New tags and categories they create are saved unpublished. **Custom field
+    values are dropped silently** without `core.edit.value` on com_content (`FieldsHelper::
+    canEditFieldValue()`), so the recipe grants it.
+  - **What it lets them do that the front-end does not:** create article categories and custom fields
+    (both unpublished). `CategoriesController`/`FieldsController::allowAdd()` check the same
+    `core.manage` + `core.create` on com_content an article does, so it cannot be split off.
+  - ⚠️ **Category-level `core.create` is not enforced on article creation over the API.**
+    `allowAdd()` passes if the user may create in *any* category and nothing checks the posted
+    `catid`, so per-category ACL is no way to confine a token holder.
 - Articles: `POST/PATCH /v1/content/articles[/{id}]`. **Write bodies are a flat
   top-level JSON object of field values** — Joomla's JSON:API `{data:{type,attributes}}`
   envelope is for *responses only*; wrapping a write makes Joomla bind nothing and
@@ -158,6 +183,20 @@ what we cache about a site, and the API contracts that govern reading it. Verbat
   *before* reading the note, so it is a silent no-op, never an error. `Versioning::store()` also
   dedupes on the content hash: an unchanged re-publish adds no row, and a matching hash with a
   different note *updates* the existing row's note.
+- ⚠️ **Tag create (`POST /v1/tags`) must send `parent_id: 1` and `description: ""`**, for every
+  user, Super User included. com_tags' form validates `parent_id` with `notequals` against `id`, and
+  on a create `ApiController::save()` sets `id` to null — so a missing `parent_id` is "equal" and the
+  tag is refused ("Invalid field: Parent"), on every version since API support arrived in 4.0. And
+  `#__tags.description` has no default, so a strict-SQL-mode database refuses an INSERT without it.
+  Before this was known, any publish that introduced a new tag failed.
+- ⚠️ **A PATCH to an article that was ever published fails with a bare HTTP 500 for a user without
+  `core.edit.state`.** `ArticleModel::getForm()` disables `publish_up`/`publish_down` (filter `unset`)
+  for such a user, but the PATCH backfill sends their stored values into the form anyway, which fails
+  validation ("Invalid field: Start Publishing" — visible only with Joomla's debug on; otherwise the
+  body is just "Internal server error"). Sending both as **`null`** avoids it: an explicit key is not
+  backfilled, and `Table::store()` does not write nulls, so the stored dates survive — for a Super
+  User too. `ApiClient::updateArticle()` therefore retries a 500 once with both null, unless the
+  caller sent either itself.
 - Media upload: `POST /v1/media/files` with `{path, content:<base64>}`; the response `url` is public.
   ⚠️ **Always qualify `path` with an adapter** (`local-images:/grafida/x.jpg`), and never assume the
   colon-less form means "the images folder" (gh-57). `MediumModel::save()` runs the path through
@@ -170,8 +209,10 @@ what we cache about a site, and the API contracts that govern reading it. Verbat
   `GET /v1/media/adapters` lists the filesystems (`provider_id`, `name`, `path` like
   `local-images:/`); a folder in the path is created by `File::write()` as needed.
 - Template styles: `GET /v1/templates/styles/site` (the `webservices/templates` plugin, **enabled out of
-  the box** — `base.sql`'s `plg_webservices_templates` row has `enabled = 1`). Needs `core.manage` on
-  com_templates, so it can return 403 for non-Super-User tokens; treat it as optional. The list view
+  the box** — `base.sql`'s `plg_webservices_templates` row has `enabled = 1`). Like every API read it
+  has no permission check, so an Author's token gets a 200 too (an earlier version of this note said
+  it needed `core.manage` on com_templates; the lab showed otherwise). Still treat it as optional —
+  the plugin can be disabled. The list view
   renders `id`, `template`, `title`, `home`, `client_id`, …; `template` is the template's **directory
   name** and `home` is `"1"` for the site default, a **language tag** for a multilingual site's
   per-language home, and `"0"` otherwise. Grafida fetches collection routes in 100-item pages and

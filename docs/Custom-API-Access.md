@@ -1,48 +1,69 @@
 # Custom API access for non-Super-Users
 
-> [!WARNING]
-> **As of Joomla 5.4.8 and 6.1.3, Joomla no longer lets users without the "Access Administration Interface" permission create or edit content through the API, and this affects Grafida.** In practice, only Managers, Administrators and Super Users can use Grafida without weakening your site's security. Authors, Editors and Publishers cannot, unless you give them back-end access, which you should not do lightly. Read [Joomla 5.4.8 and 6.1.3 and later](#joomla-548-and-613-and-later) below before you follow the instructions on this page.
+By default, Joomla only allows API access to and mints API tokens for Super Users. If you want to use a non-Super-User account with Grafida — an Author, for example — you will need to follow the guide below to configure your site. All of it must be carried out by a Super User.
 
-By default, Joomla only allows API access to and mints API tokens for Super Users. If you want to use a non-Super-User account with Grafida you will need to follow the guide below to configure your site and Grafida itself. Per the warning above, these instructions only make sense for accounts that are Managers or higher.
+> [!IMPORTANT]
+> **Joomla 5.4.8, 6.1.3 and later need one more permission than older releases did.** Their API refuses to create or edit anything unless the user also has **Access Administration Interface** on the component involved. Step 3 below grants it on Articles, Media and Tags only. This does **not** let your users into your site's back-end: that is a different permission, **Administrator Login**, which you leave alone. See [Why Access Administration Interface does not mean back-end access](#why-access-administration-interface-does-not-mean-back-end-access).
 
-First, we need to create a special group called API Access. This will allow us to give Joomla API application access to non-Super-User accounts. This must be carried out be a Super User.
+## Setting up the API Access group
 
-1. Log into your site as a Super User.
-1. Go to Users Groups and create a new user group with the name **API Access**. Make sure the Group Parent is set to Public.
+**Step 1: create the group.**
+
+1. Log into your site's back-end as a Super User.
+1. Go to Users, Groups and create a new user group with the name **API Access**. Make sure the Group Parent is set to **Public**.
+
+**Step 2: let the group use the API.**
+
 1. Go to System, Setup, Global Configuration.
 1. Click the Permissions tab.
 1. Click on the API Access user group.
-1. Set the following permissions:
-   * **Web Services Login**: Allowed.
+1. Set **Web Services Login** to _Allowed_.
+1. Leave everything else as it is. In particular, do **not** set **Administrator Login** or **Access Administration Interface** here: on this page they would apply to every component on your site, including third-party ones.
+1. Click on Save & Close.
 
-Now, we need to tell Joomla it is allowed to mint API tokens for our API Access user group. Again, this must be carried out by a Super User.
+**Step 3: let the group write articles, images and tags through the API.** You do this on three components, and only those three. In System, Setup, Global Configuration, the components are listed down the left-hand side.
 
-1. Log into your site as a Super User.
-2. Go to System, Manage, Plugins. 
-3. Search for the "User - Joomla API Token" plugin.
-4. Click on the plugin
-5. In the "Allowed User Groups" section add our "API Access" user group.
-6. Click on Save & Close.
+1. Click on **Articles**, then the Permissions tab, then the API Access user group. Set **Access Administration Interface** and **Edit Custom Field Value** to _Allowed_. Click on Save.
+1. Click on **Media**, then the Permissions tab, then the API Access user group. Set **Access Administration Interface** to _Allowed_. Click on Save.
+1. Click on **Tags**, then the Permissions tab, then the API Access user group. Set **Access Administration Interface** to _Allowed_. Click on Save & Close.
 
-You can now edit your non-Super-User user accounts who need access to Grafida and add them to the API Access user group _in addition to_ their normal user group (e.g. Author). 
+Without **Edit Custom Field Value**, Joomla quietly discards the values your users give the article's custom fields; the article itself still saves. You can skip Media if your users never add images, and Tags if they never create new tags (picking existing tags needs nothing).
+
+**Step 4: let Joomla give the group API tokens.**
+
+1. Go to System, Manage, Plugins.
+1. Search for the "User - Joomla API Token" plugin.
+1. Click on the plugin.
+1. In the "Allowed User Groups" section add the "API Access" user group.
+1. Click on Save & Close.
+
+**Step 5: add your users to the group.** Edit each non-Super-User account that needs Grafida and add it to the API Access user group _in addition to_ its normal user group (e.g. Author). Joomla combines the permissions of all of a user's groups: the normal group says what the user may do with articles, and API Access says they may do it through the API.
 
 Your users will now be able to log into your site, go to their profile, edit it, and enable (and see) their Joomla! API Token. They can use that token in Grafida.
 
-## Joomla 5.4.8 and 6.1.3 and later
+## Why Access Administration Interface does not mean back-end access
 
-Joomla's API application uses one base controller (`ApiController`) for every component, in Joomla itself and in third party extensions. Since Joomla 5.4.8 and 6.1.3 it refuses to create, edit or delete **any** record unless the user also has the **Access Administration Interface** (`core.manage`) permission on that component, on top of the usual Create, Edit or Delete permission. Before that, Create, Edit or Delete was enough.
+Joomla has two different permissions here, and their names make them easy to confuse:
 
-This applies even when the same user can do the same thing without that permission through the site's front-end. An Author who can submit an article from a front-end form now gets an _Access Denied_ error when Grafida creates the very same article through the API.
+* **Administrator Login** (Global Configuration only) decides whether someone can log into the back-end at all. Without it, Joomla turns them away at the login page with "You do not have access to the Administrator section of this site", whatever else they are allowed.
+* **Access Administration Interface** (per component) decides whether someone who _is_ in the back-end may open that component's screens. Since Joomla 5.4.8 and 6.1.3, the API checks it too before it creates, edits or deletes anything.
 
-Granting Access Administration Interface is **not a safe workaround**. It lets the user into the Joomla back-end, and back-end access comes with non-obvious security considerations: component screens, options and tools that were never designed for, or reviewed against, a low-privilege user. This is a Joomla design decision, not something Grafida can work around, and it is not a Grafida bug.
+The API Access group gets the second on three components, and never the first, so your users can publish through Grafida but still cannot log into the back-end. We tested this on Joomla 5.4.10, 6.1.4 and 6.2.0.
 
-What this means for you:
+Do **not** "fix" anything by giving the group Administrator Login. It is not needed, and it would open the Articles, Categories, Fields, Media and Tags screens of the back-end to those users. That is where back-end access gets risky: back-end screens, and especially third-party back-end extensions, are often written assuming whoever reaches them is trusted.
 
-* **Super Users, Administrators and Managers** can use Grafida. They already have back-end access, so nothing changes for them.
-* **Authors, Editors, Publishers and any other group without back-end access cannot use Grafida** on a site running Joomla 5.4.8 / 6.1.3 or later, and the instructions on this page do not fix that. They will see _Access Denied_ when they publish.
-* If you decide to accept the risk and grant Access Administration Interface to such a group anyway, set it per component (Articles, Tags, Fields and Media, as needed) and no wider. You do so at your own risk.
+## What your users can and cannot do
 
-If you run an older Joomla release, the instructions above are enough for Authors and above, but you are strongly encouraged to update your site: those releases contain security fixes.
+What a user can do is decided by their normal user group. The API Access group only lets them do it through the API. For an **Author**:
+
+* **They can** write new articles, edit their own, upload images, and add existing or new tags. Adding a tag that does not exist on the site yet, and editing an article of theirs that has already been published, need **Grafida 1.0 or later**; earlier versions fail at both.
+* **They cannot publish.** Joomla saves their articles as unpublished even if they chose Published in Grafida, and Grafida still reports a successful publish. A Publisher or above has to publish the article. The same goes for new tags they create: Joomla saves those unpublished.
+* **They cannot edit anyone else's articles**, nor change a published article's publishing dates.
+* **They cannot edit, rename or delete images** already uploaded to the site, including their own. That needs the Edit and Delete permissions on Media, which apply to every file in the Media Manager, not just the user's own. This is why Grafida's Media Manager and image editor cannot save changes to site images for such a user.
+
+There is one thing they **can** do through the API that they cannot do on your site's front-end. With Access Administration Interface and Create on Articles — which they need to write articles at all — Joomla's API also lets them **create article categories and article custom fields**. Joomla saves both unpublished, so neither appears on your site or in the article editor until someone with the right to publish them does so. You cannot switch this off without also stopping them from writing articles, because Joomla checks exactly the same permissions for all three. Keep an eye on unpublished categories and fields, and delete any you did not expect.
+
+If you were thinking of limiting **which categories** an Author can write in through each category's own permissions: the API does not enforce that for new articles. A user who may create articles in any one category can create them in every category through the API. Joomla only uses those permissions to decide which categories its own forms offer.
 
 ## Caveats
 
@@ -50,7 +71,7 @@ Make sure the Public user group's permissions are all set to the value "Not Set"
 
 You must have a login module / menu item, and a menu item for the user's Profile or Edit Profile page on your site's frontend. This is necessary for non-Super-User accounts to be able to create and view their API Token. You CANNOT create or view API Tokens for other user accounts, even if you are a Super User; this is a security feature in Joomla itself. You can always use a "hidden" menu item to do that, and give your users the direct link to the login and profile edit pages on the public site even though these URLs are not linked to from any page of your site. 
 
-Your actions are limited by the user groups your user belongs to _in addition to_ the API Access user group. Authors, for example, cannot change the publish status of an article; only Publishers and above can. Authors cannot edit an existing article either; clicking Grafida's Publish button on a draft of an article already published on the site will result in an Access Denied error toast. This means that you will perceive some features in Grafida "not working". They work fine; Joomla simply denied you access because your Permissions do not allow what you're trying to do. We cannot prevent the display of these features; the Joomla API does not return adequate information for us to determine your access to the site at the granular level required to decide which features to hide.
+Joomla's API does not tell Grafida what your user is allowed to do, so Grafida cannot hide what you may not use. Something Joomla refuses shows up as an Access Denied error toast, and something Joomla quietly ignores, like publishing as an Author, simply does not take effect. This does not mean the feature is broken; your permissions do not allow it.
 
 Grafida cannot get the Unicode Aliases setting of your site. The value of this setting is only available to Super Users. This is not a bug, it's a limitation in Joomla itself. Because Grafida cannot ask, it assumes the setting is off — which is Joomla's own default, and wrong for your site if you have turned it on; the alias generated from a title with non-ASCII characters would then come out partial, or nonsensical.
 

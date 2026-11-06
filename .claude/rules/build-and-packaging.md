@@ -311,7 +311,7 @@ scan it.
 
 Within each version block, entries are **grouped and ordered by significance**:
 
-1. `!` — critical / breaking
+1. `!` — important change (may also be a security update; never means "breaking")
 2. `+` — new features
 3. `-` — removals
 4. `~` — changes to existing behaviour

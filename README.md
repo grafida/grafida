@@ -27,7 +27,7 @@ You own your data. You don't give up your privacy. You are in control.
 > Grafida is focused on content _authoring_, not content management. It only provides an essential subset of features compared to the full Joomla! article editor page.
 
 > [!WARNING]
-> As of Joomla 5.4.8 and 6.1.3, Joomla's API refuses to create or edit content for users without the "Access Administration Interface" permission, even if they can do the same on the front-end. Only Managers, Administrators and Super Users can use Grafida without giving users back-end access, which has security implications. See [Custom API access](https://grafida.app/docs/desktop/Custom-API-Access.html).
+> As of Joomla 5.4.8 and 6.1.3, Joomla's API refuses to create or edit content for users without the "Access Administration Interface" permission on the component, even if they can do the same on the front-end. Authors and other non-Super-Users can still use Grafida: grant that permission on Articles, Media and Tags only, which does not give them back-end access. See [Custom API access](https://grafida.app/docs/desktop/Custom-API-Access.html).
 
 ## License
 

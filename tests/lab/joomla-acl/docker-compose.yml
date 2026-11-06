@@ -1,0 +1,51 @@
+# Throwaway Joomla stack for the API permissions lab (see README.md).
+#
+# Do not run this by hand: ./run.sh downloads Joomla, provisions the site, runs the checks and
+# tears the stack down. The php and web images are the shared Akeeba E2E ones, built by
+# ../buildfiles/docker/e2e/images.sh (run.sh calls `ensure`), hence `pull_policy: never`.
+# Every resource carries org.akeeba.e2e so buildfiles' maintain.sh can prune leftovers.
+
+name: grafida-acl-lab
+
+x-e2e-labels: &e2e-labels
+  org.akeeba.e2e: "1"
+
+services:
+  db:
+    image: "mariadb:${MARIADB_VERSION:-11}"
+    labels: *e2e-labels
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: lab
+      MARIADB_USER: lab
+      MARIADB_PASSWORD: lab
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 40
+
+  php:
+    image: "akeeba-e2e/php:${PHP_VERSION:-8.4}"
+    pull_policy: never
+    labels: *e2e-labels
+    volumes:
+      - ./www:/var/www/html
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    image: "akeeba-e2e/web:${APACHE_VERSION:-2.4}"
+    pull_policy: never
+    labels: *e2e-labels
+    ports:
+      - "127.0.0.1:${HTTP_PORT:-18620}:80"
+    volumes:
+      - ./www:/var/www/html
+    depends_on:
+      - php
+
+networks:
+  default:
+    labels: *e2e-labels

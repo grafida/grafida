@@ -44,6 +44,26 @@ is open to any token holder — Joomla's API puts no permission check on reads. 
 user may or may not do depends on the site's permission set, so a test denies it explicitly with
 `->deny('POST', 'tags')`. See `AuthorTokenReferenceTest` and `AuthorTokenPublishTest`.
 
+What a real Joomla site lets such a user do is measured, not assumed, by the lab below.
+
+### The Joomla API permissions lab (`tests/lab/joomla-acl/`)
+
+A throwaway Joomla in Docker, provisioned with an Author-based group per permission recipe, against
+which `run.sh` replays Grafida's API calls and checks each answer — which writes need which
+permissions, what is silently downgraded or dropped, and whether the recipe Grafida documents for
+non-Super-Users keeps them out of the back-end. It is **not** part of `composer test`: it downloads
+Joomla from GitHub and takes a few minutes per version. Run it when a Joomla release touches the
+API's access checks, or before changing what `docs/Custom-API-Access.md` tells people to set up:
+
+```bash
+tests/lab/joomla-acl/run.sh 5.4 6.1 6.2     # newest stable of each; exit 0 = every check as expected
+tests/lab/joomla-acl/run.sh --keep 6.2      # leave the site up at http://127.0.0.1:18620 afterwards
+```
+
+It needs Docker, `jq`, and the `akeeba/buildfiles` checkout at `../buildfiles` for the shared
+`akeeba-e2e/*` PHP and Apache images. See `tests/lab/joomla-acl/README.md` for what each group is
+and what the results mean.
+
 ### Why there is a JavaScript suite
 
 The AI provider call **runs in the SPA's JavaScript**, not in PHP — that is what makes streaming
