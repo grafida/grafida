@@ -7,6 +7,7 @@ Grafida 1.0
 ~ `phing git` packs the application PHAR once instead of once per platform
 ~ The documentation is published to Grafida.app over SFTP, replacing the copy into a sibling site repository
 # [HIGH] Clicking a sidebar menu item while editing an article discarded unsaved changes without asking (gh-80)
+# [HIGH] Publishing an article with a tag that did not exist on the site yet failed with "Invalid field: Parent"
 
 Grafida 0.3
 ================================================================================

@@ -263,10 +263,16 @@ final class ApiClient
     /** @return array<string, mixed> The created tag resource (includes its new id). */
     public function createTag(string $base, string $token, string $title): array
     {
+        // parent_id: com_tags' form validates it with `notequals` against the record id, and on a
+        // create both are missing — equal — so a tag without it is refused ("Invalid field: Parent")
+        // for every user. description: the column has no default, so a strict-SQL-mode database
+        // refuses an INSERT without it. A user without Edit State gets the tag saved unpublished.
         $response = $this->send($base, $token, 'POST', 'tags', 'tags', [
-            'title'     => $title,
-            'published' => 1,
-            'language'  => '*',
+            'title'       => $title,
+            'parent_id'   => 1,
+            'description' => '',
+            'published'   => 1,
+            'language'    => '*',
         ]);
 
         return $this->unwrapResource($response);

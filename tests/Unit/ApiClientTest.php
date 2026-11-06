@@ -211,6 +211,27 @@ final class ApiClientTest extends TestCase
         self::assertSame('Hello', $sent['title']);
     }
 
+    public function testCreateTagSendsTheRootParentAndAnEmptyDescription(): void
+    {
+        // Without parent_id, com_tags' `notequals` rule compares the missing parent with the
+        // missing record id, finds them equal and rejects the tag ("Invalid field: Parent") — for
+        // every user, Super User included. Without description a strict-SQL-mode database rejects
+        // the INSERT, since the column has no default.
+        $transport = new FakeTransport();
+        $transport->on(
+            'https://example.com/api/index.php/v1/tags',
+            new HttpResponse(200, '{"data":{"type":"tags","id":"7","attributes":{"title":"News"}}}')
+        );
+
+        $tag = (new ApiClient($transport))->createTag('https://example.com/api/index.php', 'tok', 'News');
+
+        self::assertSame(7, $tag['id']);
+        $sent = json_decode((string) $transport->requests[0]['body'], true);
+        self::assertSame('News', $sent['title']);
+        self::assertSame(1, $sent['parent_id']);
+        self::assertSame('', $sent['description']);
+    }
+
     public function testGetArticleExposesTextAttributeAndRelationships(): void
     {
         // Mirrors Joomla's real article API response: the body is the combined
