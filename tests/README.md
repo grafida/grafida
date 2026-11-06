@@ -39,7 +39,8 @@ regenerate. The format — and the seven rules a case has to obey — is documen
 `tests/Unit/Support/FakeTransport` answers whatever URL it is told to, so a test built on it
 silently plays a user who may do anything. `tests/Unit/Support/JoomlaSiteTransport` is keyed on the
 API *route* instead and starts from a role: `AUTHOR` (the default) answers 403 on
-`config/application` and `templates/styles/site`, `SUPER_USER` serves them. Anything else a token's
+`config/application` (the one read that needs `core.admin`), `SUPER_USER` serves it. Every other read
+is open to any token holder — Joomla's API puts no permission check on reads. Anything else a token's
 user may or may not do depends on the site's permission set, so a test denies it explicitly with
 `->deny('POST', 'tags')`. See `AuthorTokenReferenceTest` and `AuthorTokenPublishTest`.
 

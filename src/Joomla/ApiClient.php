@@ -354,9 +354,10 @@ final class ApiClient
      * {@see \Grafida\Reference\TemplateDiscovery} to scan.
      *
      * The route is served by `plg_webservices_templates` (enabled out of the
-     * box) and needs `core.manage` on com_templates. Joomla can be configured
-     * to issue API tokens to non-Super-User groups, whose ordinary Joomla
-     * permissions still apply; this route may therefore answer 403. Callers
+     * box). Joomla's API puts no permission check on reads, so any token
+     * holder — an Author included — gets an answer (measured on 5.4.10, 6.1.4
+     * and 6.2.0 by `tests/lab/joomla-acl`). It may still fail — the plugin can
+     * be disabled, a third-party extension can guard the route — so callers
      * must treat a thrown {@see ApiException} as "unknown" rather than as a
      * failure.
      *

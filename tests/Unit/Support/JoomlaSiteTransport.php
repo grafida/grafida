@@ -23,13 +23,16 @@ use Grafida\Http\Transport;
  * a test can say "this is an Author" and get the answers such a token really
  * gets.
  *
- * ⚠️ The {@see self::AUTHOR} profile denies only what the repository documents
- * as needing more than an author has: `GET v1/config/application`
- * (`core.admin`) and `GET v1/templates/styles/site` (`core.manage` on
- * com_templates). Everything else an author's rights depend on — creating
- * tags, uploading media, editing another user's article — varies with the
- * site's own permission set, so a test that wants it denied says so with
- * {@see self::deny()} instead of this class guessing at Joomla's defaults.
+ * ⚠️ The {@see self::AUTHOR} profile denies only what no author can have:
+ * `GET v1/config/application`, whose controller demands `core.admin`. Joomla's
+ * API puts no permission check on any other read — `templates/styles/site`
+ * included, which answers an Author's token with a 200 (measured on 5.4.10,
+ * 6.1.4 and 6.2.0 by `tests/lab/joomla-acl`). Every *write* an author's rights
+ * depend on — creating tags, uploading media, editing another user's article —
+ * varies with the site's own permission set (and since Joomla 5.4.8 / 6.1.3
+ * needs Access Administration Interface on the component too), so a test that
+ * wants it denied says so with {@see self::deny()} instead of this class
+ * guessing at Joomla's defaults.
  */
 final class JoomlaSiteTransport implements Transport
 {
@@ -66,15 +69,15 @@ final class JoomlaSiteTransport implements Transport
             ], 201, 'media'),
         ];
 
+        $this->routes['GET templates/styles/site'] = self::collection([[1, ['template' => 'cassiopeia', 'home' => '1']]]);
+
         if ($role === self::SUPER_USER) {
-            $this->routes['GET config/application']     = self::collection([[1, ['unicodeslugs' => 1]]]);
-            $this->routes['GET templates/styles/site'] = self::collection([[1, ['template' => 'cassiopeia', 'home' => '1']]]);
+            $this->routes['GET config/application'] = self::collection([[1, ['unicodeslugs' => 1]]]);
 
             return;
         }
 
         $this->deny('GET', 'config/application');
-        $this->deny('GET', 'templates/styles/site');
     }
 
     /** Answers `$method $route` (route is relative to `{apiBase}/v1/`) with a fixed response. */

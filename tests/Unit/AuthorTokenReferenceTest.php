@@ -26,9 +26,8 @@ use Joomla\Database\DatabaseInterface;
  * A token does not have to belong to a Super User: Joomla can issue API tokens
  * to a dedicated group, and that user's ordinary permissions still govern every
  * route. Every other test in the suite answers as a user who may do anything;
- * these answer as an Author — `core.admin` and com_templates' `core.manage`
- * withheld — and pin that connecting and reading reference data degrade rather
- * than throw.
+ * these answer as an Author — `core.admin` withheld — and pin that connecting
+ * and reading reference data degrade rather than throw.
  */
 final class AuthorTokenReferenceTest extends TestCase
 {
