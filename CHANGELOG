@@ -1,5 +1,6 @@
 Grafida 1.0
 ================================================================================
++ Distraction-free mode in the article editor: hides the sidebars, toolbar and title so only the editor remains
 ~ Settings is split into General, Editor, AI Assistant and Advanced tabs; long explanations fold away
 ~ Connection test no longer tries the never-valid /index.php/api URL
 ~ The Windows build no longer enables opcache, matching every other platform

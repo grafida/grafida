@@ -197,6 +197,11 @@
                                 <span data-i18n="GRAFIDA_BTN_PUBLISH">Publish</span>
                             </button>
                         </div>
+                        <!-- Enters distraction-free mode; see setDistractionFree() in app.js. -->
+                        <button id="btn-distraction-free" type="button" class="btn btn-secondary btn-sm btn-icon-only"
+                                data-i18n-title="GRAFIDA_BTN_DISTRACTION_FREE">
+                            <i class="fa-solid fa-angles-up" aria-hidden="true"></i>
+                        </button>
                     </div>
 
                     <div id="editor-title-bar">
@@ -209,6 +214,17 @@
                                 <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
                             </button>
                         </div>
+                    </div>
+
+                    <!--
+                        Only shown in distraction-free mode, where it stands in for the
+                        toolbar and the title/alias row it brings back.
+                    -->
+                    <div id="editor-focus-bar">
+                        <button id="btn-exit-distraction-free" type="button" class="icon-toggle"
+                                data-i18n-title="GRAFIDA_BTN_EXIT_DISTRACTION_FREE">
+                            <i class="fa-solid fa-angles-down" aria-hidden="true"></i>
+                        </button>
                     </div>
 
                     <div id="tinymce-wrapper">

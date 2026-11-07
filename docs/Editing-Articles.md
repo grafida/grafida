@@ -28,9 +28,38 @@ to confirm, and the article is saved before it is overwritten.
 
 **Publish** sends the article to your site. See [Publishing](#publishing) below.
 
+The button with the upward chevrons at the far right switches to
+[distraction-free mode](#distraction-free-mode).
+
 > [!TIP]
 > <kbd>Ctrl</kbd> + <kbd>S</kbd> (Windows, Linux) or <kbd>Cmd</kbd> + <kbd>S</kbd> (macOS) saves
 > the local article from anywhere in the editor.
+
+## Distraction-free mode
+
+Distraction-free mode clears the screen around the article so there is nothing left but the text
+you are writing. Press the button with the upward chevrons at the far right of the toolbar and
+Grafida:
+
+* collapses the navigation sidebar on the left and the Article properties sidebar on the right;
+* hides the toolbar and the title and alias fields;
+* closes the AI assistant panel, if it was open.
+
+The editor keeps its own menu bar and formatting toolbar. The navigation sidebar shrinks to a thin
+strip holding only its expand button, the light/dark/automatic switch and your site's icon.
+
+To bring back the toolbar and the title and alias fields, press the button with the downward
+chevrons above the editor. This does not reopen the sidebars; use each sidebar's own expand button
+when you want it back. Expanding a sidebar does not end distraction-free mode either.
+
+Grafida remembers the mode, so the next article you open looks the same. The exception is
+**New article**: a new article needs a title first, so distraction-free mode switches itself off for
+it. The mode only affects the article editor; every other screen looks as usual.
+
+> [!TIP]
+> Distraction-free mode does not make Grafida full screen, because on a large monitor you may well
+> not want that. To go full screen as well, use your operating system's own full-screen control —
+> on macOS, the green button at the top left of the window.
 
 ## Title and alias
 

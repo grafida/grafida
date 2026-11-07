@@ -621,6 +621,25 @@ ship inside the app.
   three triggers to fire on its own. ⚠️ The `hidden` attribute alone does **not** hide it: the UA's
   `[hidden] { display: none }` loses to `app.css`'s `nav#main-nav a { display: flex }`, so the rule
   is restated as `nav#main-nav a[hidden]` — without it the item shows even with the setting off.
+  **Distraction-free mode** (Article view only): `#btn-distraction-free` (right end of
+  `#editor-toolbar`) → `setDistractionFree(true)` collapses both sidebars through
+  `collapseAside()` (the same `.collapsed` class + localStorage keys `setupCollapsible()` uses, so
+  their own toggles keep working), closes the AI panel via `GrafidaAIPanel.close()` (its normal close
+  path, "remember this chat?" prompt included), and sets `State.distractionFree`
+  (`grafida.distractionFree`). `#btn-exit-distraction-free`, in the `#editor-focus-bar` strip that
+  stands in for the hidden toolbar and title/alias row, brings back **only** those two — the sidebars
+  stay collapsed until their own buttons expand them, and expanding one does not end the mode.
+  **`openNewArticle()` switches the mode off** (persisted, `setDistractionFree(false, {focus:
+  false})`) — a brand-new article needs its title first; opening an existing article keeps it.
+  ⚠️ **Every rule hangs off `body.distraction-free`, which `syncDistractionFree()` sets only while
+  `State.activeScreen === 'editor'`** and which `showScreen()` re-derives on every screen change —
+  the left `#sidebar` is shared by every screen, and its trimmed rail (expand button, `#theme-switch`
+  and a 38px `.site-favicon`; nav, footer, update notice, site `<select>` and Visit site button
+  hidden) must not leak onto them. Those rules are scoped to `#sidebar.collapsed`, so an expanded
+  sidebar shows everything as usual. The mode **never** touches the window's full screen, by design:
+  on a large monitor full screen is unwanted, and Boson exposes no full-screen API anyway (the green
+  button's native full screen also keeps a notched Mac's camera-housing strip black — macOS confines
+  native full-screen content to the safe area, and only a hand-built borderless window could avoid it).
   **The in-article media browser (`openMediaBrowser()`) grew a second tab** (gh-43), mirroring the
   Media Manager screen's own `buildMediaTabs()`/`applyMediaTab()` pattern (same
   `articles-tabs`/`articles-tab` classes): **Site media** is the original online Joomla Media

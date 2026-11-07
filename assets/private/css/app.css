@@ -1633,6 +1633,66 @@ input[type="color"].form-control {
     transform: rotate(180deg);
 }
 
+/* ---- Distraction-free mode (Article view only) ---- */
+/*
+ * body.distraction-free is set by syncDistractionFree() only while the editor
+ * screen is showing, so every rule here is inert on the other screens even
+ * though the left sidebar is shared with them.
+ *
+ * The strip that replaces the toolbar and the title/alias row has the same
+ * height, background and bottom rule as the collapsed Article properties
+ * header, so the two read as one band across the top of the editor.
+ */
+#editor-focus-bar {
+    display: none;
+}
+
+body.distraction-free #editor-toolbar,
+body.distraction-free #editor-title-bar {
+    display: none;
+}
+
+body.distraction-free #editor-focus-bar {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: flex-end;
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-surface-2);
+}
+
+/*
+ * The collapsed left rail keeps only its expand button, the display-mode
+ * switch and the site favicon. Expanding the sidebar drops the .collapsed
+ * class, so it shows everything as usual without leaving the mode.
+ */
+body.distraction-free #sidebar.collapsed nav#main-nav,
+body.distraction-free #sidebar.collapsed #sidebar-update,
+body.distraction-free #sidebar.collapsed #sidebar-footer,
+body.distraction-free #sidebar.collapsed #site-select,
+body.distraction-free #sidebar.collapsed #sidebar-site-favicon .btn {
+    display: none;
+}
+
+body.distraction-free #sidebar.collapsed #site-selector {
+    display: block;
+    padding: 10px 8px;
+}
+
+body.distraction-free #sidebar.collapsed #sidebar-site-favicon {
+    margin-top: 0;
+}
+
+body.distraction-free #sidebar.collapsed .site-favicon {
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius);
+}
+
+body.distraction-free #sidebar.collapsed .site-favicon-empty {
+    font-size: 16px;
+}
+
 #editor-sidebar-inner {
     flex: 1;
     overflow-y: auto;

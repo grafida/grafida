@@ -125,6 +125,9 @@ const State = {
     editorCss: null,
     tinyMCEEditor: null,
     activeScreen: 'sites',
+    // Distraction-free mode of the Article view. Only takes effect while the
+    // editor screen is showing; see syncDistractionFree().
+    distractionFree: false,
     // Working copy of the open draft's article images (intro + full text), the
     // single source of truth for the editor's Images section. See collectImages().
     editorImages: {},
@@ -952,6 +955,8 @@ function showScreen(name) {
     document.querySelectorAll('nav#main-nav a').forEach(a => {
         a.classList.toggle('active', a.dataset.screen === name);
     });
+
+    syncDistractionFree();
 }
 
 // ============================================================
@@ -2863,6 +2868,10 @@ async function openEditorFor(article, type) {
 
 async function openNewArticle() {
     if (!State.currentSiteId) return;
+    // A brand-new article needs its title first, so distraction-free mode
+    // switches itself off for it (and stays off, as if its expand button had
+    // been pressed). Opening an existing article keeps the mode.
+    if (State.distractionFree) setDistractionFree(false, { focus: false });
     await openDraftInEditor({
         id: null,
         siteId: State.currentSiteId,
@@ -9533,6 +9542,7 @@ const PROPS_COLLAPSED_KEY = 'grafida.propsCollapsed';
 const AI_PANEL_WIDTH_KEY = 'grafida.aiPanelWidth';
 const HELP_TOC_COLLAPSED_KEY = 'grafida.helpTocCollapsed';
 const HELP_TOC_WIDTH_KEY = 'grafida.helpTocWidth';
+const DISTRACTION_FREE_KEY = 'grafida.distractionFree';
 
 /** Toggle a collapsible aside and persist the preference. */
 function setupCollapsible(asideId, toggleId, storageKey, onChange) {
@@ -9549,6 +9559,67 @@ function setupCollapsible(asideId, toggleId, storageKey, onChange) {
             localStorage.setItem(storageKey, collapsed ? '1' : '0');
             if (onChange) onChange();
         });
+    }
+}
+
+/** Collapse a collapsible aside (if it is not already) and persist that. */
+function collapseAside(asideId, storageKey, onChange) {
+    const aside = document.getElementById(asideId);
+    if (!aside || aside.classList.contains('collapsed')) return;
+    aside.classList.add('collapsed');
+    try { localStorage.setItem(storageKey, '1'); } catch (e) { /* storage may be unavailable */ }
+    if (onChange) onChange();
+}
+
+/**
+ * Applies distraction-free mode to the page. The mode is remembered across
+ * screens but only ever *shown* on the editor screen, which is why the body
+ * class is derived from both State.distractionFree and the active screen, and
+ * why showScreen() calls this on every screen change. Every CSS rule of the
+ * mode hangs off `body.distraction-free`, so leaving the editor undoes it all,
+ * including what it does to the left sidebar every screen shares.
+ */
+function syncDistractionFree() {
+    document.body.classList.toggle(
+        'distraction-free',
+        State.activeScreen === 'editor' && State.distractionFree
+    );
+}
+
+/**
+ * Enters or leaves the Article view's distraction-free mode.
+ *
+ * Entering collapses both sidebars, closes the AI panel and hides the toolbar
+ * and the title/alias row behind a single expand button. Leaving brings back
+ * only the toolbar and the title/alias row: each sidebar has its own expand
+ * button, and expanding one never ends the mode. Full screen is deliberately
+ * not touched — whether to run full screen is the user's call, not this mode's.
+ *
+ * Pass `{focus: false}` when the mode is changed programmatically rather than
+ * by its own buttons, so the focus is left alone.
+ */
+function setDistractionFree(on, { focus = true } = {}) {
+    State.distractionFree = on;
+    try {
+        localStorage.setItem(DISTRACTION_FREE_KEY, on ? '1' : '0');
+    } catch (e) { /* storage may be unavailable */ }
+
+    if (on) {
+        collapseAside('sidebar', SIDEBAR_COLLAPSED_KEY, syncSidebarTooltips);
+        collapseAside('editor-sidebar', PROPS_COLLAPSED_KEY);
+        if (typeof GrafidaAIPanel !== 'undefined') GrafidaAIPanel.close();
+    }
+
+    syncDistractionFree();
+
+    // The button that was pressed has just been hidden, so put the focus
+    // somewhere useful rather than letting it fall back to <body>.
+    if (!focus) return;
+    if (on) {
+        if (State.tinyMCEEditor) State.tinyMCEEditor.focus();
+    } else {
+        const btn = document.getElementById('btn-distraction-free');
+        if (btn) btn.focus();
     }
 }
 
@@ -9732,6 +9803,16 @@ function initLayoutControls() {
     setupCollapsible('help-toc', 'help-toc-toggle', HELP_TOC_COLLAPSED_KEY, syncHelpTocToggle);
     setupHelpTocResize();
     setupAiPanelResize();
+
+    // Distraction-free mode of the Article view, remembered like the sidebars.
+    try {
+        State.distractionFree = localStorage.getItem(DISTRACTION_FREE_KEY) === '1';
+    } catch (e) { /* storage may be unavailable */ }
+    syncDistractionFree();
+    const dfEnter = document.getElementById('btn-distraction-free');
+    if (dfEnter) dfEnter.addEventListener('click', () => setDistractionFree(true));
+    const dfExit = document.getElementById('btn-exit-distraction-free');
+    if (dfExit) dfExit.addEventListener('click', () => setDistractionFree(false));
 
     // Display-mode tri-state (gh-41): persist + apply without leaving the editor.
     const themeSwitch = document.getElementById('theme-switch');

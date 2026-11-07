@@ -12,7 +12,7 @@ Next to them, you will see the collapse control button: `<<`. Click on it to col
 
 ## Site selector
 
-Below the application title, there's the site selector area. This area is hidden when the navigation sidebar is collapsed.
+Below the application title, there's the site selector area. This area is hidden when the navigation sidebar is collapsed. The one exception is the article editor's [distraction-free mode](Editing-Articles#distraction-free-mode), where the collapsed sidebar still shows the site's favicon.
 
 The drop-down allows you to select the **active site**. This is a core part of the work you do in Grafida: the Articles and Media Manager views are shown for the site selected here.
 

@@ -1549,6 +1549,17 @@
         },
 
         /**
+         * Close the panel if it is open, exactly as its own close button would
+         * (including the "remember this chat?" prompt). Used by the Article
+         * view's distraction-free mode.
+         */
+        close() {
+            const panel = document.getElementById('ai-panel');
+            if (!panel || panel.classList.contains('hidden')) return;
+            _closePanel();
+        },
+
+        /**
          * Reset panel state when the editor opens/reinitialises.
          * Called by app.js from openEditorScreen() after initTinyMCE().
          */

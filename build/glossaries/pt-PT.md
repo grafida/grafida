@@ -177,3 +177,4 @@ Proper nouns kept as-is: Grafida, Joomla!, API, Markdown, HTML, TinyMCE.
 | screen reader | leitor de ecrã | Software de leitura de ecrã; anuncia também os caracteres invisíveis — a razão de acessibilidade desta definição. |
 | general (settings tab) | Geral | Settings-screen tab for app-wide basics (language, display mode). GRAFIDA_LBL_SETTINGS_TAB_GENERAL. |
 | advanced (settings tab) | Avançado | Settings-screen tab for metadata cache, debug and local storage. GRAFIDA_LBL_SETTINGS_TAB_ADVANCED. |
+| distraction-free mode | Modo sem distrações | Article view mode hiding everything but the editor. GRAFIDA_BTN_DISTRACTION_FREE. |

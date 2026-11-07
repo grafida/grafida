@@ -184,3 +184,4 @@ Proper nouns kept as-is: Grafida, Joomla!, API, Markdown, HTML, TinyMCE.
 | screen reader | αναγνώστης οθόνης | Λογισμικό ανάγνωσης οθόνης· εκφωνεί και τους αόρατους χαρακτήρες — ο λόγος προσβασιμότητας πίσω από τη ρύθμιση. |
 | general (settings tab) | Γενικά | Settings-screen tab for app-wide basics (language, display mode). GRAFIDA_LBL_SETTINGS_TAB_GENERAL. |
 | advanced (settings tab) | Για προχωρημένους | Settings-screen tab for metadata cache, debug and local storage. GRAFIDA_LBL_SETTINGS_TAB_ADVANCED. |
+| distraction-free mode | Λειτουργία χωρίς περισπασμούς | Article view mode hiding everything but the editor. GRAFIDA_BTN_DISTRACTION_FREE. |

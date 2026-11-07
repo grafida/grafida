@@ -183,3 +183,4 @@ I nomi propri non si traducono: Grafida, Joomla!, API, Markdown, HTML, TinyMCE.
 | screen reader | screen reader | Software di lettura dello schermo; annuncia anche i caratteri invisibili — la ragione di accessibilità di questa impostazione. |
 | general (settings tab) | Generale | Settings-screen tab for app-wide basics (language, display mode). GRAFIDA_LBL_SETTINGS_TAB_GENERAL. |
 | advanced (settings tab) | Avanzate | Settings-screen tab for metadata cache, debug and local storage. GRAFIDA_LBL_SETTINGS_TAB_ADVANCED. |
+| distraction-free mode | Modalità senza distrazioni | Article view mode hiding everything but the editor. GRAFIDA_BTN_DISTRACTION_FREE. |
