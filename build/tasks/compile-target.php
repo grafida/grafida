@@ -237,4 +237,33 @@ $command = \sprintf(
 
 @\unlink($tempFile);
 
+// ---------------------------------------------------------------------------
+// gh-79: patch the copied Linux libboson so a boson:// POST does not abort
+// ---------------------------------------------------------------------------
+// The compiler copies the prebuilt library verbatim from vendor/ into each output
+// dir; we patch that copy (never vendor/) — see build/tasks/patch-libboson.php.
+// A library we do not recognise fails the build rather than shipping a crash.
+if ($exitCode === 0 && !$packOnly)
+{
+    require_once __DIR__ . '/patch-libboson.php';
+
+    foreach ($json['target'] as $target)
+    {
+        if (($target['type'] ?? '') !== 'linux')
+        {
+            continue;
+        }
+
+        $isArm   = ($target['arch'] ?? '') === 'arm64';
+        $library = $root . '/build/linux/' . ($isArm ? 'aarch64' : 'amd64')
+            . '/libboson-linux-' . ($isArm ? 'aarch64' : 'x86_64') . '.so';
+
+        if (($error = grafidaPatchLibboson($library)) !== null)
+        {
+            \fwrite(\STDERR, "ERROR: {$error}\n");
+            exit(1);
+        }
+    }
+}
+
 exit($exitCode);

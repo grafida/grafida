@@ -7,6 +7,7 @@ Grafida 1.0
 ~ Documentation: how Authors can use Grafida on Joomla 5.4.8/6.1.3+ without back-end access
 ~ `phing git` packs the application PHAR once instead of once per platform
 ~ The documentation is published to Grafida.app over SFTP, replacing the copy into a sibling site repository
+# [HIGH] Linux: the app crashed on the first click that saved anything, e.g. saving a site or switching the theme (gh-79)
 # [HIGH] Clicking a sidebar menu item while editing an article discarded unsaved changes without asking (gh-80)
 # [HIGH] Publishing an article with a tag that did not exist on the site yet failed with "Invalid field: Parent"
 # [MEDIUM] Users without Edit State, such as Authors, got HTTP 500 updating an article that was ever published

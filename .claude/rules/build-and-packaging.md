@@ -74,6 +74,17 @@ warn+skip), but a failing compile or a genuine packaging-tool error is fatal. Pi
 - Linux (amd64+arm64): `scripts/make-linux-tarball.sh <arch>` builds a `.tar.gz` of the per-arch
   output dir (binary + `libboson-linux-*.so` + `assets/`) plus the icon, `grafida.desktop`, and
   `build/linux-install.sh` (renamed `install.sh`) — a per-user XDG desktop-integration installer.
+  ⚠️ **The shipped `libboson-linux-*.so` is binary-patched (gh-79).** The prebuilt library reads a
+  `boson://` request body with `g_input_stream_read_bytes(stream, G_MAXSSIZE, …)`, which `g_malloc`s
+  9223372036854775807 bytes up front, so on WebKitGTK *every POST with a body* aborts the process
+  (saucer/saucer#57, fixed upstream but never rebuilt into boson-php/saucer; Boson is unmaintained).
+  `compile-target.php` runs `build/tasks/patch-libboson.php` on each Linux output dir's copy after a
+  successful compile (never on `vendor/`), rewriting the one immediate to 64 MiB (x86_64 `movabs`,
+  aarch64 `movz`). It stays a single `read()`, which is enough only because every internal API POST
+  is one `JSON.stringify()`d string — **do not start POSTing a `Blob`/`FormData` to `boson://`**
+  without revisiting it. Each library is pinned by SHA-256 before and after, so a changed library
+  **fails the build**: disassemble `saucer::scheme::request::content()` — a chunked loop means the
+  bug is fixed and the entry can go, otherwise re-derive offset + hashes.
 - Windows (amd64): `scripts/make-windows-installer.sh` compiles `build/windows-installer.nsi` with
   **NSIS** `makensis`, which runs natively on macOS/Linux (no Wine/Docker/Windows) →
   `Grafida-<v>-windows-amd64-Setup.exe` (per-user install in `%LOCALAPPDATA%\Programs\Grafida`).

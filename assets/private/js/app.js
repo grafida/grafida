@@ -681,6 +681,9 @@ async function apiFetch(method, path, body = null) {
         cache: 'no-store',
     };
     if (body !== null) {
+        // Keep this a single string: the patched Linux libboson reads a request body
+        // in ONE read() (gh-79, build/tasks/patch-libboson.php); a Blob/FormData body
+        // could arrive truncated.
         opts.body = JSON.stringify(body);
     }
     netActivityCount++;
