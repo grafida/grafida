@@ -144,6 +144,15 @@ the editor's own menu instead.
 > the languages enabled in that list are detected. Windows and Linux likewise defer to their own
 > spell-check configuration.
 
+> [!TIP]
+> **On Linux, spell checking needs a dictionary for each language you write in.** Grafida uses the
+> system's Hunspell dictionaries, and a minimal installation may not have one for your language, in
+> which case nothing is underlined at all. Install the dictionary from your distribution, then
+> restart Grafida. For English (United States), for example: `sudo apt install hunspell-en-us` on
+> Debian and Ubuntu, `sudo dnf install hunspell-en-US` on Fedora, or `sudo pacman -S
+> hunspell-en_us` on Arch. Other languages follow the same pattern, such as `hunspell-en-gb` or
+> `hunspell-de`; search your package manager for `hunspell` to find yours.
+
 Spell checking can be turned off in [Settings](Settings). Turning it back on only marks text you
 edit afterwards, not the text already on screen — that is a limitation of the underlying web view.
 
