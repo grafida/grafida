@@ -38,7 +38,7 @@ patched runtime works identically on Linux/Windows and in unsigned dev builds.
 ## The moving parts
 
 ```
-nikosdion/phpmicro (branch sibling-phar)        ← the C patch lives here
+grafida/phpmicro (branch sibling-phar)          ← the C patch lives here
   └─ .github/workflows/build-sfx.yml            ← CI: builds micro.sfx per platform
        │  (stock static-php-cli, pointed at the repo itself via -L)
        ▼
@@ -133,7 +133,7 @@ Key properties:
   anyway.
 * **Why not upstream the patch?** Deliberately deferred until battle-tested.
   When the time comes: the patch is `php_micro_fileinfo.c` +
-  `php_micro_hooks.c` (the `MICRO_TRACE_OPEN` aid) on `nikosdion/phpmicro`;
+  `php_micro_hooks.c` (the `MICRO_TRACE_OPEN` aid) on `grafida/phpmicro`;
   candidates are a PR to `static-php/phpmicro` (and/or `dixyes/phpmicro`), and
   pointing Boson at it. If upstream ever ships an equivalent (or Boson emits a
   signable layout natively), the fork, the CI, `fetch-sfx.sh` and the split

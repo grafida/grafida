@@ -237,7 +237,7 @@ maintenance playbook (PHP/Boson bumps, fork upkeep, troubleshooting) in
 
 1. **Get the patched `micro.sfx`.** The normal way is to download the CI-built
    binaries — GitHub Actions on the
-   [`nikosdion/phpmicro`](https://github.com/nikosdion/phpmicro) fork
+   [`grafida/phpmicro`](https://github.com/grafida/phpmicro) fork
    (workflow `build-sfx.yml`, branch **`sibling-phar`**) builds them for macOS
    arm64 + x86_64 on every push and publishes them to the rolling
    **`sfx-latest`** release:
@@ -259,7 +259,7 @@ maintenance playbook (PHP/Boson bumps, fork upkeep, troubleshooting) in
    bin/spc doctor --auto-fix
    EXTS="ctype,curl,dom,ffi,filter,iconv,libxml,mbstring,opcache,openssl,pdo,pdo_sqlite,phar,shmop,sockets,sodium,sqlite3,xml,zlib"
    bin/spc download --with-php=8.4 --for-extensions="$EXTS" \
-     -G "php-micro:sibling-phar:https://github.com/nikosdion/phpmicro.git"
+     -G "php-micro:sibling-phar:https://github.com/grafida/phpmicro.git"
    bin/spc build "$EXTS" --build-micro
    ```
 

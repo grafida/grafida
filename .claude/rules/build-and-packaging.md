@@ -49,7 +49,7 @@ warn+skip), but a failing compile or a genuine packaging-tool error is fatal. Pi
   patched SFX runtime** — docs: `build/readme/01-macos-signing.md` (Apple setup + recipe +
   unsignability analysis), `02-signing-architecture.md` (architecture, why the fork exists,
   design decisions), `03-sfx-maintenance.md` (PHP/Boson bump playbook, troubleshooting): a
-  `micro.sfx` built with static-php-cli from the `nikosdion/phpmicro` fork's `sibling-phar`
+  `micro.sfx` built with static-php-cli from the `grafida/phpmicro` fork's `sibling-phar`
   branch (which adds an additive fallback — no appended payload → load `"<self>.phar"`, then
   `"../Resources/<self>.phar"`, realpath-canonicalised so the offset stream hooks keep
   matching) lives in the gitignored `build/sfx/<os>-<cpu>.standard.sfx`. **The fork's own

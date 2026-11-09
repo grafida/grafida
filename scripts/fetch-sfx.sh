@@ -6,7 +6,7 @@
 #
 # Download the patched sibling-payload micro.sfx runtimes into build/sfx/.
 #
-# The binaries are built by GitHub Actions on the nikosdion/phpmicro fork
+# The binaries are built by GitHub Actions on the grafida/phpmicro fork
 # (branch sibling-phar, workflow build-sfx.yml) and published as assets of the
 # rolling "sfx-latest" release. With them in place, macOS builds become
 # Developer-ID signable/notarisable and Windows builds become Authenticode
@@ -24,7 +24,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-BASE_URL="https://github.com/nikosdion/phpmicro/releases/download/sfx-latest"
+BASE_URL="https://github.com/grafida/phpmicro/releases/download/sfx-latest"
 ASSETS=(
   macos-aarch64.standard.sfx
   macos-x86_64.standard.sfx

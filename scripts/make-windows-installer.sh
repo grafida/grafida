@@ -42,7 +42,7 @@ mkdir -p "$DIST"
 # broken signature" (Phar::mapPhar). So we must NEVER sign the combined binary.
 #
 # When grafida.exe was compiled against the patched sibling-payload SFX
-# (build/sfx/windows-x86_64.standard.sfx, from the nikosdion/phpmicro
+# (build/sfx/windows-x86_64.standard.sfx, from the grafida/phpmicro
 # `sibling-phar` fork — see build/readme/02-signing-architecture.md), we split
 # it, exactly like scripts/make-macos-app.sh does for the .app bundle: the clean
 # PE stub becomes grafida.exe and the payload becomes a sibling grafida.phar the

@@ -154,7 +154,7 @@
 	</target>
 
 	<!--
-	The patched sibling-payload micro.sfx runtimes (built by GitHub Actions on the nikosdion/phpmicro
+	The patched sibling-payload micro.sfx runtimes (built by GitHub Actions on the grafida/phpmicro
 	fork, rolling "sfx-latest" release) make macOS builds Developer-ID signable — see
 	build/readme/01-macos-signing.md. Download them into the gitignored build/sfx/ when missing.
 	Best-effort on purpose (failonerror=false): offline machines still build fine, they just fall

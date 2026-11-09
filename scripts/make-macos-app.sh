@@ -53,7 +53,7 @@ mkdir -p "$MACOS" "$RES"
 # PHP payload appended after the code signature. codesign rejects trailing data,
 # so such a combined binary can never be Developer-ID signed. When the binary
 # was compiled against the PATCHED SFX runtime (build/sfx/macos-<cpu>.standard.sfx,
-# built from the nikosdion/phpmicro `sibling-phar` fork — see
+# built from the grafida/phpmicro `sibling-phar` fork — see
 # build/readme/01-macos-signing.md) we can split it instead: the clean Mach-O
 # stub becomes the bundle executable and the payload moves to
 # Contents/Resources/grafida.phar, which the patched stub finds at run time

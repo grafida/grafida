@@ -6,7 +6,7 @@ macOS builds code-signable. Background and rationale:
 build recipe: [`01-macos-signing.md`](01-macos-signing.md).
 
 The binaries are built by GitHub Actions on
-[`nikosdion/phpmicro`](https://github.com/nikosdion/phpmicro) (branch
+[`grafida/phpmicro`](https://github.com/grafida/phpmicro) (branch
 `sibling-phar`, workflow `.github/workflows/build-sfx.yml`) and published to the
 rolling **`sfx-latest`** release: `macos-{aarch64,x86_64}.standard.sfx` (unix
 `build` matrix) and `windows-x86_64.standard.sfx` (separate `build-windows` job —

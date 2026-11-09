@@ -74,7 +74,7 @@ locally on the build machine.
 > `boson compile` produces a phpmicro self-executable whose PHP payload is appended *after* the
 > binary's code-signature region; Apple's `codesign` requires the signature to be the trailing
 > content of the file, so a stock build can never be signed. Grafida solves this with a patched
-> phpmicro SFX (the [`nikosdion/phpmicro`](https://github.com/nikosdion/phpmicro) `sibling-phar`
+> phpmicro SFX (the [`grafida/phpmicro`](https://github.com/grafida/phpmicro) `sibling-phar`
 > branch, built via static-php-cli and dropped into `build/sfx/`): the packaging script splits
 > the compiled binary into a clean, signable Mach-O stub plus a sibling
 > `Contents/Resources/grafida.phar` the stub loads at run time. Without the patched SFX in

@@ -238,7 +238,7 @@ overlay too — but that does not help; nothing appendable can survive after a P
 This is the same trailing-data problem macOS has, and it has the same cure (see
 [`02-signing-architecture.md`](02-signing-architecture.md)). When `grafida.exe` was compiled against
 the patched sibling-payload SFX (`build/sfx/windows-x86_64.standard.sfx`, from the
-`nikosdion/phpmicro` `sibling-phar` fork — fetched by `scripts/fetch-sfx.sh`),
+`grafida/phpmicro` `sibling-phar` fork — fetched by `scripts/fetch-sfx.sh`),
 `scripts/make-windows-installer.sh` **splits** it into a clean PE stub (`grafida.exe`) plus a sibling
 `grafida.phar` — using the split offset from `build/tasks/pe-sfxsize.php` — exactly as
 `make-macos-app.sh` splits the `.app`. The patched stub loads `grafida.phar` from its own directory
