@@ -134,6 +134,42 @@ warn+skip), but a failing compile or a genuine packaging-tool error is fatal. Pi
   a fallback only when FFI is unavailable.
 - PHAR: `scripts/make-phar-dist.sh` copies the compiler's `build/phar/grafida.phar` to `Grafida-<v>.phar`.
 
+## Native-shell Linux tarball (experimental, gh-86)
+
+`composer build:shell-linux [-- amd64|arm64]` / Phing `package-shell-linux-x86|-arm` →
+`scripts/make-shell-linux-tarball.sh` → `vendor/bin/shell-packager linux-tarball` over
+**`shell-package.json`** (repo root, beside `shell.json`, which names everything: `id`, `title`,
+`worker.binary`). It stamps `App::VERSION` first (the PHAR carries `App.php`) and sets
+`SOURCE_DATE_EPOCH` to the commit time, so **one commit builds one byte-identical tarball**. Output:
+`build/dist/Grafida-<v>-linux-<arch>-shell-preview.tar.gz` + `.sha256`. ⚠️ **It must never become a
+dependency of `package`/`all`/`release`**: release builds stay on Boson until the switch-over (gh-82).
+
+- **Pins:** `shell-package.json`'s `runtimes` pin the shell + launcher (a grafida/shell release tag)
+  and the SFX (an **immutable** grafida/phpmicro `sfx-<YYYYMMDD>.<run>` release, never the rolling
+  `sfx-latest`) by per-arch SHA-256; a mismatch is fatal. To bump one: take the new release's
+  `.sha256` assets, update the URL and both hashes, rebuild. Downloads are cached in
+  `~/.cache/grafida-shell-packager`, **never `build/sfx/`**: `compile-target.php` injects any
+  `build/sfx/linux-*.standard.sfx` into the Boson Linux build.
+- **The Linux SFX links glibc dynamically** (2.35 floor, = the shell's), everything else static: musl
+  has no NSS, so `.local`/systemd-resolved names would not resolve for sites or local AI servers.
+- **The PHAR** is `bin/worker.php` + `src`, `assets/private|public`, `docs`, `language`,
+  `storage/migrations`, `src/Ai/resources` and the `--no-dev` vendor `*.php`: 1,690 files against the
+  Boson PHAR's 4,915. Its ini block sets `memory_limit=1G`, because a body at `shell.json`'s
+  `maxBodyBytes` (128 MiB) peaks at ~600 MiB RSS (the body, the decoded JSON string, the decoded bytes,
+  and `getimagesizefromstring()`'s copy); 512M died in `ImageInfo`. Keep the two in step:
+  `tests/Pipe/PackagedWorkerTest::testABodyAtTheLimitFitsInMemory` pushes a body at the limit.
+- **shell-packager stays out of the Boson PHAR** through `boson.json`'s `not-directory`. ⚠️ Box
+  resolves those **relative to the finder's `in` directory (`vendor/`)**, so the working entries are
+  `grafida/shell-packager` and `seld/phar-utils`; the old `vendor/boson-php/compiler` entry matches
+  nothing, and the Boson PHAR has always carried the dev tools (PHPUnit, php-cs-fixer, PHPStan, the
+  compiler). That is left alone until the switch-over, since changing it changes what ships. A new
+  dev dependency must be excluded the same way, verified by listing the packed PHAR before and after.
+- **Testing a packaged build:** `GRAFIDA_PIPE_WORKER=<extracted>/grafida/grafida-worker composer
+  test:pipe` runs the handshake, smoke and conformance tests against it, plus
+  `PackagedWorkerTest` (Help from `phar://` docs, the `Resources::base()` extraction, a body at the
+  limit). The shell-packager build itself runs the worker before writing (ini probe + `ready`) on a
+  Linux host of the same arch.
+
 **⚠️ The minimum macOS version is set by the vendored library, not by us.** `boson-php/saucer`
 ships a prebuilt `libboson-darwin-universal.dylib` which `boson compile` copies verbatim into
 every macOS target (`vendor/boson-php/compiler/src/Target/BuiltinTarget.php` — there is no `sfx`-style

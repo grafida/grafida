@@ -16,6 +16,10 @@
         {
             "type": "vcs",
             "url": "https://github.com/grafida/shell-php"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/grafida/shell-packager"
         }
     ],
     "require": {
@@ -37,6 +41,7 @@
     "require-dev": {
         "boson-php/compiler": "^0.19",
         "friendsofphp/php-cs-fixer": "^3.88",
+        "grafida/shell-packager": "0.1.0",
         "phpstan/phpstan": "^2.1",
         "phpstan/phpstan-strict-rules": "^2.0",
         "phpunit/phpunit": "^12.4",
@@ -69,6 +74,7 @@
         "docs:publish": "bash scripts/upload-docs.sh",
         "build:git": "phing git",
         "build:package": "phing package",
+        "build:shell-linux": "bash scripts/make-shell-linux-tarball.sh",
         "start": "phing run",
         "test": ["@test:unit", "@test:integration", "@test:feature", "@test:pipe", "@test:js"],
         "test:unit": "phpunit --testsuite=unit --testdox",
@@ -92,6 +98,7 @@
         "docs:publish": "Upload docs/ — the Help pages, docs/images/ and _manifest.json — to the Grafida.app Documentation section over SFTP. Configured by docs.sftp.* in build/build.properties; see build/readme/05-documentation-publishing.md. Deliberately NOT a release step. Pass --dry-run to preview the transfer.",
         "build:git": "Build the native binaries for every platform via Phing (the `git` target) — binaries only, no installers/DMG packaging. Requires Phing on the PATH.",
         "build:package": "Build AND package the application for every platform via Phing (the `package` target) — macOS .app/.dmg, Linux .tar.gz, Windows installer/zip, and the PHAR into build/dist/. Requires Phing on the PATH.",
+        "build:shell-linux": "EXPERIMENTAL (gh-86): build the native-shell Linux tarballs (amd64 + arm64) with grafida/shell-packager into build/dist/Grafida-<v>-linux-<arch>-shell-preview.tar.gz. Not part of build, build:package or the release, which still ship Boson. Pass an arch to build one: `composer build:shell-linux -- amd64`.",
         "start": "Compile the binary for THIS host (the matching git-* target) and launch it, via the Phing `run` target. Requires Phing on the PATH.",
         "test:js": "Run the JavaScript unit tests (node's built-in runner; node is already a build prerequisite). Covers assets/private/js/ai/providers.js — the AI transport — which PHPUnit cannot reach because it runs in the SPA.",
         "shell:dev": "Run Grafida in the native shell from this source tree (grafida/grafida#85): builds ../shell (a sibling clone of grafida/shell) and starts it with `--dev .`, so the worker is `php bin/worker.php` and a PHP edit takes effect when the worker restarts. Add `-- --automation` to open the debug automation channel. Needs Rust and the WebKitGTK 4.1 development packages.",

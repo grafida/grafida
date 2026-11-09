@@ -447,6 +447,25 @@
 		</exec>
 	</target>
 
+	<!--
+	EXPERIMENTAL (gh-86): the Linux tarball for the native shell, built by grafida/shell-packager from
+	shell-package.json. Deliberately NOT a dependency of `package`, `all` or `release`, which keep
+	shipping Boson until the switch-over (gh-82 Phase 6); it needs no Boson compile either.
+	-->
+	<target name="package-shell-linux-x86" depends="prepare" description="EXPERIMENTAL: the native-shell Linux (x64) .tar.gz">
+		<exec executable="bash" dir="${dirs.root}" passthru="true" checkreturn="true">
+			<arg value="scripts/make-shell-linux-tarball.sh" />
+			<arg value="amd64" />
+		</exec>
+	</target>
+
+	<target name="package-shell-linux-arm" depends="prepare" description="EXPERIMENTAL: the native-shell Linux (ARM64) .tar.gz">
+		<exec executable="bash" dir="${dirs.root}" passthru="true" checkreturn="true">
+			<arg value="scripts/make-shell-linux-tarball.sh" />
+			<arg value="arm64" />
+		</exec>
+	</target>
+
 	<target name="package-phar" depends="git-phar" description="Package the cross-platform PHAR">
 		<exec executable="bash" dir="${dirs.root}" passthru="true" checkreturn="true">
 			<arg value="scripts/make-phar-dist.sh" />

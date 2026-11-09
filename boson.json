@@ -55,7 +55,11 @@
             },
             {
                 "directory": "vendor",
-                "not-directory": "vendor/boson-php/compiler",
+                "not-directory": [
+                    "vendor/boson-php/compiler",
+                    "grafida/shell-packager",
+                    "seld/phar-utils"
+                ],
                 "name": "*.php",
                 "not-name": [
                     "*Test.php",

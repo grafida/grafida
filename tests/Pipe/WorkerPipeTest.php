@@ -76,8 +76,19 @@ final class WorkerPipeTest extends TestCase
         self::$home = null;
     }
 
+    /**
+     * `bin/worker.php` on this PHP, or the packaged worker named by `GRAFIDA_PIPE_WORKER` (gh-86:
+     * the SFX stub of an extracted shell tarball), in which case the same handshake, smoke and
+     * conformance tests run against what ships. {@see PackagedWorkerTest} has the packaged-only ones.
+     */
     private static function realWorker(): WorkerProcess
     {
+        $packaged = getenv('GRAFIDA_PIPE_WORKER');
+
+        if (\is_string($packaged) && $packaged !== '') {
+            return new WorkerProcess([$packaged], \dirname($packaged), self::isolatedEnv(), 30.0);
+        }
+
         return new WorkerProcess([\PHP_BINARY, \dirname(__DIR__, 2) . '/bin/worker.php'], \dirname(__DIR__, 2), self::isolatedEnv());
     }
 

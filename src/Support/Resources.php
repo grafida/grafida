@@ -78,9 +78,14 @@ final class Resources
     }
 
     /**
-     * Copies a directory tree from $source (which may be a phar:// URL) to the
-     * real-filesystem $destination, overwriting files whose size differs. Small
-     * and idempotent: it runs on every launch.
+     * Makes the real-filesystem $destination an exact copy of $source (which may be a phar:// URL).
+     * Idempotent and cheap enough to run on every launch (a few hundred KiB of language files and
+     * migrations).
+     *
+     * A file is rewritten when its **contents** differ, not merely its size: an upgrade that fixes a
+     * language string without changing its length must still reach the extracted copy (gh-86). And
+     * what the new version no longer ships is removed, or a dropped language would stay selectable
+     * (LanguageService lists whatever is in `language/`). $destination belongs to this method alone.
      */
     private static function sync(string $source, string $destination): void
     {
@@ -92,6 +97,7 @@ final class Resources
             @mkdir($destination, 0700, true);
         }
 
+        $shipped  = [];
         $iterator = new \RecursiveIteratorIterator(
             new \RecursiveDirectoryIterator($source, \FilesystemIterator::SKIP_DOTS),
             \RecursiveIteratorIterator::SELF_FIRST
@@ -103,6 +109,8 @@ final class Resources
             $relative = str_replace('/', \DIRECTORY_SEPARATOR, $relative);
             $dest     = $destination . \DIRECTORY_SEPARATOR . $relative;
 
+            $shipped[$relative] = true;
+
             if ($item->isDir()) {
                 if (!is_dir($dest)) {
                     @mkdir($dest, 0700, true);
@@ -111,14 +119,30 @@ final class Resources
                 continue;
             }
 
-            if (is_file($dest) && filesize($dest) === $item->getSize()) {
+            $contents = @file_get_contents($item->getPathname());
+
+            if ($contents === false) {
+                continue;
+            }
+
+            if (is_file($dest) && filesize($dest) === \strlen($contents) && @file_get_contents($dest) === $contents) {
                 continue; // already extracted, unchanged
             }
 
-            $contents = @file_get_contents($item->getPathname());
+            @file_put_contents($dest, $contents);
+        }
 
-            if ($contents !== false) {
-                @file_put_contents($dest, $contents);
+        $extracted = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($destination, \FilesystemIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::CHILD_FIRST
+        );
+
+        foreach ($extracted as $item) {
+            /** @var \SplFileInfo $item */
+            $relative = substr($item->getPathname(), \strlen($destination) + 1);
+
+            if (!isset($shipped[$relative])) {
+                $item->isDir() && !$item->isLink() ? @rmdir($item->getPathname()) : @unlink($item->getPathname());
             }
         }
     }

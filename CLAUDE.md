@@ -54,6 +54,19 @@ at the root on purpose: no Boson build bundles it. The shell's debug automation 
 is how the real window is driven from here; see grafida/shell's CLAUDE.md. Run it with
 `HOME`/`XDG_*` pointed at a throwaway directory unless you mean to use your own data.
 
+**Phase 3 (gh-86) packages it for Linux, experimentally**: `composer build:shell-linux` (Phing
+`package-shell-linux-x86|-arm`) runs **grafida/shell-packager** (a dev dependency pinned to an exact
+tag) over the repo-root **`shell-package.json`** and writes
+`build/dist/Grafida-<v>-linux-<arch>-shell-preview.tar.gz`. It is in no way part of `composer build`,
+`phing package` or `phing release`, which ship Boson until the switch-over. The tarball holds the
+static launcher (`grafida`), the shell (`grafida-shell`), the phpmicro SFX stub (`grafida-worker`)
+and its sibling `grafida-worker.phar` (an extra-INI block + a PHAR of `bin/worker.php` built from a
+`--no-dev` install), `shell.json`, `app.grafida.desktop` (named after the manifest `id`, which is the
+window's Wayland app_id), the icons and `install.sh`. There is no `assets/` beside it: the worker
+serves the SPA from inside the PHAR. Every binary is pinned by tag + SHA-256 in `shell-package.json`.
+`tests/Pipe` runs against a packaged worker with `GRAFIDA_PIPE_WORKER=…/grafida-worker`; the detail
+is in `.claude/rules/build-and-packaging.md`.
+
 Request flow: `index.php` → `Grafida\FrontController` → `Grafida\Application\Kernel` →
 either `Grafida\Http\ApiController` (paths under `/api/`) or a static asset / the SPA shell.
 **The kernel is a pure `Request → Response` function**, so the whole back-end is testable
@@ -556,7 +569,9 @@ the page read any file.
   Endpoints: `/api/ai/services[...]` (+ `/default`, `/resolved`), `/api/ai/tools[...]`,
   `/api/ai/system-prompt`, `/api/ai/proxy`, `/api/ai/render` (sanitise a reply for display — see the
   AI facts), `/api/ai/chats[...]`, `/api/drafts/{id}/chats`.
-- `src/Support/` — `Resources`/`Paths` (filesystem locations), `App` (app identity/legal
+- `src/Support/` — `Resources`/`Paths` (filesystem locations; inside a PHAR, `Resources::base()`
+  mirrors `language/` and `storage/migrations/` into the data dir on every launch, by **content**, and
+  removes what the build no longer ships, gh-86), `App` (app identity/legal
   metadata: name, `VERSION`, copyright, licence + FSF URL, the verbatim Joomla! trademark
   disclaimer — sent to the SPA in the `bootstrap` payload's `app` key), and `UrlOpener`
   (opens an external http(s) URL in the OS default browser; backs `POST /api/open-url`).

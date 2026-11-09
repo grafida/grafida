@@ -1,0 +1,62 @@
+{
+    "manifest": "shell.json",
+    "phar": {
+        "entrypoint": "bin/worker.php",
+        "include": [
+            {"directory": "bin", "name": "worker.php"},
+            {"directory": "src", "name": "*.php"},
+            {"directory": "src/Ai/resources"},
+            {"directory": "assets/private"},
+            {"directory": "assets/public"},
+            {"directory": "docs"},
+            {"directory": "language"},
+            {"directory": "storage/migrations"},
+            {"directory": "vendor", "name": "*.php", "notName": ["*Test.php", "*TestCase.php", ".phpstorm.meta.php"]}
+        ],
+        "ini": {
+            "memory_limit": "1G",
+            "display_errors": "stderr",
+            "opcache.enable": false,
+            "opcache.enable_cli": false
+        }
+    },
+    "runtimes": {
+        "shell": {
+            "url": "https://github.com/grafida/shell/releases/download/0.1.0/grafida-shell-linux-{arch}",
+            "sha256": {
+                "x86_64": "463e3ba328f88bb324e884be803a200e07772fe2717c66ef81c37f208029f8f4",
+                "aarch64": "cd521f8caa591835297f16f9a85095bac7166890767128879921a46ac5bc8174"
+            }
+        },
+        "launcher": {
+            "url": "https://github.com/grafida/shell/releases/download/0.1.0/grafida-launcher-linux-{arch}",
+            "sha256": {
+                "x86_64": "99e60fd7f09135abbe58d632dd77075922b6af63591f250bec5e836009da5e09",
+                "aarch64": "47117354302b2421b861eee0cb5177df8475337045f7190baa3ff11aeb7a7826"
+            }
+        },
+        "sfx": {
+            "url": "https://github.com/grafida/phpmicro/releases/download/sfx-20261109.16/linux-{arch}.standard.sfx",
+            "sha256": {
+                "x86_64": "45607f6142ab76333ccb80ebfc08d4412552b9e0cf43ae83c8a278057e17b1e4",
+                "aarch64": "cfefff8e185372c5264454d672df0e02a6e219a47a376a376b7dc62724caa242"
+            }
+        }
+    },
+    "linux": {
+        "name": "grafida",
+        "desktop": "assets/logo/grafida.desktop",
+        "icons": {
+            "16": "assets/logo/png/grafida-16.png",
+            "24": "assets/logo/png/grafida-24.png",
+            "32": "assets/logo/png/grafida-32.png",
+            "48": "assets/logo/png/grafida-48.png",
+            "64": "assets/logo/png/grafida-64.png",
+            "128": "assets/logo/png/grafida-128.png",
+            "256": "assets/logo/png/grafida-256.png",
+            "512": "assets/logo/png/grafida-512.png"
+        },
+        "files": {"LICENSE.txt": "LICENSE.txt"},
+        "output": "build/dist/Grafida-{version}-linux-{debarch}-shell-preview.tar.gz"
+    }
+}

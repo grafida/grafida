@@ -17,6 +17,33 @@ all three into the gitignored `build/sfx/` — automatically from the Phing
 `prepare-sfx` step and `scripts/build-all.sh`, best-effort, and it **never
 overwrites an existing file** unless you pass `--force`.
 
+## Linux runtimes (the native shell, gh-86)
+
+The same workflow's `build-linux` job builds `linux-{x86_64,aarch64}.standard.sfx` on
+`ubuntu-22.04` and `ubuntu-22.04-arm`. They are consumed only by the experimental native-shell
+tarball (`composer build:shell-linux`, through grafida/shell-packager), never by Boson:
+`fetch-sfx.sh` does not download them, and shell-packager caches them outside `build/sfx/`.
+
+- **glibc, linked dynamically (2.35 floor); everything else static.** A static musl SFX has no NSS,
+  so `.local` (mDNS), systemd-resolved and libvirt names would not resolve. Three settings are needed
+  together, each for a reason that is easy to undo by accident:
+  `SPC_TOOLCHAIN=StaticPHP\Toolchain\GccNativeToolchain` (with any `SPC_TARGET` set, static-php-cli
+  ignores `SPC_LIBC`, and its `config/env.ini` sets `SPC_TARGET=<arch>-linux-musl` by default),
+  `SPC_TARGET=native-native-gnu` (so the rest of static-php-cli treats the libc as glibc), and
+  `SPC_EXTRA_PHP_VARS=--enable-micro` (static-php-cli hard-codes `--enable-micro=all-static` on
+  Linux; the later value wins). Not the Zig toolchain's `gnu.2.35` target: phpmicro links libresolv
+  with `-Wl,-Bstatic,-lresolv,-Bdynamic`, which `zig cc` rejects.
+- `.github/scripts/check-linux-sfx.sh` gates publishing: only glibc and libgcc_s may be NEEDED,
+  with no symbol above GLIBC_2.35, and every payload mode must work: appended; sibling
+  `<self>.phar`; a PHAR behind an extra-INI block (`ini_get()` must read the value back); a
+  symlinked stub; NSS. Until gh-86 the sibling patch had never been smoke-tested on Linux.
+- **Every run also publishes an immutable `sfx-<YYYYMMDD>.<run>` release.** shell-packager
+  consumers pin one of those by SHA-256, never `sfx-latest`, which the next push overwrites.
+- **Dispatch a subset** (`gh workflow run build-sfx.yml --ref sibling-phar -f platforms=linux`) to
+  rebuild Linux alone. A full run rebuilds macOS and Windows against the newest PHP 8.4 patch
+  release, which changes what Boson's `release` ships. Commit a Linux-only workflow change with
+  `[skip ci]`, then dispatch.
+
 ## When Boson bumps its PHP version
 
 Boson's runtime PHP version and our SFX **must match the same minor** (the SFX
