@@ -185,6 +185,18 @@ Everything behind `index.php` speaks **grafida/shell-php**'s types: `Grafida\She
   `500` response, never an exit. Anything printed during a request goes to stderr as
   `[stray-output]` and never into the stream. `ApiController` already turns exceptions into JSON
   errors, so the worker's own 500 is a last resort.
+- **Files picked in the shell's dialogs arrive as `X-Shell-File-Path` (gh-85), read through
+  `Grafida\Http\ShellFile`.** `ShellFile::path($request)` is the picked file;
+  `ShellFile::directory($request, $body)` is an export's destination, the header winning over the
+  body's `directory` (which is all Boson can send). The route closures pass it in, so the handler
+  methods (`openFile()`, `exportDraft()`, `exportRequestLog()`, `saveLocalMediaToDisk()`) keep their
+  Boson-era behaviour for a request without the header, 503-without-a-dialog included. The header is
+  trustworthy only because the shell strips whatever the page sent; ⚠️ **under Boson nothing would, so
+  `BosonBridge::headers()` drops `x-shell-file-path`, `x-shell-file` and `x-shell-clipboard`** (pinned by
+  `BosonBridgeTest::testThePageCannotNameAFileUnderBoson`). `tests/Feature/ShellFileTest.php` covers the
+  header path; the pipe differential has a scenario for it (a step's optional fourth element is its
+  request headers). The clipboard works the same way (`Grafida\Http\ShellClipboard`): the shell
+  reads it and sends the text as the body of `GET /api/clipboard/text` with `X-Shell-Clipboard: text`.
 - **`tests/Pipe/` (`composer test:pipe`)** is the proof. It plays every grafida/shell conformance
   fixture (shipped inside shell-php, `Grafida\Shell\Testing\Fixtures`) into a real
   `bin/worker.php`. It also runs a **differential**: Feature-suite request sequences answered by the

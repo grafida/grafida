@@ -119,11 +119,23 @@ final class DisplayModeService
     }
 
     /**
-     * GNOME/freedesktop expose the preference via gsettings; a `color-scheme`
-     * of "prefer-dark" (or a dark GTK theme name) means dark mode.
+     * Linux: the desktop's own answer first, then GNOME's settings.
+     *
+     * The freedesktop **appearance portal** (`org.freedesktop.appearance` `color-scheme`: 1 = prefer
+     * dark, 2 = prefer light, 0 = no preference) is what KDE Plasma, GNOME and the other desktops
+     * publish, and what Firefox and GTK 4 apps follow. GNOME's gsettings is only a fallback: KDE never
+     * writes it, so on Plasma it stays at `default`/`Adwaita` whatever the global theme, and reading it
+     * first made "auto" ignore a switch to Breeze Dark. Public for the tests; the OS dispatch in
+     * {@see self::systemPrefersDark()} would otherwise hide it on a non-Linux host.
      */
-    private function linuxPrefersDark(): ?bool
+    public function linuxPrefersDark(): ?bool
     {
+        $portal = $this->portalPrefersDark();
+
+        if ($portal !== null) {
+            return $portal;
+        }
+
         [$code, $stdout] = $this->runner->run([
             'gsettings', 'get', 'org.gnome.desktop.interface', 'color-scheme',
         ]);
@@ -146,6 +158,35 @@ final class DisplayModeService
 
         if ($code === 0) {
             return str_contains(strtolower(trim($stdout)), 'dark');
+        }
+
+        return null;
+    }
+
+    /**
+     * The appearance portal's `color-scheme`, through `gdbus` (part of GLib, so present wherever a
+     * desktop is). `ReadOne` is the current method; portals older than 1.15 only have the deprecated
+     * `Read`, which wraps the value in one more variant. Null for "no preference", no portal or no
+     * gdbus, so the caller falls back to gsettings.
+     */
+    private function portalPrefersDark(): ?bool
+    {
+        foreach (['ReadOne', 'Read'] as $method) {
+            [$code, $stdout] = $this->runner->run([
+                'gdbus', 'call', '--session', '--timeout', '2',
+                '--dest', 'org.freedesktop.portal.Desktop',
+                '--object-path', '/org/freedesktop/portal/desktop',
+                '--method', 'org.freedesktop.portal.Settings.' . $method,
+                'org.freedesktop.appearance', 'color-scheme',
+            ]);
+
+            if ($code === 0 && preg_match('/uint32\s+(\d+)/', $stdout, $m) === 1) {
+                return match ((int) $m[1]) {
+                    1       => true,
+                    2       => false,
+                    default => null,
+                };
+            }
         }
 
         return null;

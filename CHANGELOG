@@ -2,6 +2,7 @@ Grafida 1.0
 ================================================================================
 + Distraction-free mode in the article editor: hides the sidebars, toolbar and title so only the editor remains
 + `bin/worker.php`: the back-end as a stdio worker for the upcoming native shell, tested over real pipes (gh-84)
++ Runs in the native shell on Linux in dev mode (`composer shell:dev`); file dialogs hand out tokens, not paths (gh-85)
 ~ Settings is split into General, Editor, AI Assistant and Advanced tabs; long explanations fold away
 ~ Connection test no longer tries the never-valid /index.php/api URL
 ~ The Windows build no longer enables opcache, matching every other platform
@@ -14,6 +15,10 @@ Grafida 1.0
 # [HIGH] Clicking a sidebar menu item while editing an article discarded unsaved changes without asking (gh-80)
 # [HIGH] Publishing an article with a tag that did not exist on the site yet failed with "Invalid field: Parent"
 # [MEDIUM] Users without Edit State, such as Authors, got HTTP 500 updating an article that was ever published
+# [MEDIUM] Linux: the Automatic display mode ignored KDE Plasma's dark theme
+# [MEDIUM] Changing an AI tool, such as its AI service, only took effect after restarting Grafida
+# [MEDIUM] An AI tool pointed at a specific AI service could not be switched back to the default one
+# [MEDIUM] Leaving the article did not stop an AI reply in progress
 
 Grafida 0.3
 ================================================================================

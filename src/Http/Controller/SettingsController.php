@@ -24,6 +24,8 @@ use Grafida\Editor\SpellCheckService;
 use Grafida\Http\Json;
 use Grafida\Http\RouteContext;
 use Grafida\Http\Router;
+use Grafida\Http\ShellClipboard;
+use Grafida\Http\ShellFile;
 use Grafida\I18n\LanguageService;
 use Grafida\I18n\UiStrings;
 use Grafida\Markdown\MarkdownService;
@@ -80,14 +82,14 @@ final class SettingsController extends Controller
         $router->add('POST', '/api/settings/metadata-cache', fn (RouteContext $ctx): Response => $this->setMetadataCache($ctx->body()));
         $router->add('GET', '/api/request-log', fn (RouteContext $ctx): Response => $this->requestLog());
         $router->add('POST', '/api/request-log/clear', fn (RouteContext $ctx): Response => $this->clearRequestLog());
-        $router->add('POST', '/api/request-log/export', fn (RouteContext $ctx): Response => $this->exportRequestLog($ctx->body()));
+        $router->add('POST', '/api/request-log/export', fn (RouteContext $ctx): Response => $this->exportRequestLog(['directory' => ShellFile::directory($ctx->request(), $ctx->body())] + $ctx->body()));
         $router->add('GET', '/api/update', fn (RouteContext $ctx): Response => $this->updateStatus());
         $router->add('GET', '/api/settings/storage', fn (RouteContext $ctx): Response => $this->storageInfo());
         $router->add('POST', '/api/settings/storage/open', fn (RouteContext $ctx): Response => $this->openStorageFolder());
         $router->add('POST', '/api/settings/storage/reset', fn (RouteContext $ctx): Response => $this->resetStorage());
         $router->add('POST', '/api/open-url', fn (RouteContext $ctx): Response => $this->openUrl($ctx->body()));
-        $router->add('GET', '/api/clipboard/text', fn (RouteContext $ctx): Response => $this->clipboardText());
-        $router->add('POST', '/api/dialog/open-file', fn (RouteContext $ctx): Response => $this->openFile($ctx->body()));
+        $router->add('GET', '/api/clipboard/text', fn (RouteContext $ctx): Response => $this->clipboardText(ShellClipboard::text($ctx->request())));
+        $router->add('POST', '/api/dialog/open-file', fn (RouteContext $ctx): Response => $this->openFile($ctx->body(), ShellFile::path($ctx->request())));
         $router->add('POST', '/api/dialog/select-directory', fn (RouteContext $ctx): Response => $this->selectDirectory($ctx->body()));
     }
 
@@ -106,9 +108,10 @@ final class SettingsController extends Controller
      * invisible mark gets into an article, and "paste as plain text" is a
      * request for the words, not for what is hiding between them.
      */
-    public function clipboardText(): Response
+    public function clipboardText(?string $shellText = null): Response
     {
-        $text = $this->clipboard->readText();
+        // Under the native shell the shell has already read it (ShellClipboard).
+        $text = $shellText !== null ? ClipboardService::normaliseLineEndings($shellText) : $this->clipboard->readText();
 
         if ($text === null) {
             return Json::error('Could not read the clipboard', 500);
@@ -126,33 +129,36 @@ final class SettingsController extends Controller
     }
 
     /**
-     * Open a native OS file-picker and return the chosen file's bytes.
+     * Return the bytes of a file the user picked in a native dialog.
      *
-     * Boson's webview (WKWebView on macOS, WebKitGTK on Linux) does not wire up
-     * the HTML `<input type="file">` open-panel callback, so an in-page file
-     * input never opens a dialog. We instead drive the OS picker through Boson's
-     * native Dialog API and hand the file back to the SPA as base64, which then
-     * feeds it into the normal media-upload / Markdown-import flow.
+     * Two hosts, one answer (`{name, mime, dataBase64}`). Under the native shell the SPA has already
+     * run the shell's own dialog and hands us its token; the shell resolves it and forwards the path
+     * as `X-Shell-File-Path` ({@see ShellFile}), which arrives here as `$shellPath`. Under Boson,
+     * whose webview does not wire up `<input type="file">` (WKWebView on macOS, WebKitGTK on Linux),
+     * we drive the OS picker through Boson's Dialog API ourselves. Either way the SPA feeds the file
+     * into the normal media-upload / Markdown-import flow.
      *
      * @param array<string, mixed> $body
      */
-    public function openFile(array $body): Response
+    public function openFile(array $body, ?string $shellPath = null): Response
     {
-        if ($this->dialog === null) {
+        if ($shellPath !== null) {
+            $path = $shellPath;
+        } elseif ($this->dialog === null) {
             return Json::error('Native file dialog is unavailable', 503);
-        }
+        } else {
+            $filter = match ($this->str($body, 'filter', 'any')) {
+                'image'    => ['*.png', '*.jpg', '*.jpeg', '*.gif', '*.webp', '*.svg', '*.bmp', '*.avif'],
+                'markdown' => ['*.md', '*.markdown', '*.txt'],
+                'grafida'  => ['*.grafida'],
+                default    => [],
+            };
 
-        $filter = match ($this->str($body, 'filter', 'any')) {
-            'image'    => ['*.png', '*.jpg', '*.jpeg', '*.gif', '*.webp', '*.svg', '*.bmp', '*.avif'],
-            'markdown' => ['*.md', '*.markdown', '*.txt'],
-            'grafida'  => ['*.grafida'],
-            default    => [],
-        };
+            $path = $this->dialog->selectFile(filter: $filter);
 
-        $path = $this->dialog->selectFile(filter: $filter);
-
-        if ($path === null || $path === '') {
-            return Json::ok(['cancelled' => true]);
+            if ($path === null || $path === '') {
+                return Json::ok(['cancelled' => true]);
+            }
         }
 
         $raw = @file_get_contents($path);

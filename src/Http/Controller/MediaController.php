@@ -15,6 +15,7 @@ use Grafida\Shell\Response;
 use Grafida\Http\Json;
 use Grafida\Http\RouteContext;
 use Grafida\Http\Router;
+use Grafida\Http\ShellFile;
 use Grafida\Http\SiteContext;
 use Grafida\Joomla\ApiClient;
 use Grafida\Media\ImageInfo;
@@ -82,7 +83,7 @@ final class MediaController extends Controller
         $router->add('POST', '/api/media/{id}/rename', fn (RouteContext $ctx): Response => $this->renameLocalMedia($ctx->int('id'), $ctx->body()));
         $router->add('POST', '/api/media/{id}/content', fn (RouteContext $ctx): Response => $this->updateLocalMediaContent($ctx->int('id'), $ctx->body()));
         $router->add('GET', '/api/sites/{id}/local-media', fn (RouteContext $ctx): Response => $this->listLocalMedia($ctx->int('id')));
-        $router->add('POST', '/api/media/{id}/save-to-disk', fn (RouteContext $ctx): Response => $this->saveLocalMediaToDisk($ctx->int('id'), $ctx->body()));
+        $router->add('POST', '/api/media/{id}/save-to-disk', fn (RouteContext $ctx): Response => $this->saveLocalMediaToDisk($ctx->int('id'), ['directory' => ShellFile::directory($ctx->request(), $ctx->body())] + $ctx->body()));
     }
 
     /**

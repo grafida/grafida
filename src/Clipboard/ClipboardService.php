@@ -51,9 +51,18 @@ final class ClipboardService
             return null;
         }
 
-        // Normalise the line endings the platforms disagree about: TinyMCE's
-        // plain-text-to-HTML conversion splits on \n, and a stray \r survives
-        // it as a control character inside the pasted paragraph.
+        return self::normaliseLineEndings($text);
+    }
+
+    /**
+     * Normalise the line endings the platforms disagree about: TinyMCE's
+     * plain-text-to-HTML conversion splits on \n, and a stray \r survives
+     * it as a control character inside the pasted paragraph. Public because
+     * the native shell reads the clipboard itself and hands PHP the text
+     * ({@see \Grafida\Http\ShellClipboard}), which needs the same treatment.
+     */
+    public static function normaliseLineEndings(string $text): string
+    {
         return str_replace(["\r\n", "\r"], "\n", $text);
     }
 

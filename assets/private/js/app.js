@@ -667,10 +667,10 @@ function updateNetActivityIndicator() {
     if (ind) ind.classList.toggle('active', netActivityCount > 0);
 }
 
-async function apiFetch(method, path, body = null) {
+async function apiFetch(method, path, body = null, extraHeaders = null) {
     const opts = {
         method,
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', ...(extraHeaders || {}) },
         // The webview applies its ordinary HTTP cache to `boson://app/api/…`
         // GETs, and that cache is disk-backed and app-scoped: it outlives a
         // restart, and after a local-storage reset the new site is id 1 again,
@@ -715,6 +715,57 @@ async function apiFetch(method, path, body = null) {
     }
 }
 
+/**
+ * Stores the AI tools list from `GET /api/ai/tools`, keeping both copies in step: `aiAllTools` (the
+ * Settings screen, disabled tools included) and `aiTools` (the enabled ones, which the editor's AI
+ * tools menu and the panel run). Only refreshing the first is how a tool edit — its service, prompt,
+ * title or icon — used to take effect only after restarting the app.
+ */
+function setAiTools(tools) {
+    State.aiAllTools = tools;
+    State.aiTools = tools.filter((tool) => tool.enabled);
+}
+
+/**
+ * Whether the page is hosted by the native shell (grafida/grafida#85) rather than Boson.
+ *
+ * The two hosts pick files differently. Under Boson, PHP opens the OS dialog itself and answers with
+ * the file (`POST /api/dialog/open-file`) or the folder's path. Under the shell, the page opens the
+ * shell's own dialog (`/_native/dialog/*`, via `js/shell.js`), which answers with an opaque per-session
+ * **token**, never a path, and the page hands that token to PHP in the `X-Shell-File` header; the shell
+ * swaps it for the real path on the way. So script in the page can only ever name what the user
+ * picked. `GrafidaShell.available()` asks the shell once per page and remembers the answer; under
+ * Boson, `/_native/info` reaches PHP, which answers with the SPA page rather than the shell's JSON,
+ * so it resolves false and the old flow runs. `typeof` guards a build missing `js/shell.js`.
+ */
+function underShell() {
+    return typeof GrafidaShell !== 'undefined' ? GrafidaShell.available() : Promise.resolve(false);
+}
+
+/**
+ * The shell dialog's filters for `api.openFile(filter)`. Mirrors the patterns
+ * `SettingsController::openFile()` gives Boson's dialog; the label is the patterns themselves, so it
+ * needs no translation.
+ */
+const SHELL_FILE_FILTERS = {
+    image: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp', 'avif'],
+    markdown: ['md', 'markdown', 'txt'],
+    grafida: ['grafida'],
+};
+
+function shellFileFilters(filter) {
+    const extensions = SHELL_FILE_FILTERS[filter];
+    return extensions ? [{ name: extensions.map((e) => '*.' + e).join(' '), extensions }] : [];
+}
+
+/**
+ * Headers that hand a destination folder to an export endpoint: the shell's folder token when there
+ * is one (the body's `directory` is then empty, and PHP reads the path the shell resolved).
+ */
+function folderHeaders(dir) {
+    return dir && dir.token ? GrafidaShell.fileHeaders(dir.token) : null;
+}
+
 const api = {
     bootstrap: () => apiFetch('GET', '/api/bootstrap'),
     testConnection: (url, token) => apiFetch('POST', '/api/sites/test', { url, token }),
@@ -747,12 +798,28 @@ const api = {
     // required custom fields Grafida cannot edit, by sending back the values it
     // imported from the site for them (gh-59).
     publishDraft: (id, force = false) => apiFetch('POST', `/api/drafts/${id}/publish`, { force }),
-    exportDraft: (id, directory) => apiFetch('POST', `/api/drafts/${id}/export`, { directory }),
+    exportDraft: (id, dir) => apiFetch('POST', `/api/drafts/${id}/export`, { directory: dir.path || '' }, folderHeaders(dir)),
     importDraft: (siteId, payload) => apiFetch('POST', '/api/drafts/import', { siteId, payload }),
     importDraftInto: (id, payload) => apiFetch('POST', `/api/drafts/${id}/import`, { payload }),
-    selectDirectory: () => apiFetch('POST', '/api/dialog/select-directory'),
+    // `{cancelled}`, or `{path}` under Boson / `{token, name}` under the shell: hand the whole object
+    // to the export call, never just a path (see underShell()).
+    selectDirectory: async () => {
+        if (await underShell()) {
+            const picked = await GrafidaShell.selectFolder();
+            return picked.cancelled ? { cancelled: true } : { token: picked.folder.token, name: picked.folder.name };
+        }
+        return apiFetch('POST', '/api/dialog/select-directory');
+    },
     uploadMedia: (siteId, body) => apiFetch('POST', `/api/sites/${siteId}/media`, body),
-    openFile: (filter) => apiFetch('POST', '/api/dialog/open-file', { filter }),
+    // Either host answers `{cancelled}` or `{name, mime, dataBase64}`; see underShell().
+    openFile: async (filter) => {
+        if (await underShell()) {
+            const picked = await GrafidaShell.openFile({ filters: shellFileFilters(filter) });
+            if (picked.cancelled) return { cancelled: true };
+            return apiFetch('POST', '/api/dialog/open-file', { filter }, GrafidaShell.fileHeaders(picked.files[0].token));
+        }
+        return apiFetch('POST', '/api/dialog/open-file', { filter });
+    },
     browseMedia: (siteId, path = '') => apiFetch('GET', `/api/sites/${siteId}/media?path=${encodeURIComponent(path)}`),
     getMediaBlob: (id) => apiFetch('GET', `/api/media/${id}`),
     getMediaTarget: (id) => apiFetch('GET', `/api/media/${id}/target`),
@@ -768,7 +835,7 @@ const api = {
     renameLocalMedia: (id, filename) => apiFetch('POST', `/api/media/${id}/rename`, { filename }),
     updateLocalMediaContent: (id, dataBase64) => apiFetch('POST', `/api/media/${id}/content`, { dataBase64 }),
     deleteLocalMedia: (id) => apiFetch('DELETE', `/api/media/${id}`),
-    saveLocalMediaToDisk: (id, directory) => apiFetch('POST', `/api/media/${id}/save-to-disk`, { directory }),
+    saveLocalMediaToDisk: (id, dir) => apiFetch('POST', `/api/media/${id}/save-to-disk`, { directory: dir.path || '' }, folderHeaders(dir)),
     convertMarkdown: (markdown) => apiFetch('POST', '/api/markdown', { markdown }),
     setLanguage: (tag) => apiFetch('POST', '/api/settings/language', { tag }),
     setDisplayMode: (mode) => apiFetch('POST', '/api/settings/display-mode', { mode }),
@@ -782,17 +849,29 @@ const api = {
     getStorageInfo: () => apiFetch('GET', '/api/settings/storage'),
     openStorageFolder: () => apiFetch('POST', '/api/settings/storage/open'),
     resetStorage: () => apiFetch('POST', '/api/settings/storage/reset'),
-    openUrl: (url) => apiFetch('POST', '/api/open-url', { url }),
+    // Under the shell the shell opens it (`_native/open-url`, http/https only), which is also what its
+    // navigation policy does with an off-origin link; under Boson, PHP's UrlOpener does.
+    openUrl: async (url) => {
+        if (await underShell()) {
+            await GrafidaShell.openUrl(url);
+            return { ok: true };
+        }
+        return apiFetch('POST', '/api/open-url', { url });
+    },
     // The OS clipboard, read by the backend rather than by JavaScript — see
     // bindPastePlainShortcut() for why.
-    getClipboardText: () => apiFetch('GET', '/api/clipboard/text'),
+    // Under the shell the shell reads the clipboard itself and hands it to PHP in the request body
+    // (no wl-paste/xclip needed); PHP normalises it either way (see underShell()).
+    getClipboardText: async () => (await underShell())
+        ? apiFetch('GET', '/api/clipboard/text', null, GrafidaShell.clipboardHeaders())
+        : apiFetch('GET', '/api/clipboard/text'),
     getHelpContents: () => apiFetch('GET', '/api/help'),
     getHelpPage: (slug) => apiFetch('GET', `/api/help/page/${encodeURIComponent(slug)}`),
     setRequestLog: (enabled) => apiFetch('POST', '/api/settings/request-log', { enabled }),
     setMetadataCache: (payload) => apiFetch('POST', '/api/settings/metadata-cache', payload),
     getRequestLog: () => apiFetch('GET', '/api/request-log'),
     clearRequestLog: () => apiFetch('POST', '/api/request-log/clear'),
-    exportRequestLog: (directory) => apiFetch('POST', '/api/request-log/export', { directory }),
+    exportRequestLog: (dir) => apiFetch('POST', '/api/request-log/export', { directory: dir.path || '' }, folderHeaders(dir)),
     // AI Services
     listAiServices: () => apiFetch('GET', '/api/ai/services'),
     getAiService: (id) => apiFetch('GET', `/api/ai/services/${id}`),
@@ -950,6 +1029,11 @@ function confirmYesNo(titleText, bodyNodes) {
 // ============================================================
 
 function showScreen(name) {
+    // Leaving the article stops an AI reply still being written for it: nothing on the next screen
+    // can show it, and it would keep the panel busy until it finished.
+    if (State.activeScreen === 'editor' && name !== 'editor' && typeof GrafidaAIPanel !== 'undefined') {
+        GrafidaAIPanel.onEditorLeave();
+    }
     State.activeScreen = name;
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     const screen = document.getElementById(`${name}-screen`);
@@ -5355,6 +5439,54 @@ async function uploadLocalImage(siteId, cb) {
     }
 }
 
+/**
+ * Image files dropped on the editor, under the native shell (gh-85).
+ *
+ * The webview is sandboxed and cannot read the user's files, so a file WebKit took in itself would
+ * arrive as nothing but its `file://` URI (which TinyMCE then pastes as text). The shell takes file
+ * drops instead and hands us tokens with the drop point (`GrafidaShell.onDrop()`); each image is
+ * read through the token exactly as after the file dialog, stored offline like a paste, and inserted
+ * at the drop point. Anything dropped outside the editing area, or that is not an image, is ignored.
+ * Under Boson the event never fires.
+ */
+function initShellDrops() {
+    if (typeof GrafidaShell === 'undefined') return;
+    GrafidaShell.onDrop((drop) => {
+        insertDroppedImages(drop).catch((err) => showToast(err.message, 'error'));
+    });
+}
+
+const DROPPABLE_IMAGE = /\.(png|jpe?g|gif|webp|svg|bmp|avif)$/i;
+
+async function insertDroppedImages({ files, x, y }) {
+    const editor = State.tinyMCEEditor;
+    if (State.activeScreen !== 'editor' || !editor || !Array.isArray(files)) return;
+    const frame = editor.iframeElement;
+    if (!frame) return;
+    const rect = frame.getBoundingClientRect();
+    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) return;
+
+    const siteId = State.currentDraft ? State.currentDraft.siteId : State.currentSiteId;
+    editor.focus();
+    editor.selection.placeCaretAt(x - rect.left, y - rect.top);
+
+    for (const file of files) {
+        if (!DROPPABLE_IMAGE.test(file.name || '')) continue;
+        const picked = await apiFetch('POST', '/api/dialog/open-file', { filter: 'image' }, GrafidaShell.fileHeaders(file.token));
+        const result = await api.uploadMedia(siteId, {
+            filename: picked.name, mime: picked.mime || 'image/png',
+            dataBase64: picked.dataBase64, draftId: State.currentDraftId,
+        });
+        State.inlineMediaByUri[result.url] = result.id;
+        const attrs = { src: result.url, alt: '' };
+        if (result.width && result.height) {
+            attrs.width = String(result.width);
+            attrs.height = String(result.height);
+        }
+        editor.insertContent(editor.dom.createHTML('img', attrs));
+    }
+}
+
 /** Pick a local image file, store it offline, and set it as the kind's image. */
 function chooseImageFile(kind, siteId) {
     uploadLocalImage(siteId, (entry) => {
@@ -5452,9 +5584,10 @@ function isPastePlainShortcut(e) {
  * paste trick founders on the same refusal — TinyMCE can only strip a paste the
  * *user* performs, never perform one. A `paste` event is therefore only
  * available on a webview that binds the chord natively, which WKWebView and
- * WebKitGTK do not. So {@see api.getClipboardText} reads it server-side
- * (`pbpaste` / `wl-paste` / Win32 FFI): no prompt, no callout, one code path on
- * every platform. Do not "simplify" this back into the page.
+ * WebKitGTK do not. So {@see api.getClipboardText} reads it outside the page:
+ * PHP under Boson (`pbpaste` / `wl-paste` / Win32 FFI), the native shell under
+ * the shell (GTK's own clipboard, then PHP for the normalisation): no prompt, no
+ * callout. Do not "simplify" this back into the page.
  */
 function bindPastePlainShortcut(editor) {
     editor.on('keydown', (e) => {
@@ -6318,7 +6451,7 @@ async function localMediaSaveToDisk(entry) {
     }
     if (!dir || dir.cancelled) return;
     try {
-        const result = await api.saveLocalMediaToDisk(entry.id, dir.path);
+        const result = await api.saveLocalMediaToDisk(entry.id, dir);
         showToast(formatText(t('GRAFIDA_MSG_MEDIA_SAVED_TO_DISK'), result.path), 'success');
     } catch (err) {
         showToast(err.message, 'error');
@@ -7445,7 +7578,7 @@ async function exportCurrentDraft() {
     if (!dir || dir.cancelled) return;
 
     try {
-        const result = await api.exportDraft(saved.id, dir.path);
+        const result = await api.exportDraft(saved.id, dir);
         showToast(formatText(t('GRAFIDA_MSG_DRAFT_EXPORTED'), result.path), 'success');
     } catch (err) {
         showToast(err.message, 'error');
@@ -7983,7 +8116,7 @@ async function exportRequestLogHandler() {
     if (!dir || dir.cancelled) return;
 
     try {
-        const result = await api.exportRequestLog(dir.path);
+        const result = await api.exportRequestLog(dir);
         showToast(formatText(t('GRAFIDA_MSG_REQUEST_LOG_EXPORTED'), result.path), 'success');
     } catch (err) {
         showToast(err.message, 'error');
@@ -8746,7 +8879,7 @@ async function loadAiToolsData() {
 
     try {
         const data = await api.listAiTools();
-        State.aiAllTools = data.tools || [];
+        setAiTools(data.tools || []);
         State.aiSystemPrompt = data.systemPrompt || '';
         State.aiTones = data.tones || {};
     } catch (err) {
@@ -8880,7 +9013,7 @@ async function toggleAiTool(tool) {
     try {
         await api.updateAiTool(tool.toolKey, { enabled: !tool.enabled });
         const data = await api.listAiTools();
-        State.aiAllTools = data.tools || [];
+        setAiTools(data.tools || []);
         renderAiToolsList();
     } catch (err) {
         showToast(err.message, 'error');
@@ -9066,7 +9199,7 @@ async function saveAiToolHandler(tool) {
         }
         closeModal();
         const data = await api.listAiTools();
-        State.aiAllTools = data.tools || [];
+        setAiTools(data.tools || []);
         State.aiSystemPrompt = data.systemPrompt || '';
         State.aiTones = data.tones || {};
         renderAiToolsList();
@@ -9084,7 +9217,7 @@ async function confirmDeleteAiTool(tool) {
     try {
         await api.deleteAiTool(tool.toolKey);
         const data = await api.listAiTools();
-        State.aiAllTools = data.tools || [];
+        setAiTools(data.tools || []);
         State.aiSystemPrompt = data.systemPrompt || '';
         State.aiTones = data.tones || {};
         renderAiToolsList();
@@ -9241,11 +9374,23 @@ function applyTheme(reinitEditor = false) {
     const changed = resolved !== State.resolvedTheme;
     State.resolvedTheme = resolved;
     document.documentElement.setAttribute('data-theme', resolved);
+    if (changed) syncShellWindowTheme(resolved);
 
     if (reinitEditor && changed && State.tinyMCEEditor && State.currentDraft) {
         const html = State.tinyMCEEditor.getContent();
         initTinyMCE({ ...State.currentDraft, html });
     }
+}
+
+/**
+ * Under the native shell, the window's title bar follows the app's resolved theme (gh-85). The shell
+ * is told the *resolved* scheme, not `auto`: the SPA already resolves `auto` from the OS probe, which
+ * is more reliable than what the webview reports. Fire-and-forget; under Boson it does nothing.
+ */
+function syncShellWindowTheme(resolved) {
+    underShell()
+        .then((shell) => shell && GrafidaShell.setWindowTheme(resolved === 'dark' ? 'dark' : 'light'))
+        .catch(() => {});
 }
 
 /** Returns the TinyMCE UI skin matching the current resolved theme. */
@@ -10009,6 +10154,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initLayoutControls();
     initHelpLinks();
+    initShellDrops();
 
     bootstrap();
 });

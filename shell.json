@@ -1,0 +1,36 @@
+{
+    "$schema": "https://github.com/grafida/shell/raw/main/schema/shell.schema.json",
+    "id": "app.grafida",
+    "title": "Grafida",
+    "scheme": "boson",
+    "dataDir": "grafida",
+    "startPath": "/",
+    "noStorePaths": ["/api/"],
+    "window": {
+        "width": 1280,
+        "height": 860,
+        "minWidth": 900,
+        "minHeight": 600,
+        "theme": "system"
+    },
+    "worker": {
+        "binary": "grafida-worker",
+        "args": [],
+        "readyTimeoutMs": 15000,
+        "maxBodyBytes": 134217728,
+        "restart": {"max": 3, "windowSeconds": 60}
+    },
+    "dev": {
+        "worker": ["php", "bin/worker.php"]
+    },
+    "webview": {
+        "contextMenu": true,
+        "devtools": "env:GRAFIDA_DEBUG",
+        "spellCheck": true
+    },
+    "menu": {
+        "preset": "standard",
+        "reservedChords": ["CmdOrCtrl+Shift+V"]
+    },
+    "logDir": "auto"
+}

@@ -5,7 +5,7 @@
  *
  * AI chat panel — Step 7 + Step 8 (saved chats).
  *
- * Exposes window.GrafidaAIPanel = { toggle, openWithTool, onEditorOpen, renderAiChatsBanner }.
+ * Exposes window.GrafidaAIPanel = { toggle, openWithTool, onEditorOpen, onEditorLeave, renderAiChatsBanner }.
  *
  * This module is a plain IIFE loaded AFTER app.js and relies on globals that
  * app.js places in the window scope (resolved at call time, not load time):
@@ -359,6 +359,15 @@
         return true;
     }
 
+    /**
+     * The editor is being left (app.js's showScreen()): stop a reply in progress, through the same
+     * path as the Stop button, so its partial answer and the response chain are handled exactly as
+     * after a manual stop.
+     */
+    function onEditorLeave() {
+        if (_abortCtrl) _abortCtrl.abort();
+    }
+
     function _openPanel(tool) {
         _activeTool = tool || null;
         _history = [];
@@ -440,7 +449,8 @@
         if (!State.aiSystemPrompt && !State.aiAllTools.length) {
             try {
                 const data = await api.listAiTools();
-                State.aiAllTools = data.tools || [];
+                if (typeof setAiTools === 'function') setAiTools(data.tools || []);
+                else State.aiAllTools = data.tools || [];
                 State.aiSystemPrompt = data.systemPrompt || '';
                 State.aiTones = data.tones || {};
             } catch {
@@ -1564,6 +1574,9 @@
          * Called by app.js from openEditorScreen() after initTinyMCE().
          */
         onEditorOpen,
+
+        /** Stop a reply in progress because the editor is being left (app.js's showScreen()). */
+        onEditorLeave,
 
         /**
          * Step 8 override point: replace with an implementation that populates

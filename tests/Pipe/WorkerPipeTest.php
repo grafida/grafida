@@ -145,7 +145,7 @@ final class WorkerPipeTest extends TestCase
      * Request sequences taken from the Feature suite. `{key}` in a path or body is replaced by
      * `data.key` of the most recent response that had one (a created draft's id, the help home page).
      *
-     * @return iterable<string, array{list<array{0: string, 1: string, 2?: string}>}>
+     * @return iterable<string, array{list<array{0: string, 1: string, 2?: string, 3?: array<string, string>}>}>
      */
     public static function scenarios(): iterable
     {
@@ -222,6 +222,14 @@ final class WorkerPipeTest extends TestCase
             ['GET', '/api/drafts/{draftId}/chats'],
         ]];
 
+        // A file or folder picked in the native shell's dialogs arrives as X-Shell-File-Path (gh-85).
+        yield 'files picked in the shell' => [[
+            ['POST', '/api/dialog/open-file', '{"filter":"any"}', ['x-shell-file-path' => __FILE__]],
+            ['POST', '/api/dialog/open-file', '{"filter":"any"}', ['x-shell-file-path' => '/nonexistent/picked.png']],
+            ['POST', '/api/dialog/open-file', '{"filter":"any"}'],
+            ['POST', '/api/request-log/export', '{}', ['x-shell-file-path' => '/nonexistent/folder']],
+        ]];
+
         yield 'static assets and the SPA shell' => [[
             ['GET', '/'],
             ['GET', '/js/app.js'],
@@ -232,7 +240,7 @@ final class WorkerPipeTest extends TestCase
         ]];
     }
 
-    /** @param list<array{0: string, 1: string, 2?: string}> $steps */
+    /** @param list<array{0: string, 1: string, 2?: string, 3?: array<string, string>}> $steps */
     #[DataProvider('scenarios')]
     public function testFeatureRequestsAnswerIdenticallyThroughThePipe(array $steps): void
     {
@@ -243,11 +251,12 @@ final class WorkerPipeTest extends TestCase
         foreach ($steps as $i => $step) {
             $method = $step[0];
             $path   = self::substitute($step[1], $vars);
-            $body   = self::substitute($step[2] ?? '', $vars);
-            $label  = sprintf('step %d: %s %s', $i, $method, $path);
+            $body    = self::substitute($step[2] ?? '', $vars);
+            $headers = $step[3] ?? [];
+            $label   = sprintf('step %d: %s %s', $i, $method, $path);
 
-            $direct = $kernel->handle(new Request($method, 'boson://app' . $path, [], $body));
-            $piped  = $worker->request(new Request($method, 'boson://app' . $path, [], $body));
+            $direct = $kernel->handle(new Request($method, 'boson://app' . $path, $headers, $body));
+            $piped  = $worker->request(new Request($method, 'boson://app' . $path, $headers, $body));
 
             self::assertSame($direct->status, $piped->status, "$label: status");
             self::assertSame($direct->headers->toArray(), $piped->headers->toArray(), "$label: headers");

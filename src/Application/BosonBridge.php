@@ -14,6 +14,8 @@ namespace Grafida\Application;
 use Boson\Component\Http\Response as BosonResponse;
 use Boson\Contracts\Http\RequestInterface as BosonRequest;
 use Boson\Contracts\Http\ResponseInterface as BosonResponseInterface;
+use Grafida\Http\ShellClipboard;
+use Grafida\Http\ShellFile;
 use Grafida\Shell\Handler;
 use Grafida\Shell\Headers;
 use Grafida\Shell\Request;
@@ -34,6 +36,10 @@ use Grafida\Shell\Response;
  * - **A request header our `Headers` refuses is dropped, not fatal.** Boson validated nothing a
  *   webview sent; shell-php refuses names that are not tokens and values with CR/LF/NUL. One odd
  *   header must not turn a working request into a 500.
+ *
+ * And some are dropped on purpose: `X-Shell-File-Path`, `X-Shell-File` and `X-Shell-Clipboard`.
+ * Under the native shell they can only come from the shell; under Boson they could only come from
+ * the page (ShellFile, ShellClipboard).
  */
 final class BosonBridge
 {
@@ -83,6 +89,14 @@ final class BosonBridge
 
         foreach ($pairs as $name => $value) {
             if (!\is_string($name) || !\is_string($value)) {
+                continue;
+            }
+
+            // Only the native shell may name a picked file: it strips whatever the page sent and
+            // forwards the path it resolved from a dialog token. Boson has no such guard, so a page
+            // sending the header itself must never reach the kernel, or any script in the page could
+            // read any file on the disk (ShellFile).
+            if (\in_array(strtolower($name), [ShellFile::PATH_HEADER, ShellFile::TOKEN_HEADER, ShellClipboard::HEADER], true)) {
                 continue;
             }
 

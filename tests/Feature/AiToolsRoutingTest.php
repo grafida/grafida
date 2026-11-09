@@ -175,6 +175,29 @@ final class AiToolsRoutingTest extends TestCase
         self::assertSame('My proofread prompt.', $byKey['proofread']['prompt']);
     }
 
+    /**
+     * The tool form sends `serviceId: null` for "use the default service". Leaving the key out
+     * (the list's enable toggle sends nothing but `enabled`) keeps whatever the tool targets.
+     */
+    public function testPatchAiToolCanGoBackToTheDefaultService(): void
+    {
+        $kernel  = $this->kernel();
+        $service = $this->createService($kernel);
+
+        [, $json] = $this->call($kernel, 'PATCH', '/api/ai/tools/gen', json_encode(['serviceId' => $service]));
+        self::assertSame($service, $json['data']['serviceId']);
+
+        [, $json] = $this->call($kernel, 'PATCH', '/api/ai/tools/gen', json_encode(['enabled' => false]));
+        self::assertSame($service, $json['data']['serviceId'], 'an omitted serviceId keeps the override');
+
+        [, $json] = $this->call($kernel, 'PATCH', '/api/ai/tools/gen', json_encode(['serviceId' => null]));
+        self::assertNull($json['data']['serviceId'], 'an explicit null goes back to the default');
+
+        [, $list] = $this->call($kernel, 'GET', '/api/ai/tools');
+        $gen = array_values(array_filter($list['data']['tools'], static fn (array $t): bool => $t['toolKey'] === 'gen'))[0];
+        self::assertNull($gen['serviceId']);
+    }
+
     public function testPatchAiToolCanDisableBuiltIn(): void
     {
         $kernel = $this->kernel();

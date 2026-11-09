@@ -37,13 +37,22 @@ and **`bin/worker.php`** (the stdio worker the native shell will spawn; run it a
 `composer test:pipe` (`tests/Pipe/`) spawns the worker over real pipes. It runs every conformance
 fixture against `bin/worker.php`, then replays Feature-suite requests through a worker and through
 `Kernel::handle()` in process and requires byte-identical answers. shell-php is pinned to an **exact
-tag** (`0.1.0`) through a `vcs` repository entry in `composer.json`, until it is on Packagist. To
+tag** (`0.2.0`) through a `vcs` repository entry in `composer.json`, until it is on Packagist. To
 change shell-php and Grafida together, point that entry at a local **path repository**
 (`../shell-php`, `"options": {"symlink": false}`, so the Boson compiler never meets a symlink in
 `vendor/`) and require `dev-main`. Tag shell-php before committing Grafida, and never commit the
 path entry: it breaks every checkout that lacks the sibling clone. shell-php's `Request`/`Response` keep Boson's positional constructors and
 `Headers` iterates one `name => value` pair per value, which is why the Feature suite switched type
 with no assertion edits.
+
+**Phase 2 (gh-85) runs Grafida in the shell on Linux in dev mode**: `composer shell:dev` builds the
+sibling `../shell` clone and starts it with `--dev .`, which reads the repo-root **`shell.json`** (the
+app manifest: id, window, worker, `noStorePaths: ["/api/"]`, `devtools: "env:GRAFIDA_DEBUG"`, the
+reserved Cmd/Ctrl+Shift+V chord) and runs its `dev.worker`, `php bin/worker.php`. `shell.json` sits
+at the root on purpose: no Boson build bundles it. The shell's debug automation channel
+(`composer shell:dev -- --automation`, then `../shell/scripts/dev/automation.py eval|screenshot|pick`)
+is how the real window is driven from here; see grafida/shell's CLAUDE.md. Run it with
+`HOME`/`XDG_*` pointed at a throwaway directory unless you mean to use your own data.
 
 Request flow: `index.php` → `Grafida\FrontController` → `Grafida\Application\Kernel` →
 either `Grafida\Http\ApiController` (paths under `/api/`) or a static asset / the SPA shell.
@@ -68,6 +77,18 @@ chosen file and returns `{name, mime, dataBase64}` (or `{cancelled:true}`). `upl
 (intro/full-text images, the in-editor/media-browser "Choose file…" button) and
 `importMarkdown()` consume it. The dialog dependency is **nullable** so the kernel stays
 window-free in tests (a null dialog makes the endpoint return 503).
+**Under the native shell (gh-85) the same SPA calls pick files the other way**, and `api.openFile()` /
+`api.selectDirectory()` choose per host through `underShell()` (`GrafidaShell.available()`, from the
+vendored `js/shell.js`). The shell's own dialog (`/_native/dialog/*`) answers with an opaque
+per-session **token, never a path**; the SPA sends it back as `X-Shell-File`, and the shell forwards the
+resolved path as `X-Shell-File-Path`, which `Grafida\Http\ShellFile` reads: `openFile()` returns that
+file, and the three folder exports (`.grafida` draft, Request Log, Local Media "save to disk") take it
+over the body's `directory`. So under the shell no path ever comes from JS, and a folder pick is
+`{token, name}`, not `{path}`: pass the whole `dir` object to the export call. `api.openUrl()` likewise
+goes to the shell's `_native/open-url`, and the title bar follows the resolved theme
+(`_native/window/theme`). ⚠️ **`BosonBridge` drops
+both headers**: under Boson there is no shell to strip them, and trusting one would let any script in
+the page read any file.
 
 ## Layout
 
@@ -333,8 +354,11 @@ window-free in tests (a null dialog makes the endpoint return 503).
   `displayMode` key and written via `POST /api/settings/display-mode`. Because Boson's
   webview does **not** report `prefers-color-scheme` reliably (on macOS it always reports
   dark), `systemPrefersDark()` probes the OS appearance directly (macOS `defaults read -g
-  AppleInterfaceStyle`, Windows `AppsUseLightTheme` registry DWORD, Linux gsettings
-  `color-scheme`/`gtk-theme`) → `true`/`false`/`null` when undetectable; it is sent in the
+  AppleInterfaceStyle`, Windows `AppsUseLightTheme` registry DWORD, Linux the freedesktop
+  **appearance portal** `org.freedesktop.appearance color-scheme` via `gdbus`, falling back to gsettings
+  `color-scheme`/`gtk-theme`) → `true`/`false`/`null` when undetectable. ⚠️ The portal must stay first:
+  KDE Plasma never writes GNOME's gsettings, so on Plasma they read `default`/`Adwaita` whatever the
+  global theme, and reading them first made "auto" ignore Breeze Dark; it is sent in the
   `bootstrap` payload as `systemPrefersDark` and re-probed on demand via
   `GET /api/settings/system-theme`. The SPA's `systemPrefersDark()` trusts that value to
   resolve `auto`, only falling back to the media query when it is `null`, and re-probes on
@@ -372,7 +396,11 @@ window-free in tests (a null dialog makes the endpoint return 503).
   app, so it is read the same way as the OS appearance and the secret store — a short-lived
   subprocess, no prompt. Returns **null** for an unreadable clipboard but the **empty string** for
   an empty one, and the two must not be conflated (empty = paste nothing, unreadable = tell the
-  user). Line endings are normalised to `\n`, because TinyMCE's plain-text conversion splits on it
+  user). **Under the native shell (gh-85) PHP does not read the clipboard at all**: the shell owns the
+  window and reads GTK's clipboard itself (no `wl-paste`/`xclip` needed, which a desktop may not
+  have), and hands the text over as the request body with `X-Shell-Clipboard: text`
+  (`Grafida\Http\ShellClipboard`); `clipboardText()` then applies the same line-ending and content
+  normalisation. `BosonBridge` drops that header, so under Boson only PHP's own read happens. Line endings are normalised to `\n`, because TinyMCE's plain-text conversion splits on it
   and a stray `\r` survives into the pasted paragraph. See the shortcut's own notes in
   `.claude/rules/spa-frontend.md` for which webview owns the chord and why that decides everything.
 - `src/Editor/SlashToolsService.php` — persists whether the editor's slash-command menu is
@@ -505,6 +533,8 @@ window-free in tests (a null dialog makes the endpoint return 503).
   ⚠️ **An override row is written whole, but a PATCH may carry any subset of the fields** (gh-28), so
   `AiServiceController::updateAiTool()` fills what the body omits from `effectiveTool($key)` — the
   tool *as it currently resolves*, bundled defaults included — never from the override row alone.
+  "Omits" means the key is **absent**: an explicit `serviceId: null` is the form's "use the default
+  service" and clears the tool's service (treating it as omitted pinned a tool to its service for good).
   Falling back to the row alone is what let the list's enable/disable toggle (which sends nothing but
   `enabled`) blank a bundled tool's title, icon, prompt and tone the first time it was pressed; and
   `isCustom` is likewise preserved from the existing row, since a custom tool demoted to a built-in
@@ -569,7 +599,8 @@ window-free in tests (a null dialog makes the endpoint return 503).
 - `bin/worker.php` — the stdio worker entry point (gh-84): the container + shell-php's
   `Worker::run()`. Not shipped yet (Boson's `index.php` is), and deliberately free of what belongs to
   the process owning the window: no `StartupCheck`, `MacSpellCheck` or console hiding, and no native
-  dialog until Phase 2's token flow (so `POST /api/dialog/*` answers 503 there). stdout carries the
+  dialog (the shell opens its own and forwards `X-Shell-File-Path`; without it `POST /api/dialog/*`
+  answers 503, as before). stdout carries the
   frame stream; never print to it. `tests/Pipe/` drives it over real pipes against a throwaway data
   directory (`HOME`/`XDG_*`/`APPDATA` pointed at a temp dir), never the user's.
 - `docs/` — the user documentation, in Markdown. Shipped inside every binary (it is in

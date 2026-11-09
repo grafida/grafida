@@ -366,6 +366,33 @@ ship inside the app.
   a `TINYMCE_LANGS` entry in `app.js` (none for languages TinyMCE has no pack for — they get the
   English editor UI). This is the editor UI *chrome*; it is unrelated
   to the spell-check dictionary (an OS setting, above) and the article content language.
+  **Two hosts pick files differently, and `underShell()` decides which** (gh-85). Boson's PHP opens
+  the OS dialog itself; the native shell opens its own (`/_native/dialog/*`) and answers with an opaque
+  **token**, which the SPA hands back to PHP as `X-Shell-File` (`GrafidaShell.fileHeaders()`), so script
+  in the page can only ever name what the user picked. `js/shell.js` comes from grafida/shell-php,
+  copied (gitignored) by `vendor:assets` like the npm libraries, because `boson.json` bundles only
+  `vendor/**/*.php`; it loads before `app.js`, and `underShell()` guards its absence with `typeof`.
+  `GrafidaShell.available()` asks `/_native/info` **once per page**; under Boson that path reaches the
+  kernel, which answers the SPA page (HTML, not the shell's JSON), so it resolves false. A refusal from
+  the shell is a `GrafidaShell.ShellError` (its `code`, e.g. `dialog_busy`), never a reason to fall back
+  to the Boson flow. Consequences in `app.js`: `api.selectDirectory()` answers `{path}` under Boson but
+  `{token, name}` under the shell, so the export calls (`exportDraft`, `exportRequestLog`,
+  `saveLocalMediaToDisk`) take the **whole `dir` object** and turn it into body + headers
+  (`folderHeaders()`); `SHELL_FILE_FILTERS` mirrors the patterns `SettingsController::openFile()` gives
+  Boson's dialog, and its labels are the patterns themselves, so they need no translation.
+  Two more calls change host under the shell: **`api.openUrl()`** goes through the shell's
+  `_native/open-url` rather than PHP's `UrlOpener` (one opener for links the SPA routes and links the
+  shell's navigation policy catches; the shell's automation channel can record it instead of opening
+  a browser), and **`applyTheme()`** tells the shell the *resolved* scheme
+  (`syncShellWindowTheme()` → `_native/window/theme`) so the title bar follows the app, not the
+  webview's guess. Both are fire-and-forget no-ops under Boson. **`api.getClipboardText()`** (the
+  Cmd/Ctrl+Shift+V chord) asks the shell to read the clipboard (`GrafidaShell.clipboardHeaders()`),
+  so it works without `wl-paste`/`xclip`; PHP still normalises the text. **Dropped image files** are
+  the shell's too: the sandboxed webview cannot read the user's files (WebKit would hand TinyMCE only
+  the `file://` URI, which it pastes as text), so the shell takes the drop and `initShellDrops()` /
+  `insertDroppedImages()` read each image through its token, store it offline via `api.uploadMedia()`
+  like a paste, and insert it at the drop point (`editor.selection.placeCaretAt()`), ignoring
+  non-images and drops outside the editing area.
   The active site is remembered **server-side**: `rememberLastSite()` persists it via
   `POST /api/settings/last-site` (`Site\LastSiteService`, the generic `settings` key/value store —
   key `last_site`, so no migration) and it rides back in the `bootstrap` payload as `lastSiteId`

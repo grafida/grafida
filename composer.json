@@ -22,7 +22,7 @@
         "php": "^8.4",
         "boson-php/runtime": "^0.19",
         "boson-php/webview-ext-web-components": "^0.19",
-        "grafida/shell-php": "0.1.0",
+        "grafida/shell-php": "0.2.0",
         "joomla/database": "^4.0",
         "joomla/di": "^4.0",
         "joomla/language": "^3.0",
@@ -75,6 +75,10 @@
         "test:feature": "phpunit --testsuite=feature --testdox",
         "test:integration": "phpunit --testsuite=integration --testdox",
         "test:pipe": "phpunit --testsuite=pipe",
+        "shell:dev": [
+            "Composer\\Config::disableProcessTimeout",
+            "cargo run --manifest-path ../shell/Cargo.toml --features automation -- --dev ."
+        ],
         "test:js": "node --test 'tests/js/**/*.test.mjs'",
         "linter:check": "phpstan analyse --configuration phpstan.neon --memory-limit 256M",
         "linter:baseline": "@linter:check --generate-baseline",
@@ -90,11 +94,17 @@
         "build:package": "Build AND package the application for every platform via Phing (the `package` target) — macOS .app/.dmg, Linux .tar.gz, Windows installer/zip, and the PHAR into build/dist/. Requires Phing on the PATH.",
         "start": "Compile the binary for THIS host (the matching git-* target) and launch it, via the Phing `run` target. Requires Phing on the PATH.",
         "test:js": "Run the JavaScript unit tests (node's built-in runner; node is already a build prerequisite). Covers assets/private/js/ai/providers.js — the AI transport — which PHPUnit cannot reach because it runs in the SPA.",
+        "shell:dev": "Run Grafida in the native shell from this source tree (grafida/grafida#85): builds ../shell (a sibling clone of grafida/shell) and starts it with `--dev .`, so the worker is `php bin/worker.php` and a PHP edit takes effect when the worker restarts. Add `-- --automation` to open the debug automation channel. Needs Rust and the WebKitGTK 4.1 development packages.",
         "test:pipe": "Run Grafida's back-end as the stdio worker (bin/worker.php) over real pipes: the wire-protocol conformance fixtures, and Feature-suite requests compared byte for byte with the in-process kernel.",
         "test:integration": "Run the integration suite. The LIVE AI provider tests in it are SKIPPED unless GRAFIDA_TEST_RESPONSES_ENDPOINT and GRAFIDA_TEST_RESPONSES_MODEL are set in the environment (see tests/Integration/Ai/ResponsesApiLiveTest.php)."
     },
     "extra": {
         "copy-static": [
+            {
+                "type": "file",
+                "from": "vendor/grafida/shell-php/resources/shell.js",
+                "to": "assets/private/js/shell.js"
+            },
             {
                 "type": "file",
                 "from": "node_modules/@fortawesome/fontawesome-free/css/fontawesome.min.css",

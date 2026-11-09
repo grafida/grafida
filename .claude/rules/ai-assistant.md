@@ -93,6 +93,17 @@ The PHP-side service inventory stays in `CLAUDE.md`'s `src/Ai/` Layout bullet.
   API calls stall ("the interface freezes") and nothing streams (the answer arrives all at once).
   Enabling CORS restores live streaming and keeps the kernel free. This is the first thing to check
   when a user reports the AI panel hanging with a local model.
+- **Under the native shell the proxy path no longer freezes the window, but it still occupies the
+  worker for the whole reply** (gh-85): the worker serves one request at a time, so every other API
+  call queues behind a long non-streaming reply. Leaving the article aborts the panel's request
+  (`showScreen()` → `GrafidaAIPanel.onEditorLeave()`, the Stop button's path), which frees a direct
+  stream at once; an aborted **proxy** call still runs to completion in PHP, because protocol v1 has
+  no way to cancel a request the worker is already serving. Enabling CORS on the local server is
+  still the fix for that case.
+- **The SPA keeps two copies of the tool list, and `setAiTools()` is the only writer**:
+  `State.aiAllTools` (the Settings screen, disabled tools included) and `State.aiTools` (the enabled
+  ones, which the editor's AI-tools menu and the panel run). Refreshing only the first after a tool
+  edit is how a changed service, prompt, title or icon took effect only after a restart.
 - **On macOS, plain-HTTP provider endpoints also need an ATS exception, or every reply falls back to
   the proxy regardless of CORS.** `WKWebView` (the webview macOS Boson uses) enforces App Transport
   Security on JS-initiated `fetch()`/XHR from web content; a plain-`http://` endpoint — e.g. LM Studio

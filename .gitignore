@@ -23,6 +23,8 @@ Thumbs.db
 /assets/private/css/fontawesome.min.css
 /assets/private/css/solid.min.css
 /assets/private/webfonts/
+# The page side of the native shell's endpoints, copied from grafida/shell-php by the same step.
+/assets/private/js/shell.js
 
 # Implementation step plans (working notes, not shipped)
 /.plans

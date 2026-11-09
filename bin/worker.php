@@ -19,9 +19,10 @@
  *
  * Deliberately absent, because they belong to whichever process owns the window, i.e. the shell:
  * the webview pre-flight (StartupCheck), the macOS spell-check default (MacSpellCheck), and the
- * Windows console hiding (the shell spawns the worker with CREATE_NO_WINDOW). The native file
- * dialog is absent too, until Phase 2 replaces it with the shell's token flow (X-Shell-File-Path),
- * so `POST /api/dialog/*` answers 503 here, as it does for any dialog-less container.
+ * Windows console hiding (the shell spawns the worker with CREATE_NO_WINDOW). There is no native
+ * dialog here either: the shell opens its own, hands the SPA a token, and forwards the picked path
+ * as X-Shell-File-Path (Grafida\Http\ShellFile, gh-85). A dialog request without that header
+ * answers 503, as it does for any dialog-less container.
  *
  * Nothing may be printed to stdout, which carries the frame stream. Worker::run() moves
  * display_errors to stderr and diverts any handler output there, tagged [stray-output].

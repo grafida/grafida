@@ -43,6 +43,25 @@ final class BosonBridgeTest extends TestCase
         self::assertSame('{"a":1}', $request->body);
     }
 
+    /**
+     * Under the native shell only the shell can set X-Shell-File-Path (it strips the page's and
+     * forwards the path a dialog token resolves to). Under Boson only the page could, so the bridge
+     * drops it, or any script in the page could make PHP read any file (gh-85).
+     */
+    public function testThePageCannotNameAFileUnderBoson(): void
+    {
+        $request = BosonBridge::request(new BosonRequest(
+            'POST',
+            'boson://app/api/dialog/open-file',
+            ['X-Shell-File-Path' => '/etc/passwd', 'x-shell-file' => 'token', 'X-Shell-Clipboard' => 'text', 'X-Other' => 'kept'],
+        ));
+
+        self::assertNull($request->header('x-shell-file-path'));
+        self::assertNull($request->header('x-shell-file'));
+        self::assertNull($request->header('x-shell-clipboard'));
+        self::assertSame('kept', $request->header('x-other'));
+    }
+
     /** The kernel only ever saw Boson's parsed URL; the bridge passes that same form on. */
     public function testUrlIsBosonsNormalisedForm(): void
     {

@@ -18,6 +18,7 @@ use Grafida\Article\DraftRepository;
 use Grafida\Http\Json;
 use Grafida\Http\RouteContext;
 use Grafida\Http\Router;
+use Grafida\Http\ShellFile;
 use Grafida\Http\SiteContext;
 use Grafida\Media\InlineImageExtractor;
 use Grafida\Publish\PublishService;
@@ -42,7 +43,7 @@ final class DraftController extends Controller
         $router->add('POST', '/api/drafts/import', fn (RouteContext $ctx): Response => $this->importDraft($ctx->body()));
         $router->add('GET', '/api/sites/{id}/drafts', fn (RouteContext $ctx): Response => $this->listDrafts($ctx->int('id')));
         $router->add('POST', '/api/sites/{id}/drafts', fn (RouteContext $ctx): Response => $this->saveDraft($ctx->int('id'), null, $ctx->body()));
-        $router->add('POST', '/api/drafts/{id}/export', fn (RouteContext $ctx): Response => $this->exportDraft($ctx->int('id'), $ctx->body()));
+        $router->add('POST', '/api/drafts/{id}/export', fn (RouteContext $ctx): Response => $this->exportDraft($ctx->int('id'), ['directory' => ShellFile::directory($ctx->request(), $ctx->body())] + $ctx->body()));
         $router->add('POST', '/api/drafts/{id}/import', fn (RouteContext $ctx): Response => $this->importDraftInto($ctx->int('id'), $ctx->body()));
         $router->add('GET', '/api/drafts/{id}', fn (RouteContext $ctx): Response => $this->getDraft($ctx->int('id')));
         $router->add('PUT', '/api/drafts/{id}', fn (RouteContext $ctx): Response => $this->saveDraft(null, $ctx->int('id'), $ctx->body()));

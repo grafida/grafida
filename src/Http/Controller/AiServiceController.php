@@ -278,8 +278,12 @@ final class AiServiceController extends Controller
         /** @var array<string, mixed> $params */
         $params = is_array($paramsRaw) ? $paramsRaw : ($current['params'] ?? []);
 
+        // An omitted serviceId keeps the tool's target; an explicit null (the form's "default
+        // service") clears it. Treating null as "omitted" left a tool pinned to its service forever.
         $serviceIdRaw = $body['serviceId'] ?? null;
-        $serviceId    = is_numeric($serviceIdRaw) ? (int) $serviceIdRaw : ($current['serviceId'] ?? null);
+        $serviceId    = \array_key_exists('serviceId', $body)
+            ? (is_numeric($serviceIdRaw) ? (int) $serviceIdRaw : null)
+            : ($current['serviceId'] ?? null);
 
         $enabledRaw = $body['enabled'] ?? null;
         $enabled    = $enabledRaw !== null ? (bool) $enabledRaw : ($current['enabled'] ?? true);
