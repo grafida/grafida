@@ -1,0 +1,83 @@
+# The experimental native-shell Linux tarball (gh-86), built and checked on both architectures.
+#
+# This is how the arm64 tarball is verified at all (gh-86 decided: arm64 in CI only), and it runs
+# the x86_64 one on the 22.04 floor too. Per architecture:
+#   - `composer build:shell-linux` (grafida/shell-packager; its own worker check runs here, since the
+#     runner can execute the SFX), then the tarball is extracted;
+#   - tests/Pipe against the packaged worker (GRAFIDA_PIPE_WORKER): the protocol fixtures, the API
+#     smoke test, Help from phar:// docs, the Resources::base() extraction, a body at the limit;
+#   - the packaged launcher started headless with the documented runtime packages: the shell must
+#     find its manifest and worker and the worker must reach `ready`.
+# Nothing here is part of Boson's build or release.
+name: Native shell (Linux)
+
+on:
+  push:
+    branches: [feature/shell]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tarball:
+    name: Tarball (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-22.04
+            arch: amd64
+          - runner: ubuntu-22.04-arm
+            arch: arm64
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          coverage: none
+          extensions: curl, dom, iconv, mbstring, pdo_sqlite, sqlite3, phar, zlib
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Composer install (vendors the front-end libraries too)
+        run: composer install --no-interaction --no-progress
+
+      - name: Build the tarball
+        run: composer build:shell-linux -- ${{ matrix.arch }}
+
+      - name: Extract it
+        run: |
+          mkdir -p "$RUNNER_TEMP/pkg"
+          tar -xzf build/dist/Grafida-*-linux-${{ matrix.arch }}-shell-preview.tar.gz -C "$RUNNER_TEMP/pkg"
+          ls -la "$RUNNER_TEMP/pkg/grafida"
+
+      - name: tests/Pipe against the packaged worker
+        run: GRAFIDA_PIPE_WORKER="$RUNNER_TEMP/pkg/grafida/grafida-worker" vendor/bin/phpunit tests/Pipe
+
+      - name: Start the packaged app headless
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-0 libgtk-3-0 xvfb dbus
+          home="$RUNNER_TEMP/home"; mkdir -p "$home"
+          export HOME="$home" XDG_DATA_HOME="$home/data" XDG_STATE_HOME="$home/state" XDG_CONFIG_HOME="$home/config" XDG_CACHE_HOME="$home/cache"
+          log="$XDG_STATE_HOME/grafida/logs/shell.log"
+          dbus-run-session -- xvfb-run -a "$RUNNER_TEMP/pkg/grafida/grafida" & app=$!
+          for _ in $(seq 1 60); do grep -q 'worker ready' "$log" 2>/dev/null && break; sleep 1; done
+          cat "$log"
+          grep -q 'worker ready' "$log"
+          ! grep -q 'giving up' "$log"
+          pkill -TERM -x grafida-shell || true
+          wait "$app" || true
+          sleep 2
+          ! pgrep -x grafida-worker
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Grafida-linux-${{ matrix.arch }}-shell-preview
+          path: build/dist/Grafida-*-shell-preview.tar.gz*
+          retention-days: 14
