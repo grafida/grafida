@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Grafida\Http\Controller;
 
-use Boson\Contracts\Http\ResponseInterface;
+use Grafida\Shell\Response;
 use Grafida\Ai\AiServiceManager;
 use Grafida\Ai\AiToolRepository;
 use Grafida\Ai\Defaults;
@@ -57,10 +57,10 @@ final class BootstrapController extends Controller
 
     public function registerRoutes(Router $router): void
     {
-        $router->add('GET', '/api/bootstrap', fn (RouteContext $ctx): ResponseInterface => $this->bootstrap());
+        $router->add('GET', '/api/bootstrap', fn (RouteContext $ctx): Response => $this->bootstrap());
     }
 
-    public function bootstrap(): ResponseInterface
+    public function bootstrap(): Response
     {
         // Starting the application clears the Request Log before any new
         // requests are sent to the site — this is the SPA's first call.

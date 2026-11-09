@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Grafida\Http\Controller;
 
-use Boson\Contracts\Http\ResponseInterface;
+use Grafida\Shell\Response;
 use Grafida\Ai\AiChat;
 use Grafida\Ai\AiChatRepository;
 use Grafida\Ai\AiMessage;
@@ -37,13 +37,13 @@ final class AiChatController extends Controller
 
     public function registerRoutes(Router $router): void
     {
-        $router->add('POST', '/api/ai/proxy', fn (RouteContext $ctx): ResponseInterface => $this->aiProxy($ctx->body()));
-        $router->add('POST', '/api/ai/render', fn (RouteContext $ctx): ResponseInterface => $this->renderAiReply($ctx->body()));
-        $router->add('POST', '/api/ai/chats', fn (RouteContext $ctx): ResponseInterface => $this->createAiChat($ctx->body()));
-        $router->add('GET', '/api/drafts/{id}/chats', fn (RouteContext $ctx): ResponseInterface => $this->listDraftChats($ctx->int('id')));
-        $router->add('GET', '/api/ai/chats/{id}', fn (RouteContext $ctx): ResponseInterface => $this->getAiChat($ctx->int('id')));
-        $router->add('PATCH', '/api/ai/chats/{id}', fn (RouteContext $ctx): ResponseInterface => $this->updateAiChat($ctx->int('id'), $ctx->body()));
-        $router->add('DELETE', '/api/ai/chats/{id}', fn (RouteContext $ctx): ResponseInterface => $this->deleteAiChat($ctx->int('id')));
+        $router->add('POST', '/api/ai/proxy', fn (RouteContext $ctx): Response => $this->aiProxy($ctx->body()));
+        $router->add('POST', '/api/ai/render', fn (RouteContext $ctx): Response => $this->renderAiReply($ctx->body()));
+        $router->add('POST', '/api/ai/chats', fn (RouteContext $ctx): Response => $this->createAiChat($ctx->body()));
+        $router->add('GET', '/api/drafts/{id}/chats', fn (RouteContext $ctx): Response => $this->listDraftChats($ctx->int('id')));
+        $router->add('GET', '/api/ai/chats/{id}', fn (RouteContext $ctx): Response => $this->getAiChat($ctx->int('id')));
+        $router->add('PATCH', '/api/ai/chats/{id}', fn (RouteContext $ctx): Response => $this->updateAiChat($ctx->int('id'), $ctx->body()));
+        $router->add('DELETE', '/api/ai/chats/{id}', fn (RouteContext $ctx): Response => $this->deleteAiChat($ctx->int('id')));
     }
 
     /**
@@ -55,7 +55,7 @@ final class AiChatController extends Controller
      *
      * @param array<string, mixed> $body
      */
-    public function aiProxy(array $body): ResponseInterface
+    public function aiProxy(array $body): Response
     {
         $serviceIdRaw = $body['serviceId'] ?? null;
 
@@ -101,7 +101,7 @@ final class AiChatController extends Controller
      *
      * @param array<string, mixed> $body
      */
-    public function renderAiReply(array $body): ResponseInterface
+    public function renderAiReply(array $body): Response
     {
         $content = $this->str($body, 'content');
         $format  = $this->str($body, 'format', 'auto');
@@ -110,7 +110,7 @@ final class AiChatController extends Controller
     }
 
     /** Lists saved chats (metadata only) for a draft, ordered newest first. */
-    public function listDraftChats(int $draftId): ResponseInterface
+    public function listDraftChats(int $draftId): Response
     {
         $chats = $this->aiChats->forDraft($draftId);
 
@@ -118,7 +118,7 @@ final class AiChatController extends Controller
     }
 
     /** @param array<string, mixed> $body */
-    public function createAiChat(array $body): ResponseInterface
+    public function createAiChat(array $body): Response
     {
         $draftIdRaw = $body['draftId'] ?? null;
 
@@ -156,7 +156,7 @@ final class AiChatController extends Controller
     }
 
     /** Returns a single chat with all its messages. */
-    public function getAiChat(int $id): ResponseInterface
+    public function getAiChat(int $id): Response
     {
         $chat = $this->aiChats->find($id);
 
@@ -179,7 +179,7 @@ final class AiChatController extends Controller
      *
      * @param array<string, mixed> $body
      */
-    public function updateAiChat(int $id, array $body): ResponseInterface
+    public function updateAiChat(int $id, array $body): Response
     {
         $chat = $this->aiChats->find($id);
 
@@ -218,7 +218,7 @@ final class AiChatController extends Controller
     }
 
     /** Deletes a chat and, via ON DELETE CASCADE, all its messages. */
-    public function deleteAiChat(int $id): ResponseInterface
+    public function deleteAiChat(int $id): Response
     {
         if ($this->aiChats->find($id) === null) {
             return Json::error('Chat not found', 404);

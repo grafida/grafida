@@ -11,13 +11,13 @@ declare(strict_types=1);
 
 namespace Grafida\Http;
 
-use Boson\Contracts\Http\RequestInterface;
+use Grafida\Shell\Request;
 
 /**
  * Everything a route handler needs: the path parameters {@see Router}
  * matched out of the URL (e.g. `siteId`, `articleId`, `key`), the parsed
  * request body, and the raw request itself (handlers read the query string
- * off it via `$context->request()->url->query->get(...)`).
+ * off it via `$context->request()->query(...)`).
  */
 final class RouteContext
 {
@@ -28,7 +28,7 @@ final class RouteContext
     public function __construct(
         private readonly array $params,
         private readonly array $body,
-        private readonly RequestInterface $request,
+        private readonly Request $request,
     ) {}
 
     /** A path parameter as an int (0 when absent — every registered placeholder is required, so this only happens for a typo'd name). */
@@ -51,7 +51,7 @@ final class RouteContext
         return $this->body;
     }
 
-    public function request(): RequestInterface
+    public function request(): Request
     {
         return $this->request;
     }

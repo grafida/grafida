@@ -11,8 +11,8 @@ declare(strict_types=1);
 
 namespace Grafida\Http;
 
-use Boson\Contracts\Http\RequestInterface;
-use Boson\Contracts\Http\ResponseInterface;
+use Grafida\Shell\Request;
+use Grafida\Shell\Response;
 use Grafida\Http\Controller\AiChatController;
 use Grafida\Http\Controller\AiServiceController;
 use Grafida\Http\Controller\ArticleController;
@@ -56,10 +56,10 @@ final class ApiController
         $this->router = $this->buildRouter();
     }
 
-    public function dispatch(RequestInterface $request): ResponseInterface
+    public function dispatch(Request $request): Response
     {
-        $method = strtoupper((string) $request->method);
-        $path   = (string) $request->url->path;
+        $method = strtoupper($request->method);
+        $path   = $request->path();
         $body   = $this->body($request);
 
         try {
@@ -128,7 +128,7 @@ final class ApiController
     /**
      * @return array<string, mixed>
      */
-    private function body(RequestInterface $request): array
+    private function body(Request $request): array
     {
         $raw = $request->body;
 

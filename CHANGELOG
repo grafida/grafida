@@ -1,6 +1,7 @@
 Grafida 1.0
 ================================================================================
 + Distraction-free mode in the article editor: hides the sidebars, toolbar and title so only the editor remains
++ `bin/worker.php`: the back-end as a stdio worker for the upcoming native shell, tested over real pipes (gh-84)
 ~ Settings is split into General, Editor, AI Assistant and Advanced tabs; long explanations fold away
 ~ Connection test no longer tries the never-valid /index.php/api URL
 ~ The Windows build no longer enables opcache, matching every other platform
@@ -8,6 +9,7 @@ Grafida 1.0
 ~ `phing git` packs the application PHAR once instead of once per platform
 ~ The documentation is published to Grafida.app over SFTP, replacing the copy into a sibling site repository
 ~ The patched PHP runtime is fetched from grafida/phpmicro (moved from nikosdion/phpmicro)
+~ The back-end runs on grafida/shell-php's request/response types; Boson is adapted at index.php only (gh-84)
 # [HIGH] Linux: the app crashed on the first click that saved anything, e.g. saving a site or switching the theme (gh-79)
 # [HIGH] Clicking a sidebar menu item while editing an article discarded unsaved changes without asking (gh-80)
 # [HIGH] Publishing an article with a tag that did not exist on the site yet failed with "Invalid field: Parent"

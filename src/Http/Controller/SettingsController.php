@@ -12,7 +12,7 @@ declare(strict_types=1);
 namespace Grafida\Http\Controller;
 
 use Boson\Api\Dialog\DialogApiInterface;
-use Boson\Contracts\Http\ResponseInterface;
+use Grafida\Shell\Response;
 use Grafida\Clipboard\ClipboardService;
 use Grafida\Debug\RequestLog;
 use Grafida\Debug\RequestLogService;
@@ -67,28 +67,28 @@ final class SettingsController extends Controller
 
     public function registerRoutes(Router $router): void
     {
-        $router->add('POST', '/api/markdown', fn (RouteContext $ctx): ResponseInterface => $this->convertMarkdown($ctx->body()));
-        $router->add('POST', '/api/settings/language', fn (RouteContext $ctx): ResponseInterface => $this->setLanguage($ctx->body()));
-        $router->add('POST', '/api/settings/display-mode', fn (RouteContext $ctx): ResponseInterface => $this->setDisplayMode($ctx->body()));
-        $router->add('GET', '/api/settings/system-theme', fn (RouteContext $ctx): ResponseInterface => $this->systemTheme());
-        $router->add('POST', '/api/settings/slash-tools', fn (RouteContext $ctx): ResponseInterface => $this->setSlashTools($ctx->body()));
-        $router->add('POST', '/api/settings/spell-check', fn (RouteContext $ctx): ResponseInterface => $this->setSpellCheck($ctx->body()));
-        $router->add('POST', '/api/settings/auto-close-tags', fn (RouteContext $ctx): ResponseInterface => $this->setAutoCloseTags($ctx->body()));
-        $router->add('POST', '/api/settings/content-normalisation', fn (RouteContext $ctx): ResponseInterface => $this->setContentNormalisation($ctx->body()));
-        $router->add('POST', '/api/settings/last-site', fn (RouteContext $ctx): ResponseInterface => $this->setLastSite($ctx->body()));
-        $router->add('POST', '/api/settings/request-log', fn (RouteContext $ctx): ResponseInterface => $this->setRequestLog($ctx->body()));
-        $router->add('POST', '/api/settings/metadata-cache', fn (RouteContext $ctx): ResponseInterface => $this->setMetadataCache($ctx->body()));
-        $router->add('GET', '/api/request-log', fn (RouteContext $ctx): ResponseInterface => $this->requestLog());
-        $router->add('POST', '/api/request-log/clear', fn (RouteContext $ctx): ResponseInterface => $this->clearRequestLog());
-        $router->add('POST', '/api/request-log/export', fn (RouteContext $ctx): ResponseInterface => $this->exportRequestLog($ctx->body()));
-        $router->add('GET', '/api/update', fn (RouteContext $ctx): ResponseInterface => $this->updateStatus());
-        $router->add('GET', '/api/settings/storage', fn (RouteContext $ctx): ResponseInterface => $this->storageInfo());
-        $router->add('POST', '/api/settings/storage/open', fn (RouteContext $ctx): ResponseInterface => $this->openStorageFolder());
-        $router->add('POST', '/api/settings/storage/reset', fn (RouteContext $ctx): ResponseInterface => $this->resetStorage());
-        $router->add('POST', '/api/open-url', fn (RouteContext $ctx): ResponseInterface => $this->openUrl($ctx->body()));
-        $router->add('GET', '/api/clipboard/text', fn (RouteContext $ctx): ResponseInterface => $this->clipboardText());
-        $router->add('POST', '/api/dialog/open-file', fn (RouteContext $ctx): ResponseInterface => $this->openFile($ctx->body()));
-        $router->add('POST', '/api/dialog/select-directory', fn (RouteContext $ctx): ResponseInterface => $this->selectDirectory($ctx->body()));
+        $router->add('POST', '/api/markdown', fn (RouteContext $ctx): Response => $this->convertMarkdown($ctx->body()));
+        $router->add('POST', '/api/settings/language', fn (RouteContext $ctx): Response => $this->setLanguage($ctx->body()));
+        $router->add('POST', '/api/settings/display-mode', fn (RouteContext $ctx): Response => $this->setDisplayMode($ctx->body()));
+        $router->add('GET', '/api/settings/system-theme', fn (RouteContext $ctx): Response => $this->systemTheme());
+        $router->add('POST', '/api/settings/slash-tools', fn (RouteContext $ctx): Response => $this->setSlashTools($ctx->body()));
+        $router->add('POST', '/api/settings/spell-check', fn (RouteContext $ctx): Response => $this->setSpellCheck($ctx->body()));
+        $router->add('POST', '/api/settings/auto-close-tags', fn (RouteContext $ctx): Response => $this->setAutoCloseTags($ctx->body()));
+        $router->add('POST', '/api/settings/content-normalisation', fn (RouteContext $ctx): Response => $this->setContentNormalisation($ctx->body()));
+        $router->add('POST', '/api/settings/last-site', fn (RouteContext $ctx): Response => $this->setLastSite($ctx->body()));
+        $router->add('POST', '/api/settings/request-log', fn (RouteContext $ctx): Response => $this->setRequestLog($ctx->body()));
+        $router->add('POST', '/api/settings/metadata-cache', fn (RouteContext $ctx): Response => $this->setMetadataCache($ctx->body()));
+        $router->add('GET', '/api/request-log', fn (RouteContext $ctx): Response => $this->requestLog());
+        $router->add('POST', '/api/request-log/clear', fn (RouteContext $ctx): Response => $this->clearRequestLog());
+        $router->add('POST', '/api/request-log/export', fn (RouteContext $ctx): Response => $this->exportRequestLog($ctx->body()));
+        $router->add('GET', '/api/update', fn (RouteContext $ctx): Response => $this->updateStatus());
+        $router->add('GET', '/api/settings/storage', fn (RouteContext $ctx): Response => $this->storageInfo());
+        $router->add('POST', '/api/settings/storage/open', fn (RouteContext $ctx): Response => $this->openStorageFolder());
+        $router->add('POST', '/api/settings/storage/reset', fn (RouteContext $ctx): Response => $this->resetStorage());
+        $router->add('POST', '/api/open-url', fn (RouteContext $ctx): Response => $this->openUrl($ctx->body()));
+        $router->add('GET', '/api/clipboard/text', fn (RouteContext $ctx): Response => $this->clipboardText());
+        $router->add('POST', '/api/dialog/open-file', fn (RouteContext $ctx): Response => $this->openFile($ctx->body()));
+        $router->add('POST', '/api/dialog/select-directory', fn (RouteContext $ctx): Response => $this->selectDirectory($ctx->body()));
     }
 
     /**
@@ -106,7 +106,7 @@ final class SettingsController extends Controller
      * invisible mark gets into an article, and "paste as plain text" is a
      * request for the words, not for what is hiding between them.
      */
-    public function clipboardText(): ResponseInterface
+    public function clipboardText(): Response
     {
         $text = $this->clipboard->readText();
 
@@ -118,7 +118,7 @@ final class SettingsController extends Controller
     }
 
     /** @param array<string, mixed> $body */
-    public function openUrl(array $body): ResponseInterface
+    public function openUrl(array $body): Response
     {
         $this->urlOpener->open($this->str($body, 'url'));
 
@@ -136,7 +136,7 @@ final class SettingsController extends Controller
      *
      * @param array<string, mixed> $body
      */
-    public function openFile(array $body): ResponseInterface
+    public function openFile(array $body): Response
     {
         if ($this->dialog === null) {
             return Json::error('Native file dialog is unavailable', 503);
@@ -175,7 +175,7 @@ final class SettingsController extends Controller
      *
      * @param array<string, mixed> $body
      */
-    public function selectDirectory(array $body): ResponseInterface
+    public function selectDirectory(array $body): Response
     {
         if ($this->dialog === null) {
             return Json::error('Native file dialog is unavailable', 503);
@@ -219,7 +219,7 @@ final class SettingsController extends Controller
      *
      * @param array<string, mixed> $body
      */
-    public function convertMarkdown(array $body): ResponseInterface
+    public function convertMarkdown(array $body): Response
     {
         $markdown = $this->normaliser->apply($this->str($body, 'markdown'));
 
@@ -227,7 +227,7 @@ final class SettingsController extends Controller
     }
 
     /** @param array<string, mixed> $body */
-    public function setLanguage(array $body): ResponseInterface
+    public function setLanguage(array $body): Response
     {
         $this->language->setOverride($this->str($body, 'tag', LanguageService::AUTO));
 
@@ -238,7 +238,7 @@ final class SettingsController extends Controller
     }
 
     /** @param array<string, mixed> $body */
-    public function setDisplayMode(array $body): ResponseInterface
+    public function setDisplayMode(array $body): Response
     {
         $mode = $this->displayMode->set($this->str($body, 'mode', DisplayModeService::AUTO));
 
@@ -246,7 +246,7 @@ final class SettingsController extends Controller
     }
 
     /** @param array<string, mixed> $body */
-    public function setSlashTools(array $body): ResponseInterface
+    public function setSlashTools(array $body): Response
     {
         $enabled = $this->slashTools->set($this->bool($body, 'enabled', true));
 
@@ -254,7 +254,7 @@ final class SettingsController extends Controller
     }
 
     /** @param array<string, mixed> $body */
-    public function setSpellCheck(array $body): ResponseInterface
+    public function setSpellCheck(array $body): Response
     {
         $enabled = $this->spellCheck->set($this->bool($body, 'enabled', true));
 
@@ -262,7 +262,7 @@ final class SettingsController extends Controller
     }
 
     /** @param array<string, mixed> $body */
-    public function setAutoCloseTags(array $body): ResponseInterface
+    public function setAutoCloseTags(array $body): Response
     {
         $mode = $this->autoCloseTags->set($this->str($body, 'mode', AutoCloseTagsService::FULL));
 
@@ -270,7 +270,7 @@ final class SettingsController extends Controller
     }
 
     /** @param array<string, mixed> $body */
-    public function setContentNormalisation(array $body): ResponseInterface
+    public function setContentNormalisation(array $body): Response
     {
         $mode = $this->normalisation->set($this->str($body, 'mode', ContentNormalisationService::FULL));
 
@@ -287,7 +287,7 @@ final class SettingsController extends Controller
      *
      * @param array<string, mixed> $body
      */
-    public function setLastSite(array $body): ResponseInterface
+    public function setLastSite(array $body): Response
     {
         $id = $this->int($body, 'siteId');
         $this->lastSite->set($id > 0 ? $id : null);
@@ -297,7 +297,7 @@ final class SettingsController extends Controller
     }
 
     /** Re-probes the OS light/dark preference so "auto" can follow it at runtime. */
-    public function systemTheme(): ResponseInterface
+    public function systemTheme(): Response
     {
         return Json::ok(['systemPrefersDark' => $this->displayMode->systemPrefersDark()]);
     }
@@ -306,24 +306,24 @@ final class SettingsController extends Controller
      * Reports whether a newer version is available (refreshing the 12-hour cache
      * from the CDN if needed). Called asynchronously by the SPA at start-up.
      */
-    public function updateStatus(): ResponseInterface
+    public function updateStatus(): Response
     {
         return Json::ok($this->updates->status());
     }
 
-    public function storageInfo(): ResponseInterface
+    public function storageInfo(): Response
     {
         return Json::ok($this->storage->info());
     }
 
-    public function openStorageFolder(): ResponseInterface
+    public function openStorageFolder(): Response
     {
         $this->storage->openContainingFolder();
 
         return Json::ok();
     }
 
-    public function resetStorage(): ResponseInterface
+    public function resetStorage(): Response
     {
         $this->storage->reset();
 
@@ -338,7 +338,7 @@ final class SettingsController extends Controller
      *
      * @param array<string, mixed> $body
      */
-    public function setRequestLog(array $body): ResponseInterface
+    public function setRequestLog(array $body): Response
     {
         $enabled = $this->requestLogService->set($this->bool($body, 'enabled', false));
 
@@ -359,7 +359,7 @@ final class SettingsController extends Controller
      *
      * @param array<string, mixed> $body
      */
-    public function setMetadataCache(array $body): ResponseInterface
+    public function setMetadataCache(array $body): Response
     {
         if (\array_key_exists('resetOnStart', $body)) {
             $this->metadataCache->setResetOnStart($this->bool($body, 'resetOnStart'));
@@ -376,7 +376,7 @@ final class SettingsController extends Controller
     }
 
     /** The Request Log screen's data: whether it is enabled and every entry currently stored, newest first. */
-    public function requestLog(): ResponseInterface
+    public function requestLog(): Response
     {
         return Json::ok([
             'enabled' => $this->requestLogService->current(),
@@ -384,7 +384,7 @@ final class SettingsController extends Controller
         ]);
     }
 
-    public function clearRequestLog(): ResponseInterface
+    public function clearRequestLog(): Response
     {
         $this->requestLog->clear();
 
@@ -402,7 +402,7 @@ final class SettingsController extends Controller
      *
      * @param array<string, mixed> $body
      */
-    public function exportRequestLog(array $body): ResponseInterface
+    public function exportRequestLog(array $body): Response
     {
         $directory = $this->str($body, 'directory');
 

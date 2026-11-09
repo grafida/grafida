@@ -11,8 +11,8 @@ declare(strict_types=1);
 
 namespace Grafida\Http\Controller;
 
-use Boson\Contracts\Http\RequestInterface;
-use Boson\Contracts\Http\ResponseInterface;
+use Grafida\Shell\Request;
+use Grafida\Shell\Response;
 use Grafida\Http\Json;
 use Grafida\Http\RouteContext;
 use Grafida\Http\Router;
@@ -51,8 +51,8 @@ final class ArticleController extends Controller
 
     public function registerRoutes(Router $router): void
     {
-        $router->add('GET', '/api/sites/{id}/articles', fn (RouteContext $ctx): ResponseInterface => $this->remoteArticles($ctx->int('id'), $ctx->request()));
-        $router->add('GET', '/api/sites/{id}/articles/{articleId}', fn (RouteContext $ctx): ResponseInterface => $this->remoteArticle($ctx->int('id'), $ctx->int('articleId')));
+        $router->add('GET', '/api/sites/{id}/articles', fn (RouteContext $ctx): Response => $this->remoteArticles($ctx->int('id'), $ctx->request()));
+        $router->add('GET', '/api/sites/{id}/articles/{articleId}', fn (RouteContext $ctx): Response => $this->remoteArticle($ctx->int('id'), $ctx->int('articleId')));
     }
 
     /**
@@ -63,7 +63,7 @@ final class ArticleController extends Controller
      * tag|language|state|featured|checked_out]` and `list[ordering|direction]`)
      * and the page's items are returned alongside the pagination total.
      */
-    public function remoteArticles(int $siteId, RequestInterface $request): ResponseInterface
+    public function remoteArticles(int $siteId, Request $request): Response
     {
         $conn = $this->siteContext->connectedSite($siteId);
 
@@ -73,17 +73,15 @@ final class ArticleController extends Controller
 
         [$site, $token, $apiBase] = $conn;
 
-        $q = $request->url->query;
-
-        $limit = (int) ($q->get('limit') ?? 20);
+        $limit = (int) ($request->query('limit') ?? 20);
         $limit = max(1, min(100, $limit));
-        $page  = max(1, (int) ($q->get('page') ?? 1));
+        $page  = max(1, (int) ($request->query('page') ?? 1));
 
-        $ordering = $q->get('ordering') ?? 'a.id';
+        $ordering = $request->query('ordering') ?? 'a.id';
         if (!in_array($ordering, self::ARTICLE_ORDERING, true)) {
             $ordering = 'a.id';
         }
-        $direction = strtolower($q->get('direction') ?? 'desc') === 'asc' ? 'asc' : 'desc';
+        $direction = strtolower($request->query('direction') ?? 'desc') === 'asc' ? 'asc' : 'desc';
 
         $query = [
             'page[limit]'     => $limit,
@@ -92,37 +90,37 @@ final class ArticleController extends Controller
             'list[direction]' => $direction,
         ];
 
-        $search = trim($q->get('search') ?? '');
+        $search = trim($request->query('search') ?? '');
         if ($search !== '') {
             $query['filter[search]'] = $search;
         }
 
-        $category = (int) ($q->get('category') ?? 0);
+        $category = (int) ($request->query('category') ?? 0);
         if ($category > 0) {
             $query['filter[category]'] = $category;
         }
 
-        $tag = (int) ($q->get('tag') ?? 0);
+        $tag = (int) ($request->query('tag') ?? 0);
         if ($tag > 0) {
             $query['filter[tag]'] = $tag;
         }
 
-        $language = trim($q->get('language') ?? '');
+        $language = trim($request->query('language') ?? '');
         if ($language !== '') {
             $query['filter[language]'] = $language;
         }
 
-        $stateRaw = $q->get('state');
+        $stateRaw = $request->query('state');
         if ($stateRaw !== null && $stateRaw !== '' && in_array((int) $stateRaw, self::ARTICLE_STATES, true)) {
             $query['filter[state]'] = (int) $stateRaw;
         }
 
-        $featuredRaw = $q->get('featured');
+        $featuredRaw = $request->query('featured');
         if ($featuredRaw === '0' || $featuredRaw === '1') {
             $query['filter[featured]'] = (int) $featuredRaw;
         }
 
-        $checkedOutRaw = $q->get('checked_out');
+        $checkedOutRaw = $request->query('checked_out');
         if ($checkedOutRaw === '0' || $checkedOutRaw === '-1') {
             $query['filter[checked_out]'] = (int) $checkedOutRaw;
         }
@@ -141,7 +139,7 @@ final class ArticleController extends Controller
      * Fetches a single remote article and returns it shaped as an unsaved draft
      * (id: null) ready for the editor — see {@see self::remoteArticleToDraft()}.
      */
-    public function remoteArticle(int $siteId, int $articleId): ResponseInterface
+    public function remoteArticle(int $siteId, int $articleId): Response
     {
         $conn = $this->siteContext->connectedSite($siteId);
 

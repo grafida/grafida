@@ -20,6 +20,9 @@
         <testsuite name="feature">
             <directory>tests/Feature</directory>
         </testsuite>
+        <testsuite name="pipe">
+            <directory>tests/Pipe</directory>
+        </testsuite>
     </testsuites>
 
     <coverage/>

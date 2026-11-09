@@ -11,8 +11,7 @@ declare(strict_types=1);
 
 namespace Grafida\Http;
 
-use Boson\Component\Http\Response;
-use Boson\Contracts\Http\ResponseInterface;
+use Grafida\Shell\Response;
 
 /**
  * Builds JSON HTTP responses for the internal API.
@@ -22,7 +21,7 @@ final class Json
     /**
      * @param mixed $data
      */
-    public static function ok($data = null, int $status = 200): ResponseInterface
+    public static function ok($data = null, int $status = 200): Response
     {
         return self::response(['ok' => true, 'data' => $data], $status);
     }
@@ -30,7 +29,7 @@ final class Json
     /**
      * @param array<string, mixed> $extra Extra fields merged into the payload (e.g. an error code).
      */
-    public static function error(string $message, int $status = 400, array $extra = []): ResponseInterface
+    public static function error(string $message, int $status = 400, array $extra = []): Response
     {
         return self::response(['ok' => false, 'error' => $message] + $extra, $status);
     }
@@ -38,7 +37,7 @@ final class Json
     /**
      * @param array<string, mixed> $payload
      */
-    private static function response(array $payload, int $status): ResponseInterface
+    private static function response(array $payload, int $status): Response
     {
         $body = json_encode($payload, \JSON_UNESCAPED_UNICODE | \JSON_UNESCAPED_SLASHES);
 

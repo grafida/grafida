@@ -11,8 +11,7 @@ declare(strict_types=1);
 
 namespace Grafida\Http\Controller;
 
-use Boson\Component\Http\Response;
-use Boson\Contracts\Http\ResponseInterface;
+use Grafida\Shell\Response;
 use Grafida\Help\HelpService;
 use Grafida\Http\Json;
 use Grafida\Http\RouteContext;
@@ -32,22 +31,22 @@ final class HelpController extends Controller
 
     public function registerRoutes(Router $router): void
     {
-        $router->add('GET', '/api/help', fn (RouteContext $ctx): ResponseInterface => $this->contents());
+        $router->add('GET', '/api/help', fn (RouteContext $ctx): Response => $this->contents());
         // `{key}` compiles to `[A-Za-z0-9_\-]+` and `{file}` to `name.ext`, so
         // neither can match a path containing a slash: the two routes cannot
         // collide with each other, nor with `/api/help` above.
-        $router->add('GET', '/api/help/page/{key}', fn (RouteContext $ctx): ResponseInterface => $this->page($ctx->string('key')));
-        $router->add('GET', '/api/help/image/{file}', fn (RouteContext $ctx): ResponseInterface => $this->image($ctx->string('file')));
+        $router->add('GET', '/api/help/page/{key}', fn (RouteContext $ctx): Response => $this->page($ctx->string('key')));
+        $router->add('GET', '/api/help/image/{file}', fn (RouteContext $ctx): Response => $this->image($ctx->string('file')));
     }
 
     /** The table of contents, and which page to open first. */
-    private function contents(): ResponseInterface
+    private function contents(): Response
     {
         return Json::ok($this->help->contents());
     }
 
     /** One page, rendered to HTML. */
-    private function page(string $slug): ResponseInterface
+    private function page(string $slug): Response
     {
         $page = $this->help->page($slug);
 
@@ -59,7 +58,7 @@ final class HelpController extends Controller
     }
 
     /** An illustration from `docs/images/`, served as raw bytes. */
-    private function image(string $filename): ResponseInterface
+    private function image(string $filename): Response
     {
         $image = $this->help->image($filename);
 

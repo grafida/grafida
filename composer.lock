@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "47f8562765f89fd6e368260772875dc5",
+    "content-hash": "fc2be5acf99526faec77f6bbf9e26399",
     "packages": [
         {
             "name": "boson-php/cpu-info",
@@ -219,58 +219,6 @@
             },
             "time": "2025-10-08T09:36:57+00:00",
             "published-time": "2025-12-09T08:09:07+00:00"
-        },
-        {
-            "name": "boson-php/http-static-provider",
-            "version": "0.19.5",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/boson-php/http-static-provider.git",
-                "reference": "c73c6d62640993a1f80d7997279447c78b9b1651"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/boson-php/http-static-provider/zipball/c73c6d62640993a1f80d7997279447c78b9b1651",
-                "reference": "c73c6d62640993a1f80d7997279447c78b9b1651",
-                "shasum": ""
-            },
-            "require": {
-                "boson-php/http": "^0.19",
-                "php": "^8.4"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "^12.0"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-main": "0.19.x-dev",
-                    "dev-master": "0.19.x-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Boson\\Component\\Http\\Static\\": "src"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Kirill Nesmeyanov",
-                    "email": "nesk@xakep.ru"
-                }
-            ],
-            "description": "Provides static files finder and resolver",
-            "homepage": "https://bosonphp.com",
-            "support": {
-                "issues": "https://github.com/boson-php/boson/issues",
-                "source": "https://github.com/boson-php/http-static-provider"
-            },
-            "time": "2025-10-08T09:39:39+00:00",
-            "published-time": "2026-01-08T19:04:20+00:00"
         },
         {
             "name": "boson-php/id-contracts",
@@ -1059,6 +1007,64 @@
             },
             "time": "2026-10-24T20:24:17+00:00",
             "published-time": "2026-10-24T20:25:32+00:00"
+        },
+        {
+            "name": "grafida/shell-php",
+            "version": "0.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/grafida/shell-php.git",
+                "reference": "ef37623ab9353fc139bcd09bff5794d19f4ca92d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/grafida/shell-php/zipball/ef37623ab9353fc139bcd09bff5794d19f4ca92d",
+                "reference": "ef37623ab9353fc139bcd09bff5794d19f4ca92d",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.4"
+            },
+            "require-dev": {
+                "phpstan/phpstan": "^2.3",
+                "phpstan/phpstan-strict-rules": "^2.1",
+                "phpunit/phpunit": "^13.4"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Grafida\\Shell\\": "src"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Grafida\\Shell\\Tests\\": "tests"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "phpunit"
+                ],
+                "linter:check": [
+                    "phpstan analyse --no-progress"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Nicholas K. Dionysopoulos",
+                    "homepage": "https://www.dionysopoulos.me/about-me"
+                }
+            ],
+            "description": "PHP worker side of the Grafida desktop shell: request/response types, the framed stdio worker loop and static-file serving.",
+            "homepage": "https://github.com/grafida/shell-php",
+            "support": {
+                "source": "https://github.com/grafida/shell-php/tree/0.1.0",
+                "issues": "https://github.com/grafida/shell-php/issues"
+            },
+            "time": "2026-11-09T08:28:57+00:00"
         },
         {
             "name": "joomla/database",

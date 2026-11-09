@@ -1,5 +1,5 @@
 ---
-description: Grafida's internal boson:// API — the Router, the per-area controllers, exception-to-status mapping, the two-kinds-of-transport-failure rule (gh-29) and the no-store caching rule (gh-35). Lifted verbatim from CLAUDE.md's Layout section.
+description: Grafida's internal boson:// API — the shell-php HTTP types and the two entry points (index.php via BosonBridge, bin/worker.php), the Router, the per-area controllers, exception-to-status mapping, the two-kinds-of-transport-failure rule (gh-29) and the no-store caching rule (gh-35). Lifted verbatim from CLAUDE.md's Layout section.
 paths:
   - "src/Http/**"
   - "src/Application/**"
@@ -143,6 +143,55 @@ two-space continuation indent are the original bullet formatting.
   back. ⚠️ `ClipboardService` itself stays a dumb reader — the same separation as
   `HttpClient`/`RecordingTransport` — so the policy lives in the controller and the OS-specific
   code stays testable without one.
+
+# HTTP types and the two entry points (gh-84)
+
+Everything behind `index.php` speaks **grafida/shell-php**'s types: `Grafida\Shell\Request`,
+`Response`, `Headers` and `StaticFiles`. No Boson HTTP type appears in `src/` except in
+`Grafida\Application\BosonBridge`. `Kernel`, `Router`, `RouteContext`, `Json`, `ApiController`,
+`FrontController` and every controller take and return the shell-php types.
+
+- **Constructors are Boson's, on purpose.** `new Request($method, $url, $headers, $body)` and
+  `new Response($body, $status, $headers)` have Boson's positional signatures, and `Headers`
+  iterates **one `name => value` pair per value** (as Boson's `HeadersMap` did). That is what let
+  the Feature suite, which is the API contract, switch type with only its `use` lines and two helper
+  type hints changed and no assertion edits. Keep it that way.
+- **Reading a request:** `$request->path()` (raw, still percent-encoded; `/` when absent),
+  `$request->query('name')` (decoded like `parse_str()`, first element of an array, as Boson's
+  `Query::get()` did), `$request->header('name')`, `$request->body`. `status` is a plain `int`.
+- **Headers keep every value of a repeated header end to end** (lower-case name → list). Names
+  must be tokens and values must not contain CR/LF/NUL, and `Headers` refuses both **at
+  construction**. So a controller that builds a header from user data (`Content-Disposition`'s
+  filename in `MediaController`) fails as a 500 from `ApiController`'s `\Throwable` catch rather
+  than smuggling a header. That is not new: Boson's `Header::validateHeaderValueOrFail()` (an
+  RFC 7230 pattern, stricter than ours) refused the same values.
+- **`BosonBridge` passes Boson's re-serialised URL** (`(string) $request->url`), not the raw
+  one Boson keeps private. That parsed form (empty path segments dropped, query re-encoded) is
+  what the kernel always saw, so routing and static lookups are unchanged. It **drops**, rather
+  than fails on, a request header shell-php refuses. Under Boson a repeated *response* header still
+  reaches the webview once: saucer's `std::map` collapses it (ADR 0001), and the shell fixes that.
+- **`StaticFiles`** replaces Boson's `FilesystemStaticProvider`. It serves GET/HEAD only, decodes
+  the path, and refuses `..`, backslashes and NUL lexically, because `realpath()` cannot see inside
+  a PHAR. An unknown extension is `application/octet-stream` (Boson defaulted to `text/html`), and
+  JavaScript is `text/javascript`. `find()` answers null on a miss, which is what lets `Kernel`
+  fall through to the SPA shell.
+- **`ContainerFactory` wraps invokable parameters.** joomla/di treats any callable value handed to
+  `share()`/`set()` as a factory, so `StaticFiles` (a `Handler`, therefore invokable) would be
+  *called with the container*. `BosonBridgeTest::testAnInvokableContainerParameterIsReturnedNotCalled`
+  pins it. The same applies to any future invokable service you register as a value.
+- **`bin/worker.php`** is the second entry point: the same container, served by shell-php's
+  `Worker::run()` over stdin/stdout in `GSF1` frames (grafida/shell `protocol/v1.md`). Exit status:
+  0 on EOF/`shutdown`, 65 on a protocol error, 74 when stdout is gone. A handler that throws is a
+  `500` response, never an exit. Anything printed during a request goes to stderr as
+  `[stray-output]` and never into the stream. `ApiController` already turns exceptions into JSON
+  errors, so the worker's own 500 is a last resort.
+- **`tests/Pipe/` (`composer test:pipe`)** is the proof. It plays every grafida/shell conformance
+  fixture (shipped inside shell-php, `Grafida\Shell\Testing\Fixtures`) into a real
+  `bin/worker.php`. It also runs a **differential**: Feature-suite request sequences answered by the
+  same container (`PipeApp`) in process and through `feature-worker.php`, where status, every header
+  and every body byte must match (JSON timestamps masked). The comparison sees what no single
+  assertion looks at; a mutation check showed one injected response header failing it. When a
+  new route matters to the worker, add its requests to a scenario there, not a Feature-test edit.
 
 # The native event loop (`src/Application/BosonApplication`, `EventLoopThrottle`)
 

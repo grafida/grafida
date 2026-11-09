@@ -11,34 +11,35 @@ declare(strict_types=1);
 
 namespace Grafida\Application;
 
-use Boson\Component\Http\Response;
-use Boson\Component\Http\Static\StaticProviderInterface;
-use Boson\Contracts\Http\RequestInterface;
-use Boson\Contracts\Http\ResponseInterface;
+use Grafida\Shell\Response;
+use Grafida\Shell\StaticFiles;
+use Grafida\Shell\Request;
 use Grafida\Http\ApiController;
 
 /**
- * Request dispatcher: routes incoming Boson scheme requests to the JSON API
- * controller, a static asset, or the single-page-app shell. Every dependency
- * is wired by the DI container's service providers (see
+ * Request dispatcher: routes incoming `boson://` requests to the JSON API
+ * controller, a static asset, or the single-page-app shell. A pure
+ * `Request → Response` function over shell-php's types, so it is the same
+ * under Boson and under the stdio worker, and testable with neither. Every
+ * dependency is wired by the DI container's service providers (see
  * `Grafida\Application\Provider\*`).
  */
 final class Kernel
 {
     public function __construct(
-        private readonly StaticProviderInterface $static,
+        private readonly StaticFiles $static,
         private readonly ApiController $api,
     ) {}
 
-    public function handle(RequestInterface $request): ResponseInterface
+    public function handle(Request $request): Response
     {
-        $path = (string) $request->url->path;
+        $path = $request->path();
 
         if (str_starts_with($path, '/api/')) {
             return $this->api->dispatch($request);
         }
 
-        $static = $this->static->findFileByRequest($request);
+        $static = $this->static->find($request);
 
         if ($static !== null) {
             return $static;

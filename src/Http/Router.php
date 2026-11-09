@@ -11,8 +11,8 @@ declare(strict_types=1);
 
 namespace Grafida\Http;
 
-use Boson\Contracts\Http\RequestInterface;
-use Boson\Contracts\Http\ResponseInterface;
+use Grafida\Shell\Request;
+use Grafida\Shell\Response;
 
 /**
  * A minimal route table for the internal `/api/...` API.
@@ -44,12 +44,12 @@ use Boson\Contracts\Http\ResponseInterface;
 final class Router
 {
     /**
-     * @var list<array{method: string, regex: string, handler: callable(RouteContext): ResponseInterface}>
+     * @var list<array{method: string, regex: string, handler: callable(RouteContext): Response}>
      */
     private array $routes = [];
 
     /**
-     * @param callable(RouteContext): ResponseInterface $handler
+     * @param callable(RouteContext): Response $handler
      */
     public function add(string $method, string $pattern, callable $handler): void
     {
@@ -63,7 +63,7 @@ final class Router
     /**
      * @param array<string, mixed> $body the already-parsed JSON request body
      */
-    public function dispatch(string $method, string $path, array $body, RequestInterface $request): ResponseInterface
+    public function dispatch(string $method, string $path, array $body, Request $request): Response
     {
         $method      = strtoupper($method);
         $pathMatched = false;

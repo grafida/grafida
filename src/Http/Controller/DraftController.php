@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Grafida\Http\Controller;
 
-use Boson\Contracts\Http\ResponseInterface;
+use Grafida\Shell\Response;
 use Grafida\Article\Draft;
 use Grafida\Article\DraftExportService;
 use Grafida\Article\DraftRepository;
@@ -39,18 +39,18 @@ final class DraftController extends Controller
 
     public function registerRoutes(Router $router): void
     {
-        $router->add('POST', '/api/drafts/import', fn (RouteContext $ctx): ResponseInterface => $this->importDraft($ctx->body()));
-        $router->add('GET', '/api/sites/{id}/drafts', fn (RouteContext $ctx): ResponseInterface => $this->listDrafts($ctx->int('id')));
-        $router->add('POST', '/api/sites/{id}/drafts', fn (RouteContext $ctx): ResponseInterface => $this->saveDraft($ctx->int('id'), null, $ctx->body()));
-        $router->add('POST', '/api/drafts/{id}/export', fn (RouteContext $ctx): ResponseInterface => $this->exportDraft($ctx->int('id'), $ctx->body()));
-        $router->add('POST', '/api/drafts/{id}/import', fn (RouteContext $ctx): ResponseInterface => $this->importDraftInto($ctx->int('id'), $ctx->body()));
-        $router->add('GET', '/api/drafts/{id}', fn (RouteContext $ctx): ResponseInterface => $this->getDraft($ctx->int('id')));
-        $router->add('PUT', '/api/drafts/{id}', fn (RouteContext $ctx): ResponseInterface => $this->saveDraft(null, $ctx->int('id'), $ctx->body()));
-        $router->add('DELETE', '/api/drafts/{id}', fn (RouteContext $ctx): ResponseInterface => $this->deleteDraft($ctx->int('id')));
-        $router->add('POST', '/api/drafts/{id}/publish', fn (RouteContext $ctx): ResponseInterface => $this->publishDraft($ctx->int('id'), $ctx->body()));
+        $router->add('POST', '/api/drafts/import', fn (RouteContext $ctx): Response => $this->importDraft($ctx->body()));
+        $router->add('GET', '/api/sites/{id}/drafts', fn (RouteContext $ctx): Response => $this->listDrafts($ctx->int('id')));
+        $router->add('POST', '/api/sites/{id}/drafts', fn (RouteContext $ctx): Response => $this->saveDraft($ctx->int('id'), null, $ctx->body()));
+        $router->add('POST', '/api/drafts/{id}/export', fn (RouteContext $ctx): Response => $this->exportDraft($ctx->int('id'), $ctx->body()));
+        $router->add('POST', '/api/drafts/{id}/import', fn (RouteContext $ctx): Response => $this->importDraftInto($ctx->int('id'), $ctx->body()));
+        $router->add('GET', '/api/drafts/{id}', fn (RouteContext $ctx): Response => $this->getDraft($ctx->int('id')));
+        $router->add('PUT', '/api/drafts/{id}', fn (RouteContext $ctx): Response => $this->saveDraft(null, $ctx->int('id'), $ctx->body()));
+        $router->add('DELETE', '/api/drafts/{id}', fn (RouteContext $ctx): Response => $this->deleteDraft($ctx->int('id')));
+        $router->add('POST', '/api/drafts/{id}/publish', fn (RouteContext $ctx): Response => $this->publishDraft($ctx->int('id'), $ctx->body()));
     }
 
-    public function listDrafts(int $siteId): ResponseInterface
+    public function listDrafts(int $siteId): Response
     {
         $drafts = array_map(
             static fn (Draft $d): array => $d->toArray(),
@@ -60,7 +60,7 @@ final class DraftController extends Controller
         return Json::ok($this->siteContext->withCategoryTitles($drafts, $this->siteContext->requireSite($siteId)));
     }
 
-    public function getDraft(int $id): ResponseInterface
+    public function getDraft(int $id): Response
     {
         $draft = $this->drafts->find($id);
 
@@ -88,7 +88,7 @@ final class DraftController extends Controller
     }
 
     /** @param array<string, mixed> $body */
-    public function saveDraft(?int $siteId, ?int $draftId, array $body): ResponseInterface
+    public function saveDraft(?int $siteId, ?int $draftId, array $body): Response
     {
         if ($draftId !== null) {
             $existing = $this->drafts->find($draftId);
@@ -147,7 +147,7 @@ final class DraftController extends Controller
         return Json::ok($saved?->toArray());
     }
 
-    public function deleteDraft(int $id): ResponseInterface
+    public function deleteDraft(int $id): Response
     {
         $this->drafts->delete($id);
 
@@ -161,7 +161,7 @@ final class DraftController extends Controller
      *
      * @param array<string, mixed> $body
      */
-    public function exportDraft(int $id, array $body): ResponseInterface
+    public function exportDraft(int $id, array $body): Response
     {
         $directory = $this->str($body, 'directory');
 
@@ -203,7 +203,7 @@ final class DraftController extends Controller
      *
      * @param array<string, mixed> $body
      */
-    public function importDraft(array $body): ResponseInterface
+    public function importDraft(array $body): Response
     {
         $siteId     = $this->int($body, 'siteId', 0);
         $payloadRaw = $body['payload'] ?? null;
@@ -225,7 +225,7 @@ final class DraftController extends Controller
      *
      * @param array<string, mixed> $body
      */
-    public function importDraftInto(int $id, array $body): ResponseInterface
+    public function importDraftInto(int $id, array $body): Response
     {
         $payloadRaw = $body['payload'] ?? null;
 
@@ -253,7 +253,7 @@ final class DraftController extends Controller
      *
      * @param array<string, mixed> $body
      */
-    public function publishDraft(int $id, array $body = []): ResponseInterface
+    public function publishDraft(int $id, array $body = []): Response
     {
         $draft = $this->drafts->find($id);
 

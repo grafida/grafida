@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Grafida\Tests\Feature;
 
-use Boson\Component\Http\Request;
+use Grafida\Shell\Request;
 use Grafida\Application\Kernel;
 use Grafida\Http\HttpResponse;
 use Grafida\Reference\ReferenceRepository;

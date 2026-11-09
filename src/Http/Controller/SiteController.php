@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Grafida\Http\Controller;
 
-use Boson\Contracts\Http\ResponseInterface;
+use Grafida\Shell\Response;
 use Grafida\Field\FieldCategoryScope;
 use Grafida\Field\FieldSupport;
 use Grafida\Http\Json;
@@ -43,23 +43,23 @@ final class SiteController extends Controller
 
     public function registerRoutes(Router $router): void
     {
-        $router->add('POST', '/api/sites/test', fn (RouteContext $ctx): ResponseInterface => $this->testConnection($ctx->body()));
+        $router->add('POST', '/api/sites/test', fn (RouteContext $ctx): Response => $this->testConnection($ctx->body()));
         // Registered before the /api/sites/{id}/... routes' fellow-traveller
         // patterns: {id} only ever matches digits, so "diagnose" cannot be
         // shadowed regardless of order — kept literal-first anyway to match
         // /api/sites/test's convention.
-        $router->add('POST', '/api/sites/diagnose', fn (RouteContext $ctx): ResponseInterface => $this->diagnoseConnection($ctx->body()));
-        $router->add('GET', '/api/sites', fn (RouteContext $ctx): ResponseInterface => $this->listSites());
-        $router->add('POST', '/api/sites', fn (RouteContext $ctx): ResponseInterface => $this->createSite($ctx->body()));
-        $router->add('PATCH', '/api/sites/{id}', fn (RouteContext $ctx): ResponseInterface => $this->updateSite($ctx->int('id'), $ctx->body()));
-        $router->add('DELETE', '/api/sites/{id}', fn (RouteContext $ctx): ResponseInterface => $this->deleteSite($ctx->int('id')));
-        $router->add('GET', '/api/sites/{id}/references', fn (RouteContext $ctx): ResponseInterface => $this->references($ctx->int('id'), false));
-        $router->add('POST', '/api/sites/{id}/references/refresh', fn (RouteContext $ctx): ResponseInterface => $this->references($ctx->int('id'), true));
-        $router->add('GET', '/api/sites/{id}/editor-css', fn (RouteContext $ctx): ResponseInterface => $this->editorCss($ctx->int('id')));
+        $router->add('POST', '/api/sites/diagnose', fn (RouteContext $ctx): Response => $this->diagnoseConnection($ctx->body()));
+        $router->add('GET', '/api/sites', fn (RouteContext $ctx): Response => $this->listSites());
+        $router->add('POST', '/api/sites', fn (RouteContext $ctx): Response => $this->createSite($ctx->body()));
+        $router->add('PATCH', '/api/sites/{id}', fn (RouteContext $ctx): Response => $this->updateSite($ctx->int('id'), $ctx->body()));
+        $router->add('DELETE', '/api/sites/{id}', fn (RouteContext $ctx): Response => $this->deleteSite($ctx->int('id')));
+        $router->add('GET', '/api/sites/{id}/references', fn (RouteContext $ctx): Response => $this->references($ctx->int('id'), false));
+        $router->add('POST', '/api/sites/{id}/references/refresh', fn (RouteContext $ctx): Response => $this->references($ctx->int('id'), true));
+        $router->add('GET', '/api/sites/{id}/editor-css', fn (RouteContext $ctx): Response => $this->editorCss($ctx->int('id')));
     }
 
     /** @param array<string, mixed> $body */
-    public function testConnection(array $body): ResponseInterface
+    public function testConnection(array $body): Response
     {
         $apiBase = $this->sites->testConnection($this->str($body, 'url'), $this->str($body, 'token'));
 
@@ -80,7 +80,7 @@ final class SiteController extends Controller
      *
      * @param array<string, mixed> $body
      */
-    public function diagnoseConnection(array $body): ResponseInterface
+    public function diagnoseConnection(array $body): Response
     {
         $url   = $this->str($body, 'url');
         $token = $this->str($body, 'token');
@@ -97,13 +97,13 @@ final class SiteController extends Controller
         return Json::ok($this->diagnostics->run($url, $token));
     }
 
-    public function listSites(): ResponseInterface
+    public function listSites(): Response
     {
         return Json::ok(array_map($this->siteContext->siteArray(...), $this->sites->list()));
     }
 
     /** @param array<string, mixed> $body */
-    public function createSite(array $body): ResponseInterface
+    public function createSite(array $body): Response
     {
         $allowInsecureVal = $body['allowInsecure'] ?? false;
         $site = $this->sites->create(
@@ -125,7 +125,7 @@ final class SiteController extends Controller
     }
 
     /** @param array<string, mixed> $body */
-    public function updateSite(int $id, array $body): ResponseInterface
+    public function updateSite(int $id, array $body): Response
     {
         $tokenVal = $body['token'] ?? null;
         $token    = is_string($tokenVal) && $tokenVal !== '' ? $tokenVal : null;
@@ -225,14 +225,14 @@ final class SiteController extends Controller
         return UnicodeAliases::normalise($this->str($body, 'unicodeAliases'));
     }
 
-    public function deleteSite(int $id): ResponseInterface
+    public function deleteSite(int $id): Response
     {
         $this->sites->delete($id);
 
         return Json::ok();
     }
 
-    public function references(int $siteId, bool $refresh): ResponseInterface
+    public function references(int $siteId, bool $refresh): Response
     {
         $site = $this->siteContext->requireSite($siteId);
 
@@ -280,7 +280,7 @@ final class SiteController extends Controller
         ]);
     }
 
-    public function editorCss(int $siteId): ResponseInterface
+    public function editorCss(int $siteId): Response
     {
         $site = $this->siteContext->requireSite($siteId);
 

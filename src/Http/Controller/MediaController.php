@@ -11,8 +11,7 @@ declare(strict_types=1);
 
 namespace Grafida\Http\Controller;
 
-use Boson\Component\Http\Response;
-use Boson\Contracts\Http\ResponseInterface;
+use Grafida\Shell\Response;
 use Grafida\Http\Json;
 use Grafida\Http\RouteContext;
 use Grafida\Http\Router;
@@ -63,27 +62,27 @@ final class MediaController extends Controller
 
     public function registerRoutes(Router $router): void
     {
-        $router->add('GET', '/api/sites/{id}/media', fn (RouteContext $ctx): ResponseInterface => $this->browseMedia($ctx->int('id'), $ctx->request()->url->query->get('path', '') ?? ''));
-        $router->add('POST', '/api/sites/{id}/media', fn (RouteContext $ctx): ResponseInterface => $this->uploadOfflineMedia($ctx->int('id'), $ctx->body()));
-        $router->add('DELETE', '/api/sites/{id}/media', fn (RouteContext $ctx): ResponseInterface => $this->deleteSiteMedia($ctx->int('id'), $ctx->request()->url->query->get('path', '') ?? ''));
-        $router->add('GET', '/api/sites/{id}/media/adapters', fn (RouteContext $ctx): ResponseInterface => $this->mediaAdapters($ctx->int('id')));
-        $router->add('GET', '/api/sites/{id}/media/file', fn (RouteContext $ctx): ResponseInterface => $this->siteMediaFile($ctx->int('id'), $ctx->request()->url->query->get('path', '') ?? ''));
-        $router->add('POST', '/api/sites/{id}/media/files', fn (RouteContext $ctx): ResponseInterface => $this->uploadSiteMedia($ctx->int('id'), $ctx->body()));
-        $router->add('POST', '/api/sites/{id}/media/folder', fn (RouteContext $ctx): ResponseInterface => $this->createSiteMediaFolder($ctx->int('id'), $ctx->body()));
-        $router->add('POST', '/api/sites/{id}/media/rename', fn (RouteContext $ctx): ResponseInterface => $this->renameSiteMedia($ctx->int('id'), $ctx->body()));
-        $router->add('POST', '/api/sites/{id}/media/content', fn (RouteContext $ctx): ResponseInterface => $this->updateSiteMediaContent($ctx->int('id'), $ctx->body()));
-        $router->add('GET', '/api/media/{id}', fn (RouteContext $ctx): ResponseInterface => $this->mediaBlob($ctx->int('id')));
-        $router->add('GET', '/api/sites/{id}/image', fn (RouteContext $ctx): ResponseInterface => $this->siteImage($ctx->int('id'), $ctx->request()->url->query->get('url', '') ?? ''));
+        $router->add('GET', '/api/sites/{id}/media', fn (RouteContext $ctx): Response => $this->browseMedia($ctx->int('id'), $ctx->request()->query('path', '') ?? ''));
+        $router->add('POST', '/api/sites/{id}/media', fn (RouteContext $ctx): Response => $this->uploadOfflineMedia($ctx->int('id'), $ctx->body()));
+        $router->add('DELETE', '/api/sites/{id}/media', fn (RouteContext $ctx): Response => $this->deleteSiteMedia($ctx->int('id'), $ctx->request()->query('path', '') ?? ''));
+        $router->add('GET', '/api/sites/{id}/media/adapters', fn (RouteContext $ctx): Response => $this->mediaAdapters($ctx->int('id')));
+        $router->add('GET', '/api/sites/{id}/media/file', fn (RouteContext $ctx): Response => $this->siteMediaFile($ctx->int('id'), $ctx->request()->query('path', '') ?? ''));
+        $router->add('POST', '/api/sites/{id}/media/files', fn (RouteContext $ctx): Response => $this->uploadSiteMedia($ctx->int('id'), $ctx->body()));
+        $router->add('POST', '/api/sites/{id}/media/folder', fn (RouteContext $ctx): Response => $this->createSiteMediaFolder($ctx->int('id'), $ctx->body()));
+        $router->add('POST', '/api/sites/{id}/media/rename', fn (RouteContext $ctx): Response => $this->renameSiteMedia($ctx->int('id'), $ctx->body()));
+        $router->add('POST', '/api/sites/{id}/media/content', fn (RouteContext $ctx): Response => $this->updateSiteMediaContent($ctx->int('id'), $ctx->body()));
+        $router->add('GET', '/api/media/{id}', fn (RouteContext $ctx): Response => $this->mediaBlob($ctx->int('id')));
+        $router->add('GET', '/api/sites/{id}/image', fn (RouteContext $ctx): Response => $this->siteImage($ctx->int('id'), $ctx->request()->query('url', '') ?? ''));
         // {id} placeholders compile to an anchored `\d+` regex (Router::compile()), so
         // `/api/media/{id}/raw` is a distinct pattern from `/api/media/{id}` above and
         // cannot be swallowed by it — the router tries every registered pattern in turn.
-        $router->add('GET', '/api/media/{id}/raw', fn (RouteContext $ctx): ResponseInterface => $this->mediaBlobRaw($ctx->int('id')));
-        $router->add('GET', '/api/media/{id}/target', fn (RouteContext $ctx): ResponseInterface => $this->mediaBlobTarget($ctx->int('id')));
-        $router->add('DELETE', '/api/media/{id}', fn (RouteContext $ctx): ResponseInterface => $this->deleteLocalMedia($ctx->int('id')));
-        $router->add('POST', '/api/media/{id}/rename', fn (RouteContext $ctx): ResponseInterface => $this->renameLocalMedia($ctx->int('id'), $ctx->body()));
-        $router->add('POST', '/api/media/{id}/content', fn (RouteContext $ctx): ResponseInterface => $this->updateLocalMediaContent($ctx->int('id'), $ctx->body()));
-        $router->add('GET', '/api/sites/{id}/local-media', fn (RouteContext $ctx): ResponseInterface => $this->listLocalMedia($ctx->int('id')));
-        $router->add('POST', '/api/media/{id}/save-to-disk', fn (RouteContext $ctx): ResponseInterface => $this->saveLocalMediaToDisk($ctx->int('id'), $ctx->body()));
+        $router->add('GET', '/api/media/{id}/raw', fn (RouteContext $ctx): Response => $this->mediaBlobRaw($ctx->int('id')));
+        $router->add('GET', '/api/media/{id}/target', fn (RouteContext $ctx): Response => $this->mediaBlobTarget($ctx->int('id')));
+        $router->add('DELETE', '/api/media/{id}', fn (RouteContext $ctx): Response => $this->deleteLocalMedia($ctx->int('id')));
+        $router->add('POST', '/api/media/{id}/rename', fn (RouteContext $ctx): Response => $this->renameLocalMedia($ctx->int('id'), $ctx->body()));
+        $router->add('POST', '/api/media/{id}/content', fn (RouteContext $ctx): Response => $this->updateLocalMediaContent($ctx->int('id'), $ctx->body()));
+        $router->add('GET', '/api/sites/{id}/local-media', fn (RouteContext $ctx): Response => $this->listLocalMedia($ctx->int('id')));
+        $router->add('POST', '/api/media/{id}/save-to-disk', fn (RouteContext $ctx): Response => $this->saveLocalMediaToDisk($ctx->int('id'), $ctx->body()));
     }
 
     /**
@@ -96,7 +95,7 @@ final class MediaController extends Controller
      * Unlike the rest of this controller this needs no API token — the image is
      * public — so it only requires the site to exist, not to be connected.
      */
-    public function siteImage(int $siteId, string $url): ResponseInterface
+    public function siteImage(int $siteId, string $url): Response
     {
         $site = $this->siteContext->requireSite($siteId);
 
@@ -111,7 +110,7 @@ final class MediaController extends Controller
      * Lists a folder of the site's Media Manager so the editor can pick an
      * existing image for the intro / full-text article image.
      */
-    public function browseMedia(int $siteId, string $path): ResponseInterface
+    public function browseMedia(int $siteId, string $path): Response
     {
         $conn = $this->siteContext->connectedSite($siteId);
 
@@ -126,7 +125,7 @@ final class MediaController extends Controller
     }
 
     /** Lists the site's Media Manager adapters (filesystems) for the Media Manager screen. */
-    public function mediaAdapters(int $siteId): ResponseInterface
+    public function mediaAdapters(int $siteId): Response
     {
         $conn = $this->siteContext->connectedSite($siteId);
 
@@ -140,7 +139,7 @@ final class MediaController extends Controller
     }
 
     /** Returns a media file's bytes as a data: URI so the SPA can load it for editing. */
-    public function siteMediaFile(int $siteId, string $path): ResponseInterface
+    public function siteMediaFile(int $siteId, string $path): Response
     {
         $conn = $this->siteContext->connectedSite($siteId);
 
@@ -173,7 +172,7 @@ final class MediaController extends Controller
      *
      * @param array<string, mixed> $body
      */
-    public function uploadSiteMedia(int $siteId, array $body): ResponseInterface
+    public function uploadSiteMedia(int $siteId, array $body): Response
     {
         $conn = $this->siteContext->connectedSite($siteId);
 
@@ -199,7 +198,7 @@ final class MediaController extends Controller
     }
 
     /** @param array<string, mixed> $body */
-    public function createSiteMediaFolder(int $siteId, array $body): ResponseInterface
+    public function createSiteMediaFolder(int $siteId, array $body): Response
     {
         $conn = $this->siteContext->connectedSite($siteId);
 
@@ -225,7 +224,7 @@ final class MediaController extends Controller
      *
      * @param array<string, mixed> $body
      */
-    public function renameSiteMedia(int $siteId, array $body): ResponseInterface
+    public function renameSiteMedia(int $siteId, array $body): Response
     {
         $conn = $this->siteContext->connectedSite($siteId);
 
@@ -254,7 +253,7 @@ final class MediaController extends Controller
     }
 
     /** @param array<string, mixed> $body */
-    public function updateSiteMediaContent(int $siteId, array $body): ResponseInterface
+    public function updateSiteMediaContent(int $siteId, array $body): Response
     {
         $conn = $this->siteContext->connectedSite($siteId);
 
@@ -279,7 +278,7 @@ final class MediaController extends Controller
     }
 
     /** Deletes a file/folder from the site's Media Manager. */
-    public function deleteSiteMedia(int $siteId, string $path): ResponseInterface
+    public function deleteSiteMedia(int $siteId, string $path): Response
     {
         $conn = $this->siteContext->connectedSite($siteId);
 
@@ -310,7 +309,7 @@ final class MediaController extends Controller
      * same way but only offers the "this may change" explanation for a
      * prediction, so a caller must not collapse the flag.
      */
-    public function mediaBlobTarget(int $id): ResponseInterface
+    public function mediaBlobTarget(int $id): Response
     {
         $meta = $this->media->findMeta($id);
 
@@ -344,7 +343,7 @@ final class MediaController extends Controller
      * an in-place edit changes them) can now get them from the same call
      * instead of re-deriving them from a decoded image client-side.
      */
-    public function mediaBlob(int $id): ResponseInterface
+    public function mediaBlob(int $id): Response
     {
         $meta = $this->media->findMeta($id);
 
@@ -383,7 +382,7 @@ final class MediaController extends Controller
      *
      * @param array<string, mixed> $body
      */
-    public function uploadOfflineMedia(int $siteId, array $body): ResponseInterface
+    public function uploadOfflineMedia(int $siteId, array $body): Response
     {
         $raw = base64_decode($this->str($body, 'dataBase64'), true);
 
@@ -429,7 +428,7 @@ final class MediaController extends Controller
      * SPA's existing error handling keeps working for the cases where this
      * *is* called from `fetch()` (e.g. re-deriving dimensions).
      */
-    public function mediaBlobRaw(int $id): ResponseInterface
+    public function mediaBlobRaw(int $id): Response
     {
         $meta = $this->media->findMeta($id);
 
@@ -470,7 +469,7 @@ final class MediaController extends Controller
      * controller this needs no site connection — `media_blobs` is entirely
      * local storage, nothing here talks to the Joomla REST API.
      */
-    public function listLocalMedia(int $siteId): ResponseInterface
+    public function listLocalMedia(int $siteId): Response
     {
         $entries = array_map(
             static function (array $row): array {
@@ -510,7 +509,7 @@ final class MediaController extends Controller
      *
      * @param array<string, mixed> $body
      */
-    public function renameLocalMedia(int $id, array $body): ResponseInterface
+    public function renameLocalMedia(int $id, array $body): Response
     {
         $meta = $this->media->findMeta($id);
 
@@ -564,7 +563,7 @@ final class MediaController extends Controller
      *
      * @param array<string, mixed> $body
      */
-    public function updateLocalMediaContent(int $id, array $body): ResponseInterface
+    public function updateLocalMediaContent(int $id, array $body): Response
     {
         $meta = $this->media->findMeta($id);
 
@@ -611,7 +610,7 @@ final class MediaController extends Controller
      * which is honest about what happened; scrubbing the reference out of
      * the draft's stored HTML is not this endpoint's job.
      */
-    public function deleteLocalMedia(int $id): ResponseInterface
+    public function deleteLocalMedia(int $id): Response
     {
         $meta = $this->media->findMeta($id);
 
@@ -635,7 +634,7 @@ final class MediaController extends Controller
      *
      * @param array<string, mixed> $body
      */
-    public function saveLocalMediaToDisk(int $id, array $body): ResponseInterface
+    public function saveLocalMediaToDisk(int $id, array $body): Response
     {
         $directory = $this->str($body, 'directory');
 

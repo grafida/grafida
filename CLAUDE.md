@@ -21,10 +21,29 @@ plugins or builder shortcodes.
 ## How Boson works here (important)
 
 Boson runs a native webview and bundles a PHP runtime. There is **no `webview->bind` RPC**.
-Instead `index.php` registers a handler for the `boson://` scheme; every request is turned
-into a PSR-style `Boson\Component\Http\Request` and answered with a `Response`. The
-front-end (a plain HTML/CSS/JS SPA under `assets/private`) talks to PHP by calling
-`fetch('boson://app/api/...')`.
+Instead `index.php` registers a handler for the `boson://` scheme; every request arrives as a
+Boson request, and **`Grafida\Application\BosonBridge` converts it at that one boundary** into a
+`Grafida\Shell\Request` and the answer back from a `Grafida\Shell\Response`. Nothing behind
+`index.php` uses a Boson HTTP type any more (gh-84). The front-end (a plain HTML/CSS/JS SPA under
+`assets/private`) talks to PHP by calling `fetch('boson://app/api/...')`.
+
+**Boson is being replaced by a self-owned native shell** (umbrella gh-82; Phase 1 is gh-84). The
+HTTP types, the frame codec, the stdio worker loop and `StaticFiles` come from the MIT package
+**[grafida/shell-php](https://github.com/grafida/shell-php)**, which speaks the wire protocol
+specified in **grafida/shell** (`protocol/v1.md`, with conformance fixtures). There are now **two
+entry points over one container**: `index.php` (Boson, what ships until the switch-over release)
+and **`bin/worker.php`** (the stdio worker the native shell will spawn; run it as
+`php bin/worker.php`). Both build the same `FrontController`, which is a shell-php `Handler`.
+`composer test:pipe` (`tests/Pipe/`) spawns the worker over real pipes. It runs every conformance
+fixture against `bin/worker.php`, then replays Feature-suite requests through a worker and through
+`Kernel::handle()` in process and requires byte-identical answers. shell-php is pinned to an **exact
+tag** (`0.1.0`) through a `vcs` repository entry in `composer.json`, until it is on Packagist. To
+change shell-php and Grafida together, point that entry at a local **path repository**
+(`../shell-php`, `"options": {"symlink": false}`, so the Boson compiler never meets a symlink in
+`vendor/`) and require `dev-main`. Tag shell-php before committing Grafida, and never commit the
+path entry: it breaks every checkout that lacks the sibling clone. shell-php's `Request`/`Response` keep Boson's positional constructors and
+`Headers` iterates one `name => value` pair per value, which is why the Feature suite switched type
+with no assertion edits.
 
 Request flow: `index.php` → `Grafida\FrontController` → `Grafida\Application\Kernel` →
 either `Grafida\Http\ApiController` (paths under `/api/`) or a static asset / the SPA shell.
@@ -34,7 +53,7 @@ without opening a window (see `tests/Feature/ApiRoutingTest.php`).
 **The composition root is a DI container, not the Kernel.** `index.php` builds a
 `Grafida\Application\Container` (a thin `Joomla\DI\Container` subclass — see `src/Application/`)
 via `ContainerFactory::create()` and pulls `FrontController` out of it; `Kernel` is now just
-`(StaticProviderInterface $static, ApiController $api)`. Nothing is `new`ed ad-hoc and there is
+`(StaticFiles $static, ApiController $api)`. Nothing is `new`ed ad-hoc and there is
 no global/singleton database object — add a service by registering it in a **service provider**
 (`src/Application/Provider/`), not by editing a constructor chain.
 
@@ -62,11 +81,15 @@ window-free in tests (a null dialog makes the endpoint return 503).
   `db.path` (default `Paths::databaseFile()`; `':memory:'` in tests), `migrations.dir`,
   `base.path`, `docs.dir` (default `Resources::docsDir()` — note it does **not** go through
   `Resources::base()`, since the docs are read straight out of the phar rather than extracted),
-  `static.provider`, `dialog` (nullable), and `secret.store` — which is
+  `static.provider` (a `Grafida\Shell\StaticFiles`; no default, each entry point supplies it),
+  `dialog` (nullable), and `secret.store` — which is
   **tri-state**: `null` → `SecretStoreFactory::secureStore()` (production), `false` → no store
   (forces the insecure-plaintext fallback path), a `SecretStore` instance → used as-is.
   The `DatabaseInterface` factory **connects *and* migrates**, so every consumer receives a
-  migrated database. `Kernel` is `(StaticProviderInterface, ApiController)`.
+  migrated database. `Kernel` is `(StaticFiles, ApiController)`.
+  ⚠️ **joomla/di calls any callable value as a factory**, so `create()` wraps a parameter that is
+  an invokable object before sharing it. `StaticFiles` is one: it is a shell-php `Handler`, and
+  without the wrap the container calls `StaticFiles::__invoke($container)` instead of returning it.
   It also holds the two classes that make the **native event loop** affordable: `BosonApplication`
   (the `Boson\Application` `index.php` actually instantiates) and `EventLoopThrottle`.
   ⚠️ **Boson's event loop is a busy-wait and costs about half a CPU core with the app idle.**
@@ -543,6 +566,12 @@ window-free in tests (a null dialog makes the endpoint return 503).
   (en-GB) sorts first, the rest by endonym. So every `.ini` MUST carry `GRAFIDA_LANGUAGE_ENDONYM`,
   and adding a translation needs no code change (the list is sent to the SPA as `bootstrap`'s
   `availableLanguages` tag => endonym map).
+- `bin/worker.php` — the stdio worker entry point (gh-84): the container + shell-php's
+  `Worker::run()`. Not shipped yet (Boson's `index.php` is), and deliberately free of what belongs to
+  the process owning the window: no `StartupCheck`, `MacSpellCheck` or console hiding, and no native
+  dialog until Phase 2's token flow (so `POST /api/dialog/*` answers 503 there). stdout carries the
+  frame stream; never print to it. `tests/Pipe/` drives it over real pipes against a throwaway data
+  directory (`HOME`/`XDG_*`/`APPDATA` pointed at a temp dir), never the user's.
 - `docs/` — the user documentation, in Markdown. Shipped inside every binary (it is in
   `boson.json`'s `build.directories`) **and** published on Grafida.app; see `src/Help/` above.
 - `storage/migrations/*.sql` — schema. `.plans/` — implementation step notes (gitignored).

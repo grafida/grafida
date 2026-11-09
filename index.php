@@ -10,15 +10,16 @@
 declare(strict_types=1);
 
 use Boson\ApplicationCreateInfo;
-use Boson\Component\Http\Static\FilesystemStaticProvider;
 use Boson\WebView\Api\Schemes\Event\SchemeRequestReceived;
 use Boson\WebView\WebViewCreateInfo;
 use Boson\Window\WindowCreateInfo;
 use Boson\Window\WindowDecoration;
 use Grafida\Application\BosonApplication;
+use Grafida\Application\BosonBridge;
 use Grafida\Application\ContainerFactory;
 use Grafida\Editor\MacSpellCheck;
 use Grafida\FrontController;
+use Grafida\Shell\StaticFiles;
 use Grafida\Startup\FailureReporter;
 use Grafida\Startup\StartupCheck;
 
@@ -117,7 +118,7 @@ try {
     exit(StartupCheck::EXIT_UNSUPPORTED);
 }
 
-$static = new FilesystemStaticProvider([
+$static = new StaticFiles([
     __DIR__ . '/assets/private',
     __DIR__ . '/assets/public',
 ]);
@@ -130,7 +131,9 @@ $container = ContainerFactory::create([
 $controller = $container->get(FrontController::class);
 
 $app->on(static function (SchemeRequestReceived $e) use ($app, $controller): void {
-    $e->response = $controller($e->request);
+    // Everything behind the front controller speaks shell-php's Request/Response, the same types
+    // bin/worker.php serves over stdio; BosonBridge translates at this one boundary (gh-84).
+    $e->response = BosonBridge::handle($controller, $e->request);
 
     // The SPA is talking to us, so the app is not idle: run the event loop at full speed for a
     // moment, or every request in a burst would pay the throttle's idle sleep again.

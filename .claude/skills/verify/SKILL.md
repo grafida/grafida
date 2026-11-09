@@ -22,12 +22,17 @@ Build the harness in the scratchpad directory, never in the repo.
 $container = ContainerFactory::create([
     'db.path'         => __DIR__ . '/drive.sqlite',   // a file, so it persists across requests
     'base.path'       => '/path/to/grafida',
-    'static.provider' => $noopStaticProvider,          // implements findFileByRequest(): ?ResponseInterface
+    'static.provider' => new StaticFiles([]),          // Grafida\Shell\StaticFiles; no roots = finds nothing
     'dialog'          => null,
     'secret.store'    => false,                        // plaintext fallback: no keychain prompts
 ]);
 $response = $container->get(Kernel::class)->handle(new Request('GET', 'boson://app/api/...'));
 ```
+
+`Request`/`Response` are `Grafida\Shell\*` (grafida/shell-php), not Boson's: `new Request($method,
+$url, $headers, $body)`, `$response->status` is an int, `$response->headers` iterates one
+`name => value` pair per value. Pass every container parameter that is an invokable object through
+`ContainerFactory::create()` as-is — it wraps them, because joomla/di would otherwise call them.
 
 Seed rows with `$container->get(DatabaseInterface::class)->getConnection()` (a
 real PDO; the container has already migrated the DB).
@@ -37,10 +42,13 @@ deprecation that otherwise corrupts JSON output.
 
 ## Full stack (the SPA, the editor, the AI panel)
 
-1. **Bridge**: a `php -S 127.0.0.1:8793 -t assets/private bridge.php` router.
-   Requests under `/api/` → `Kernel::handle(new Request($method, 'boson://app' . $uri, [], file_get_contents('php://input')))`,
-   echo the body with the response's status. Everything else → `return false`
-   so the built-in server serves the asset off disk; `/` → `view/index.html`.
+1. **Bridge**: a `php -S 127.0.0.1:8793 bridge.php` router that sends **every** request —
+   static assets included — through `FrontController`, with `static.provider` set to
+   `new StaticFiles([$root . '/assets/private', $root . '/assets/public'])`:
+   `new Request($_SERVER['REQUEST_METHOD'], 'boson://app' . $_SERVER['REQUEST_URI'], getallheaders(), file_get_contents('php://input'))`,
+   then `http_response_code($r->status)`, `header("$name: $value", false)` for each pair, echo the
+   body. Do not `return false` for assets: that lets the built-in server serve them and skips
+   `StaticFiles` and the SPA-shell fallback, which are app code.
 2. **Browser**: `npx playwright install chromium` once, then rewrite the scheme
    before app.js loads — this is the whole trick:
 
@@ -51,7 +59,8 @@ await page.addInitScript(() => {
 });
 ```
 
-Then drive the real UI: `[data-screen="articles"]`, `.article-item`,
+Then drive the real UI: `[data-screen="articles"]`, `.articles-tab` (drafts are on the
+**Local articles** tab, not the default one), `.article-item-delete`, `.article-item`,
 `#ai-input`, `#ai-btn-send`, `#settings-language-select`. Modals open via the
 globals (`window.openEditAiServiceModal(1)`); note `State` is a top-level
 `const`, so it is **not** on `window` — probe the DOM instead.
@@ -73,5 +82,9 @@ globals (`window.openEditAiServiceModal(1)`); note `State` is a top-level
 - Seeding an `ai_services` row needs `insecure_key` (with `secret.store => false`).
 - A site with no token makes reference/media calls 409 in the console — expected
   noise, not your bug.
+- `[data-screen="requestlog"]` is `hidden` until the Request Log setting is on
+  (`POST /api/settings/request-log {"enabled":true}`); default off.
+- `bin/worker.php` (the stdio worker) is covered by `composer test:pipe`, not by this skill:
+  a browser cannot speak the frame protocol.
 - Identical image URLs get HTTP-cached by the browser; use distinct filenames
   when measuring per-image latency.

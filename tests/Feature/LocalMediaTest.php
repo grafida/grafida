@@ -11,8 +11,8 @@ declare(strict_types=1);
 
 namespace Grafida\Tests\Feature;
 
-use Boson\Component\Http\Request;
-use Boson\Contracts\Http\ResponseInterface;
+use Grafida\Shell\Request;
+use Grafida\Shell\Response;
 use Grafida\Application\Container;
 use Grafida\Application\Kernel;
 use Grafida\Article\Draft;
@@ -62,7 +62,7 @@ final class LocalMediaTest extends TestCase
         return (int) $pdo->lastInsertId();
     }
 
-    private function raw(string $method, string $path, ?string $body = null): ResponseInterface
+    private function raw(string $method, string $path, ?string $body = null): Response
     {
         return $this->kernel->handle(new Request($method, 'boson://app' . $path, [], $body ?? ''));
     }
@@ -75,7 +75,7 @@ final class LocalMediaTest extends TestCase
         return [(int) (string) $response->status, json_decode((string) $response->body, true)];
     }
 
-    private function header(ResponseInterface $response, string $name): ?string
+    private function header(Response $response, string $name): ?string
     {
         foreach ($response->headers as $key => $value) {
             if (strtolower((string) $key) === strtolower($name)) {

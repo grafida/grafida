@@ -15,6 +15,7 @@ use Boson\Api\Dialog\DialogApiInterface;
 use Grafida\Application\Container;
 use Grafida\Application\ContainerFactory;
 use Grafida\Secret\SecretStore;
+use Grafida\Shell\StaticFiles;
 
 /** Builds a fully-wired application container backed by an in-memory database, for Feature tests. */
 final class TestContainer
@@ -26,7 +27,7 @@ final class TestContainer
         return ContainerFactory::create([
             'db.path'         => ':memory:',
             'base.path'       => \dirname(__DIR__, 2),
-            'static.provider' => new NoopStaticProvider(),
+            'static.provider' => new StaticFiles([]),
             'dialog'          => $dialog,
             'secret.store'    => $store,
         ]);

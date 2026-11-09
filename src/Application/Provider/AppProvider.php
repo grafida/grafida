@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Grafida\Application\Provider;
 
-use Boson\Component\Http\Static\StaticProviderInterface;
+use Grafida\Shell\StaticFiles;
 use Grafida\Application\Container;
 use Grafida\Application\Kernel;
 use Grafida\Clipboard\ClipboardService;
@@ -115,7 +115,7 @@ final class AppProvider implements ServiceProviderInterface
         });
 
         $container->share(Kernel::class, static function (Container $c): Kernel {
-            /** @var StaticProviderInterface $static */
+            /** @var StaticFiles $static */
             $static = $c->get('static.provider');
 
             return new Kernel($static, $c->get(ApiController::class));

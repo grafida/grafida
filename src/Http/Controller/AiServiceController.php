@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Grafida\Http\Controller;
 
-use Boson\Contracts\Http\ResponseInterface;
+use Grafida\Shell\Response;
 use Grafida\Ai\AiServiceManager;
 use Grafida\Ai\AiTool;
 use Grafida\Ai\AiToolRepository;
@@ -51,21 +51,21 @@ final class AiServiceController extends Controller
 
     public function registerRoutes(Router $router): void
     {
-        $router->add('GET', '/api/ai/services', fn (RouteContext $ctx): ResponseInterface => $this->listAiServices());
-        $router->add('POST', '/api/ai/services', fn (RouteContext $ctx): ResponseInterface => $this->createAiService($ctx->body()));
-        $router->add('GET', '/api/ai/tools', fn (RouteContext $ctx): ResponseInterface => $this->listAiTools());
-        $router->add('PUT', '/api/ai/system-prompt', fn (RouteContext $ctx): ResponseInterface => $this->setSystemPrompt($ctx->body()));
-        $router->add('POST', '/api/ai/tools', fn (RouteContext $ctx): ResponseInterface => $this->createAiTool($ctx->body()));
-        $router->add('PATCH', '/api/ai/tools/{key}', fn (RouteContext $ctx): ResponseInterface => $this->updateAiTool($ctx->string('key'), $ctx->body()));
-        $router->add('DELETE', '/api/ai/tools/{key}', fn (RouteContext $ctx): ResponseInterface => $this->deleteAiTool($ctx->string('key')));
-        $router->add('GET', '/api/ai/services/{id}/resolved', fn (RouteContext $ctx): ResponseInterface => $this->resolvedAiService($ctx->int('id'), $ctx->request()->url->query->get('tool') ?? ''));
-        $router->add('POST', '/api/ai/services/{id}/default', fn (RouteContext $ctx): ResponseInterface => $this->setAiServiceDefault($ctx->int('id')));
-        $router->add('GET', '/api/ai/services/{id}', fn (RouteContext $ctx): ResponseInterface => $this->getAiService($ctx->int('id')));
-        $router->add('PATCH', '/api/ai/services/{id}', fn (RouteContext $ctx): ResponseInterface => $this->updateAiService($ctx->int('id'), $ctx->body()));
-        $router->add('DELETE', '/api/ai/services/{id}', fn (RouteContext $ctx): ResponseInterface => $this->deleteAiService($ctx->int('id')));
+        $router->add('GET', '/api/ai/services', fn (RouteContext $ctx): Response => $this->listAiServices());
+        $router->add('POST', '/api/ai/services', fn (RouteContext $ctx): Response => $this->createAiService($ctx->body()));
+        $router->add('GET', '/api/ai/tools', fn (RouteContext $ctx): Response => $this->listAiTools());
+        $router->add('PUT', '/api/ai/system-prompt', fn (RouteContext $ctx): Response => $this->setSystemPrompt($ctx->body()));
+        $router->add('POST', '/api/ai/tools', fn (RouteContext $ctx): Response => $this->createAiTool($ctx->body()));
+        $router->add('PATCH', '/api/ai/tools/{key}', fn (RouteContext $ctx): Response => $this->updateAiTool($ctx->string('key'), $ctx->body()));
+        $router->add('DELETE', '/api/ai/tools/{key}', fn (RouteContext $ctx): Response => $this->deleteAiTool($ctx->string('key')));
+        $router->add('GET', '/api/ai/services/{id}/resolved', fn (RouteContext $ctx): Response => $this->resolvedAiService($ctx->int('id'), $ctx->request()->query('tool') ?? ''));
+        $router->add('POST', '/api/ai/services/{id}/default', fn (RouteContext $ctx): Response => $this->setAiServiceDefault($ctx->int('id')));
+        $router->add('GET', '/api/ai/services/{id}', fn (RouteContext $ctx): Response => $this->getAiService($ctx->int('id')));
+        $router->add('PATCH', '/api/ai/services/{id}', fn (RouteContext $ctx): Response => $this->updateAiService($ctx->int('id'), $ctx->body()));
+        $router->add('DELETE', '/api/ai/services/{id}', fn (RouteContext $ctx): Response => $this->deleteAiService($ctx->int('id')));
     }
 
-    public function listAiServices(): ResponseInterface
+    public function listAiServices(): Response
     {
         return Json::ok(array_map(
             static fn ($s) => $s->toArray(),
@@ -73,7 +73,7 @@ final class AiServiceController extends Controller
         ));
     }
 
-    public function getAiService(int $id): ResponseInterface
+    public function getAiService(int $id): Response
     {
         $service = $this->aiServices->find($id);
 
@@ -85,7 +85,7 @@ final class AiServiceController extends Controller
     }
 
     /** @param array<string, mixed> $body */
-    public function createAiService(array $body): ResponseInterface
+    public function createAiService(array $body): Response
     {
         $allowInsecureVal = $body['allowInsecure'] ?? false;
 
@@ -116,7 +116,7 @@ final class AiServiceController extends Controller
     }
 
     /** @param array<string, mixed> $body */
-    public function updateAiService(int $id, array $body): ResponseInterface
+    public function updateAiService(int $id, array $body): Response
     {
         $existing = $this->aiServices->find($id);
 
@@ -166,7 +166,7 @@ final class AiServiceController extends Controller
         return Json::ok($service->toArray());
     }
 
-    public function deleteAiService(int $id): ResponseInterface
+    public function deleteAiService(int $id): Response
     {
         $service = $this->aiServices->find($id);
 
@@ -179,7 +179,7 @@ final class AiServiceController extends Controller
         return Json::ok();
     }
 
-    public function setAiServiceDefault(int $id): ResponseInterface
+    public function setAiServiceDefault(int $id): Response
     {
         $service = $this->aiServices->find($id);
 
@@ -198,7 +198,7 @@ final class AiServiceController extends Controller
      * Returns the full effective tool list, the current system-prompt (override or
      * bundled default), and all available tones.
      */
-    public function listAiTools(): ResponseInterface
+    public function listAiTools(): Response
     {
         $systemPromptOverride = $this->settings->get('ai_system_prompt');
         $systemPrompt         = ($systemPromptOverride !== null && $systemPromptOverride !== '')
@@ -238,7 +238,7 @@ final class AiServiceController extends Controller
      *
      * @param array<string, mixed> $body
      */
-    public function setSystemPrompt(array $body): ResponseInterface
+    public function setSystemPrompt(array $body): Response
     {
         $prompt = $this->str($body, 'prompt');
 
@@ -258,7 +258,7 @@ final class AiServiceController extends Controller
      *
      * @param array<string, mixed> $body
      */
-    public function updateAiTool(string $key, array $body): ResponseInterface
+    public function updateAiTool(string $key, array $body): Response
     {
         // A key that begins with nothing can't be overridden if no bundled tool
         // exists — but we allow it for future flexibility. The override is always
@@ -334,7 +334,7 @@ final class AiServiceController extends Controller
      *
      * @param array<string, mixed> $body
      */
-    public function createAiTool(array $body): ResponseInterface
+    public function createAiTool(array $body): Response
     {
         $key = trim($this->str($body, 'toolKey'));
 
@@ -385,7 +385,7 @@ final class AiServiceController extends Controller
     /**
      * Deletes a tool override or custom tool by key.
      */
-    public function deleteAiTool(string $key): ResponseInterface
+    public function deleteAiTool(string $key): Response
     {
         if ($this->aiTools->findByKey($key) === null) {
             return Json::error('AI tool "' . $key . '" not found.', 404);
@@ -418,7 +418,7 @@ final class AiServiceController extends Controller
      * required to allow the SPA to open a native EventSource for SSE streaming
      * (which PHP cannot proxy line-by-line without holding up the request thread).
      */
-    public function resolvedAiService(int $id, string $toolKey): ResponseInterface
+    public function resolvedAiService(int $id, string $toolKey): Response
     {
         $service = $this->aiServices->find($id);
 
