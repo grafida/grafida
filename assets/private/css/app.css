@@ -1166,6 +1166,13 @@ input[type="color"].form-control {
     border-width: 2px;
 }
 
+/* Faded out (visibility: hidden, for the opacity transition), the spinner would keep running, and
+   WebKit repaints a hidden animation every frame: most of a core on the Articles screen, the one
+   a user with a site lands on, with nothing loading at all (gh-86). */
+.articles-net-indicator:not(.active) .spinner {
+    animation-play-state: paused;
+}
+
 /* Remote-article filter / sort toolbar */
 .articles-filter-bar {
     display: flex;

@@ -21,6 +21,7 @@ Grafida 1.0
 # [MEDIUM] Changing an AI tool, such as its AI service, only took effect after restarting Grafida
 # [MEDIUM] An AI tool pointed at a specific AI service could not be switched back to the default one
 # [MEDIUM] Leaving the article did not stop an AI reply in progress
+# [MEDIUM] The Articles screen kept a hidden loading spinner animating, using CPU while idle (gh-86)
 # [LOW] An upgrade could keep an outdated translation or migration, and a removed language stayed selectable (gh-86)
 
 Grafida 0.3
