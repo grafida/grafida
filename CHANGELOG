@@ -16,6 +16,7 @@ Grafida 1.0
 # [HIGH] Publishing an article with a tag that did not exist on the site yet failed with "Invalid field: Parent"
 # [MEDIUM] Users without Edit State, such as Authors, got HTTP 500 updating an article that was ever published
 # [MEDIUM] Linux: the Automatic display mode ignored KDE Plasma's dark theme
+# [MEDIUM] The Automatic display mode missed an OS theme change while typing in the editor or in the background
 # [MEDIUM] Changing an AI tool, such as its AI service, only took effect after restarting Grafida
 # [MEDIUM] An AI tool pointed at a specific AI service could not be switched back to the default one
 # [MEDIUM] Leaving the article did not stop an AI reply in progress

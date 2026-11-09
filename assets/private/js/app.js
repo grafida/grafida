@@ -4770,6 +4770,9 @@ async function initTinyMCE(draft) {
             editor.on('init', () => {
                 rebindHelpShortcut(editor);
                 editor.setContent(draft.html || '');
+                // Returning to the app with the caret in the editor focuses the editor's own
+                // window (an iframe), so the top window's `focus` never fires; listen here too.
+                editor.getWin().addEventListener('focus', () => refreshSystemTheme());
             });
 
             // Tag offline images with their blob id so PublishService uploads
@@ -9596,22 +9599,47 @@ if (darkModeQuery) {
     }
 }
 
-// Boson's webview doesn't fire the media-query change reliably, so when the
-// window regains focus we re-probe the OS appearance via the back-end and
-// re-apply the theme if "auto" is in effect and the preference flipped.
-window.addEventListener('focus', async () => {
-    if ((State.displayMode || 'auto') !== 'auto') return;
-    try {
-        const { systemPrefersDark } = await api.systemTheme();
-        const value = typeof systemPrefersDark === 'boolean' ? systemPrefersDark : null;
-        if (value !== State.systemPrefersDark) {
-            State.systemPrefersDark = value;
-            applyTheme(true);
+/**
+ * Keeps "auto" in step with the OS appearance. The webviews do not fire the media-query change
+ * reliably, so the back-end probes the OS (`GET /api/settings/system-theme`) and the theme is
+ * re-applied when the preference flipped. Focus alone is not enough to ask when: with the caret in
+ * the editor, coming back to the app focuses the editor's iframe window, not this one, and a window
+ * left in the background never gets focus at all. So it also runs when the editor's window gains
+ * focus (see initTinyMCE()), when the page becomes visible, and every SYSTEM_THEME_POLL_MS while it
+ * is visible. One probe at a time, and none outside "auto".
+ *
+ * A flip re-creates an open editor from its content (`applyTheme(true)`), exactly as switching the
+ * theme by hand does: the skin cannot be changed in place.
+ */
+const SYSTEM_THEME_POLL_MS = 30000;
+let systemThemeProbe = null;
+
+function refreshSystemTheme() {
+    if ((State.displayMode || 'auto') !== 'auto' || systemThemeProbe) return systemThemeProbe;
+    systemThemeProbe = (async () => {
+        try {
+            const { systemPrefersDark } = await api.systemTheme();
+            const value = typeof systemPrefersDark === 'boolean' ? systemPrefersDark : null;
+            if (value !== State.systemPrefersDark) {
+                State.systemPrefersDark = value;
+                applyTheme(true);
+            }
+        } catch (err) {
+            // Best-effort; keep the current theme on failure.
+        } finally {
+            systemThemeProbe = null;
         }
-    } catch (err) {
-        // Best-effort; keep the current theme on failure.
-    }
+    })();
+    return systemThemeProbe;
+}
+
+window.addEventListener('focus', () => refreshSystemTheme());
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) refreshSystemTheme();
 });
+setInterval(() => {
+    if (!document.hidden) refreshSystemTheme();
+}, SYSTEM_THEME_POLL_MS);
 
 // ============================================================
 //  App bootstrap

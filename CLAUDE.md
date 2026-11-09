@@ -361,8 +361,11 @@ the page read any file.
   global theme, and reading them first made "auto" ignore Breeze Dark; it is sent in the
   `bootstrap` payload as `systemPrefersDark` and re-probed on demand via
   `GET /api/settings/system-theme`. The SPA's `systemPrefersDark()` trusts that value to
-  resolve `auto`, only falling back to the media query when it is `null`, and re-probes on
-  window `focus` so `auto` follows OS theme changes at runtime; it sets
+  resolve `auto`, only falling back to the media query when it is `null`, and re-probes
+  (`refreshSystemTheme()`, one probe at a time, only in `auto`) on window `focus`, on the **editor
+  iframe's** `focus`, when the page becomes visible, and **every 30 s** while it is visible, so `auto`
+  follows OS theme changes at runtime. Window `focus` alone missed them: with the caret in TinyMCE,
+  returning to the app focuses the iframe's window, and a background window is never focused; it sets
   `<html data-theme="light|dark">`;
   TinyMCE follows the app theme (skin `oxide`/`oxide-dark`); its editing surface switches to
   the dark built-in content CSS only when the site supplies no `editor.css`.
