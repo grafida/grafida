@@ -17,6 +17,8 @@
 # Packaging sources used by scripts/build-all.sh (committed; not build output)
 !linux-install.sh
 !windows-installer.nsi
+# The native shell's Windows installer script (gh-91), compiled by grafida/shell-packager
+!shell-windows-installer.nsi
 # Private build configuration: the sample is committed; build.properties (real
 # secrets) stays ignored by the * rule above and must NEVER be committed.
 !build.sample.properties

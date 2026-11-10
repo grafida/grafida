@@ -144,15 +144,15 @@ warn+skip), but a failing compile or a genuine packaging-tool error is fatal. Pi
 `build/dist/Grafida-<v>-linux-<arch>-shell-preview.tar.gz` + `.sha256`. ⚠️ **It must never become a
 dependency of `package`/`all`/`release`**: release builds stay on Boson until the switch-over (gh-82).
 
-- **Pins:** `shell-package.json`'s `runtimes` is grouped by platform (`linux`, `macos`, gh-88) and
+- **Pins:** `shell-package.json`'s `runtimes` is grouped by platform (`linux`, `macos` gh-88, `windows` gh-91) and
   pins the shell + launcher (a grafida/shell release tag) and the SFX (an **immutable**
   grafida/phpmicro `sfx-<YYYYMMDD>.<run>` release, never the rolling `sfx-latest`) by per-arch
   SHA-256; a mismatch is fatal. ⚠️ **Never type a hash.** To bump one, download the release asset,
   compute its SHA-256 from the bytes, update the URL and the hashes, then prove every pin with
   `vendor/bin/shell-packager fetch --config=shell-package.json --arch=<x86_64|aarch64>
-  [--platform=macos]` (one hand-typed digit was caught that way in shell-packager's own fixture).
-  The Linux pins are still shell 0.1.0, the build #86's clean-VM runs verified; macOS pins shell
-  0.2.0 and `sfx-20261109.15`. Downloads are cached in
+  [--platform=macos|windows]` (one hand-typed digit was caught that way in shell-packager's own
+  fixture). The Linux pins are still shell 0.1.0, the build #86's clean-VM runs verified; macOS pins
+  shell 0.2.0 and `sfx-20261109.15`; Windows pins shell 0.3.0 and `sfx-20261110.27`. Downloads are cached in
   `~/.cache/grafida-shell-packager`, **never `build/sfx/`**: `compile-target.php` injects any
   `build/sfx/linux-*.standard.sfx` into the Boson Linux build.
 - **The Linux SFX links glibc dynamically** (2.35 floor, = the shell's), everything else static: musl
@@ -216,6 +216,54 @@ and `hdiutil` are not). ⚠️ Like the Linux tarball, never a dependency of `pa
   stub with `codesign --remove-signature`, and the bundle's other files. A dev-dependency bump then
   shows only Composer's metadata naming it (`installed.php`, the class maps) in Boson's payload,
   and only the autoloader's lock-derived class suffix in the shell PHAR (gh-88's 0.1.0 → 0.2.0).
+
+## Native-shell Windows installer (experimental, gh-91)
+
+`composer build:shell-windows` / Phing `package-shell-windows-x86` →
+`scripts/make-shell-windows-installer.sh` → `vendor/bin/shell-packager windows-installer` over
+`shell-package.json` (its `windows` section) and **`build/shell-windows-installer.nsi`**
+(whitelisted in `build/.gitignore`) → `build/dist/Grafida-<v>-windows-amd64-shell-preview-Setup.exe`
++ `.sha256`. **x64 only.** It stamps `App::VERSION` and `SOURCE_DATE_EPOCH` like the others; only the
+PHAR inside is reproducible. ⚠️ Never a dependency of `package`/`all`/`release`.
+
+- **Built and signed on the Mac** (Linux works too; there is no Windows build host): makensis
+  (3.08+, for `!uninstfinalize`), Jsign and osslsigncode run there, and shell-packager writes the
+  icon and version resources into the shell and the worker stub **in PHP** (no `rcedit`), keeping
+  their application manifests. The worker check (ini probe + `ready`) runs only on a Windows host,
+  so a Mac build says it skipped it; the test guests run it and `tests/Pipe`.
+- **Signing** is Azure Trusted Signing through the same `windows.sign.*` properties as Boson's
+  Windows build: with `windows.sign.op-item` set, the script reads the service principal from
+  1Password, logs `az` in, fetches an access token and hands shell-packager `WINDOWS_SIGN_ENDPOINT` /
+  `_PROFILE` / `_TOKEN` / `_TSAURL`, which reach Jsign as `env:` references. **Four signatures per
+  build** (the shell, the worker stub, the uninstaller through the `.nsi`'s
+  `!uninstfinalize '${SHELL_PACKAGER_SIGN}'`, the installer), each checked with osslsigncode; mind
+  the Basic tier's 5,000 a month. Without the item, nothing is signed (the script clears any
+  `WINDOWS_SIGN_*` it inherits, so nothing signs by accident).
+- **The installer script is Grafida's**; shell-packager passes the tree and its documented defines,
+  plus `DISPLAYNAME`/`APPURL` from `windows.installer.defines`. Per user; **side by side with Boson's
+  build**: `%LOCALAPPDATA%\Programs\app.grafida` and the uninstall key `app.grafida`, against
+  Boson's `Programs\Grafida` and `Grafida`, its own Start menu entry ("Grafida (shell preview)");
+  the uninstaller removes exactly what it installed, never `%APPDATA%\Grafida` (the shared user
+  data) or the WebView2 profile. No WebView2 bootstrapper: a missing runtime gets a warning with
+  the download page, and the shell alerts at launch.
+- **The worker is phpmicro's GUI SFX** (`windows-x86_64.standard.sfx` from the immutable
+  `sfx-20261110.27`, never `sfx-latest`): it opens no console, and the fork keeps
+  `CREATE_NO_WINDOW` for its own children (static-php-cli's patch had counted the micro SAPI as CLI
+  and dropped it), and resolves its sibling `.phar` through the file's final path (an 8.3 short
+  name in the path had defeated `realpath`). The shell starts it suspended and assigns it to a
+  Job Object (kill on close) before it runs; it uses shell-php 0.2.1, whose worker reads stdin as a
+  blocking pipe instead of polling it.
+- **Testing a packaged build** (in the test guests, scripted from the host: grafida/shell's
+  `scripts/dev/winvm.sh` and `parity-windows.sh`): install it silently (`/S`), then
+  `GRAFIDA_PIPE_WORKER="$env:LOCALAPPDATA\Programs\app.grafida\grafida-worker.exe" composer test:pipe`
+  (111 tests), and `GRAFIDA_PACKAGED='…\Programs\app.grafida' parity-windows.sh` for the in-page
+  checks on a copy with only the shell swapped for the debug automation build.
+- **Checking a shell-packager bump:** pack Boson's PHAR before and after
+  (`php -d phar.readonly=0 build/tasks/compile-target.php --pack-only`, which writes
+  `build/.temp/grafida.phar`, not `build/phar/`; the first run downloads Box) and compare entry by
+  entry by content. The 0.2.0 → 0.3.0 bump
+  changed only `vendor/composer/installed.php` (shell-packager's version, the root commit) and the
+  two class maps (the new `ShellPackager\Windows` classes), of 4,915 entries.
 
 **⚠️ The minimum macOS version is set by the vendored library, not by us.** `boson-php/saucer`
 ships a prebuilt `libboson-darwin-universal.dylib` which `boson compile` copies verbatim into

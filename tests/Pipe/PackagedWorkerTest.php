@@ -14,6 +14,7 @@ namespace Grafida\Tests\Pipe;
 use Grafida\Shell\Protocol;
 use Grafida\Shell\Request;
 use Grafida\Shell\Testing\WorkerProcess;
+use Grafida\Tests\Support\TempDir;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -59,7 +60,7 @@ final class PackagedWorkerTest extends TestCase
         }
 
         unset($this->worker);
-        exec('rm -rf ' . escapeshellarg($this->home));
+        TempDir::remove($this->home);
     }
 
     public function testItRunsFromAPhar(): void

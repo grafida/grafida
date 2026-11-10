@@ -482,6 +482,29 @@
 		</exec>
 	</target>
 
+	<!--
+	EXPERIMENTAL (gh-91): the Windows (x64) installer for the native shell, built by
+	grafida/shell-packager from shell-package.json and build/shell-windows-installer.nsi, on this
+	host (makensis, Jsign and osslsigncode run on macOS and Linux). Not a dependency of `package`,
+	`all` or `release`, and it needs no Boson compile. Signed with Azure Trusted Signing through the
+	same windows.sign.* properties as Boson's Windows build when windows.sign.op-item is set,
+	unsigned otherwise. It installs side by side with Boson's build.
+	-->
+	<target name="package-shell-windows-x86" depends="prepare" description="EXPERIMENTAL: the native-shell Windows (x64) installer">
+		<exec executable="bash" dir="${dirs.root}" passthru="true" checkreturn="true">
+			<arg value="-c" />
+			<arg value="export WINDOWS_SIGN_OP_ITEM=&quot;$1&quot;; export WINDOWS_SIGN_OP_FIELD_APPID=&quot;$2&quot;; export WINDOWS_SIGN_OP_FIELD_PASSWORD=&quot;$3&quot;; export WINDOWS_SIGN_OP_FIELD_TENANT=&quot;$4&quot;; export WINDOWS_SIGN_KEYSTORE=&quot;$5&quot;; export WINDOWS_SIGN_ALIAS=&quot;$6&quot;; export WINDOWS_SIGN_TSAURL=&quot;$7&quot;; exec bash scripts/make-shell-windows-installer.sh" />
+			<arg value="phing" />
+			<arg value="${windows.sign.op-item}" />
+			<arg value="${windows.sign.op-field-appid}" />
+			<arg value="${windows.sign.op-field-password}" />
+			<arg value="${windows.sign.op-field-tenant}" />
+			<arg value="${windows.sign.keystore}" />
+			<arg value="${windows.sign.alias}" />
+			<arg value="${windows.sign.tsaurl}" />
+		</exec>
+	</target>
+
 	<target name="package-phar" depends="git-phar" description="Package the cross-platform PHAR">
 		<exec executable="bash" dir="${dirs.root}" passthru="true" checkreturn="true">
 			<arg value="scripts/make-phar-dist.sh" />

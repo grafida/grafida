@@ -65,6 +65,30 @@ immutable release rather than rebuilt, so nothing Boson ships changed.
 - **Every non-rebuild commit to `sibling-phar` carries `[skip ci]`**: a push rebuilds and rewrites
   `sfx-latest`, and with it what Boson's next release ships.
 
+## The Windows runtime for the native shell (gh-91)
+
+The native-shell installer pins **`sfx-20261110.27`**: `windows-x86_64.standard.sfx`, SHA-256
+`2421951f6a93ba1eb69aabd1592d2df0af030c03b059cff1fefc69f03f764146` (PHP 8.4.27, the GUI subsystem).
+Unlike macOS it is a **fresh build, published immutable-only**: `sfx-latest`'s Windows asset, which
+Boson ships, is untouched. Two fixes went into it:
+
+- **`CREATE_NO_WINDOW` for the worker's children.** static-php-cli's patch makes the micro SAPI count
+  as `cli` in `TSRM/tsrm_win32.c` and `ext/standard/proc_open.c`, which drops the flag PHP sets for
+  every non-CLI SAPI, so a GUI worker's `proc_open`/`exec` children each got a console window.
+  `.github/scripts/keep-create-no-window.php` drops those two hunks from the patch before the build.
+- **The sibling `.phar` through the file's final path** (`GetFinalPathNameByHandleW`): PHP's
+  `realpath()` and the stub disagreed when the path held an 8.3 short name (CI's `RUNNER~1` temp
+  directory), so the offset stream hooks no longer matched and the payload read as garbage.
+
+- **The build is a dispatch mode of `build-sfx.yml`**: `gh workflow run build-sfx.yml -R
+  grafida/phpmicro --ref sibling-phar -f platforms=windows-immutable` builds and checks Windows
+  alone, publishes `sfx-<YYYYMMDD>.<run>` with `--latest=false`, and never writes `sfx-latest`.
+- **`check-windows-sfx.sh`** gates it, on the runner and again in both test guests' desktop
+  sessions: PE32+/AMD64, the GUI subsystem, system DLLs only, no overlay; the sibling payload behind
+  an extra-INI block, `ini_get()` proving it applied, a short-name path; a stub signed with a
+  throwaway certificate; 50 MiB over real pipes; and no console window for `proc_open`/`exec`
+  children, watched by a WinEvent hook against a control that must show one.
+
 ## When Boson bumps its PHP version
 
 Boson's runtime PHP version and our SFX **must match the same minor** (the SFX

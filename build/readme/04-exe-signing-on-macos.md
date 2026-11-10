@@ -224,6 +224,15 @@ installer unsigned — the same "blank disables it" convention as the macOS
 `macos.sign.identity`/`macos.notary.profile` properties (see
 [`01-macos-signing.md`](01-macos-signing.md)).
 
+The native-shell installer (`composer build:shell-windows`, Phing `package-shell-windows-x86`,
+gh-91) reads the same properties: `scripts/make-shell-windows-installer.sh` does the `op` + `az login`
+steps, fetches the access token, and hands it to grafida/shell-packager as `WINDOWS_SIGN_ENDPOINT`
+(the keystore), `WINDOWS_SIGN_PROFILE` (the alias), `WINDOWS_SIGN_TOKEN` and `WINDOWS_SIGN_TSAURL`.
+shell-packager runs Jsign itself, with the token as an `env:` reference rather than on the command
+line, on four files: the shell, the worker stub, the uninstaller (from inside makensis, through the
+`.nsi`'s `!uninstfinalize`) and the installer, and checks each with osslsigncode. Install
+`osslsigncode` and `makensis` beside `jsign` (`brew install osslsigncode makensis`).
+
 ### You cannot sign the compiled `grafida.exe` directly — it must be split first
 
 `boson compile` produces `grafida.exe` as a **phpmicro self-executable**: a PE stub with the

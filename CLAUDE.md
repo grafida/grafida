@@ -84,6 +84,26 @@ hardened runtime and every `preg_*` runs interpreted. Under the shell on macOS t
 real menu bar: `shell:about` opens its About dialog, and the editor maps `beforeinput`
 `historyUndo`/`historyRedo` to TinyMCE's history (`.claude/rules/spa-frontend.md`).
 
+**Phase 5 (gh-91) packages it for Windows (x64), experimentally**: `composer build:shell-windows`
+(Phing `package-shell-windows-x86`, which passes the `windows.sign.*` properties Boson's Windows build
+uses) runs shell-packager's `windows-installer` over the same `shell-package.json` (its `windows`
+section) and Grafida's own NSIS script, **`build/shell-windows-installer.nsi`**, and writes
+`build/dist/Grafida-<v>-windows-amd64-shell-preview-Setup.exe`. It builds **on the Mac** (or Linux):
+makensis, Jsign and osslsigncode all run there, and shell-packager writes the icon and version
+resources in PHP. Signed through Azure Trusted Signing when `windows.sign.op-item` is set (the
+script gets the token with `op` + `az`; four signatures a build: shell, worker stub, uninstaller,
+installer), unsigned otherwise. Like the others it is in no way part of `composer build`,
+`phing package` or `phing release`. It installs **per user, side by side with Boson's build**:
+`%LOCALAPPDATA%\Programs\app.grafida` under the uninstall key `app.grafida`, against Boson's
+`Programs\Grafida` and `Grafida`, with its own Start menu entry; both use the same
+`%APPDATA%\Grafida` data, which the uninstaller leaves. The tree is `Grafida.exe` (the shell, a GUI
+program with Grafida's icon and a version resource whose `FileDescription` names it in Task
+Manager), `grafida-worker.exe` (the phpmicro **GUI** SFX stub, `Grafida worker`) and
+`grafida-worker.phar` beside it, `shell.json`, `Grafida.ico`, `LICENSE.txt`. There is no WebView2
+bootstrapper: the installer warns and links when the runtime is missing, and the shell alerts.
+`tests/Pipe` runs against an installed worker with `GRAFIDA_PIPE_WORKER=…\grafida-worker.exe`; the
+detail is in `.claude/rules/build-and-packaging.md`.
+
 Request flow: `index.php` → `Grafida\FrontController` → `Grafida\Application\Kernel` →
 either `Grafida\Http\ApiController` (paths under `/api/`) or a static asset / the SPA shell.
 **The kernel is a pure `Request → Response` function**, so the whole back-end is testable

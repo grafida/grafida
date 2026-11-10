@@ -6,6 +6,7 @@ Grafida 1.0
 + Experimental Linux tarball for the native shell (`composer build:shell-linux`), built with grafida/shell-packager (gh-86)
 + Experimental macOS (Apple Silicon) disk image for the native shell (`composer build:shell-macos`), notarised (gh-88)
 + Native shell on macOS: the app menu's About opens Grafida's About, and Edit ▸ Undo follows the editor's history
++ Experimental Windows (x64) installer for the native shell (`composer build:shell-windows`), beside Boson's install (gh-91)
 ~ Native shell on Windows: the worker no longer polls its stdin while idle (grafida/shell-php 0.2.1, gh-91)
 ~ Settings is split into General, Editor, AI Assistant and Advanced tabs; long explanations fold away
 ~ Connection test no longer tries the never-valid /index.php/api URL

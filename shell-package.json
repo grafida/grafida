@@ -53,6 +53,16 @@
                 "url": "https://github.com/grafida/phpmicro/releases/download/sfx-20261109.15/macos-aarch64.standard.sfx",
                 "sha256": {"aarch64": "046be1292371b1b59498c5df123956c02079e704dd5877d116b8385412134af4"}
             }
+        },
+        "windows": {
+            "shell": {
+                "url": "https://github.com/grafida/shell/releases/download/0.3.0/grafida-shell-windows-x86_64.exe",
+                "sha256": {"x86_64": "f1974a330ca993c6d28e6c65734b06c9bdd83d08e5ee3672bf130ea24939ac54"}
+            },
+            "sfx": {
+                "url": "https://github.com/grafida/phpmicro/releases/download/sfx-20261110.27/windows-x86_64.standard.sfx",
+                "sha256": {"x86_64": "2421951f6a93ba1eb69aabd1592d2df0af030c03b059cff1fefc69f03f764146"}
+            }
         }
     },
     "linux": {
@@ -92,5 +102,21 @@
         },
         "app": "build/shell-macos/{name}.app",
         "output": "build/dist/Grafida-{version}-macos-{debarch}-shell-preview.dmg"
+    },
+    "windows": {
+        "name": "Grafida",
+        "icon": "assets/logo/Grafida.ico",
+        "version": {
+            "companyName": "Nicholas K. Dionysopoulos",
+            "legalCopyright": "Copyright (c) 2026 Nicholas K. Dionysopoulos. GNU GPL v3 or later.",
+            "workerDescription": "Grafida worker"
+        },
+        "files": {"LICENSE.txt": "LICENSE.txt"},
+        "installer": {
+            "script": "build/shell-windows-installer.nsi",
+            "defines": {"DISPLAYNAME": "Grafida (shell preview)", "APPURL": "https://grafida.app"}
+        },
+        "tree": "build/shell-windows/{name}",
+        "output": "build/dist/Grafida-{version}-windows-{debarch}-shell-preview-Setup.exe"
     }
 }

@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Grafida\Tests\Unit\Support;
 
 use Grafida\Support\Resources;
+use Grafida\Tests\Support\TempDir;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -34,7 +35,7 @@ final class ResourcesSyncTest extends TestCase
 
     protected function tearDown(): void
     {
-        exec('rm -rf ' . escapeshellarg($this->dir));
+        TempDir::remove($this->dir);
     }
 
     private function sync(): void
