@@ -91,7 +91,10 @@ final class PackagedWorkerTest extends TestCase
         $bootstrap = $this->worker->request(new Request('GET', 'boson://app/api/bootstrap'));
         self::assertSame(200, $bootstrap->status, $bootstrap->body);
 
-        $resources = glob($this->home . '/{,.}*/resources', \GLOB_BRACE | \GLOB_ONLYDIR) ?: [];
+        // The data dir (Grafida\Support\Paths): ~/Library/Application Support/Grafida on macOS,
+        // $XDG_DATA_HOME/grafida on Linux, %APPDATA%\Grafida on Windows; all under the throwaway home.
+        $base      = \PHP_OS_FAMILY === 'Darwin' ? $this->home . '/Library/Application Support' : $this->home;
+        $resources = glob($base . '/{,.}*/resources', \GLOB_BRACE | \GLOB_ONLYDIR) ?: [];
         self::assertCount(1, $resources, 'one resources directory under the data dir');
         self::assertFileExists($resources[0] . '/language/en-GB/en-GB.ini');
         self::assertNotEmpty(glob($resources[0] . '/storage/migrations/*.sql'));

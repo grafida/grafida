@@ -122,7 +122,9 @@ final class WorkerPipeTest extends TestCase
         self::assertSame(Worker::EXIT_OK, $worker->wait());
         self::assertStringNotContainsString('[stray-output]', $worker->stderr());
         self::assertStringNotContainsString('[protocol-error]', $worker->stderr());
-        self::assertFileExists(self::$home . '/grafida/grafida.sqlite', 'the worker used the throwaway data dir');
+        // Grafida\Support\Paths: ~/Library/Application Support/Grafida on macOS, $XDG_DATA_HOME/grafida on Linux.
+        $data = \PHP_OS_FAMILY === 'Darwin' ? self::$home . '/Library/Application Support/Grafida' : self::$home . '/grafida';
+        self::assertFileExists($data . '/grafida.sqlite', 'the worker used the throwaway data dir');
     }
 
     /**
