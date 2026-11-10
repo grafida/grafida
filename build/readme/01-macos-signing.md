@@ -202,12 +202,27 @@ export MACOS_NOTARY_PROFILE="grafida-notary"
   `MACOS_NOTARY_PROFILE` to both scripts, so a normal `phing package` (or
   `composer build:package` / `release`) signs and notarises automatically.
 
+* **The native shell's bundle (experimental, gh-88)** uses the same identity and profile and the
+  same two variables, but none of the scripts above: `composer build:shell-macos` / Phing
+  `package-shell-macos-arm` hand the job to grafida/shell-packager (`macos-app`, `macos-dmg`), which
+  signs inside-out (the worker stub, the shell, the bundle), **always with the hardened runtime**
+  (also ad hoc), with each binary's own entitlements from `shell-package.json` (the shell none, the
+  worker only `com.apple.security.cs.allow-jit` from `build/macos/shell-worker.entitlements`), reads
+  every signature back, then signs, notarises, staples and `spctl`-checks the DMG. Verified with this
+  setup: "Notarized Developer ID" for `Grafida-<v>-macos-arm64-shell-preview.dmg` and the app in it.
+  `build/macos/entitlements.plist` (below) is Boson's and not used by it.
+
 ### Verifying a finished build
 
 ```bash
 codesign --verify --deep --strict --verbose=2 build/macos/aarch64/Grafida.app
 spctl -a -vvv --type install build/dist/Grafida-<version>-macos-arm64.dmg
 stapler validate build/dist/Grafida-<version>-macos-arm64.dmg
+
+# The native shell's image (gh-88); shell-packager runs the image checks itself:
+codesign --verify --deep --strict --verbose=2 build/shell-macos/Grafida.app
+codesign -d --entitlements - build/shell-macos/Grafida.app/Contents/MacOS/grafida-worker
+spctl -a -vv -t open --context context:primary-signature build/dist/Grafida-<version>-macos-arm64-shell-preview.dmg
 ```
 
 If notarisation is rejected, get the details with:

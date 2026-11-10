@@ -21,25 +21,37 @@
         }
     },
     "runtimes": {
-        "shell": {
-            "url": "https://github.com/grafida/shell/releases/download/0.1.0/grafida-shell-linux-{arch}",
-            "sha256": {
-                "x86_64": "463e3ba328f88bb324e884be803a200e07772fe2717c66ef81c37f208029f8f4",
-                "aarch64": "cd521f8caa591835297f16f9a85095bac7166890767128879921a46ac5bc8174"
+        "linux": {
+            "shell": {
+                "url": "https://github.com/grafida/shell/releases/download/0.1.0/grafida-shell-linux-{arch}",
+                "sha256": {
+                    "x86_64": "463e3ba328f88bb324e884be803a200e07772fe2717c66ef81c37f208029f8f4",
+                    "aarch64": "cd521f8caa591835297f16f9a85095bac7166890767128879921a46ac5bc8174"
+                }
+            },
+            "launcher": {
+                "url": "https://github.com/grafida/shell/releases/download/0.1.0/grafida-launcher-linux-{arch}",
+                "sha256": {
+                    "x86_64": "99e60fd7f09135abbe58d632dd77075922b6af63591f250bec5e836009da5e09",
+                    "aarch64": "47117354302b2421b861eee0cb5177df8475337045f7190baa3ff11aeb7a7826"
+                }
+            },
+            "sfx": {
+                "url": "https://github.com/grafida/phpmicro/releases/download/sfx-20261109.16/linux-{arch}.standard.sfx",
+                "sha256": {
+                    "x86_64": "45607f6142ab76333ccb80ebfc08d4412552b9e0cf43ae83c8a278057e17b1e4",
+                    "aarch64": "cfefff8e185372c5264454d672df0e02a6e219a47a376a376b7dc62724caa242"
+                }
             }
         },
-        "launcher": {
-            "url": "https://github.com/grafida/shell/releases/download/0.1.0/grafida-launcher-linux-{arch}",
-            "sha256": {
-                "x86_64": "99e60fd7f09135abbe58d632dd77075922b6af63591f250bec5e836009da5e09",
-                "aarch64": "47117354302b2421b861eee0cb5177df8475337045f7190baa3ff11aeb7a7826"
-            }
-        },
-        "sfx": {
-            "url": "https://github.com/grafida/phpmicro/releases/download/sfx-20261109.16/linux-{arch}.standard.sfx",
-            "sha256": {
-                "x86_64": "45607f6142ab76333ccb80ebfc08d4412552b9e0cf43ae83c8a278057e17b1e4",
-                "aarch64": "cfefff8e185372c5264454d672df0e02a6e219a47a376a376b7dc62724caa242"
+        "macos": {
+            "shell": {
+                "url": "https://github.com/grafida/shell/releases/download/0.2.0/grafida-shell-macos-arm64",
+                "sha256": {"aarch64": "b24598ae8062614e19e9dac1c2851b90e739ee006323edd0ef810b54dab1045f"}
+            },
+            "sfx": {
+                "url": "https://github.com/grafida/phpmicro/releases/download/sfx-20261109.15/macos-aarch64.standard.sfx",
+                "sha256": {"aarch64": "046be1292371b1b59498c5df123956c02079e704dd5877d116b8385412134af4"}
             }
         }
     },
@@ -58,5 +70,27 @@
         },
         "files": {"LICENSE.txt": "LICENSE.txt"},
         "output": "build/dist/Grafida-{version}-linux-{debarch}-shell-preview.tar.gz"
+    },
+    "macos": {
+        "name": "Grafida",
+        "icon": "assets/logo/Grafida.icns",
+        "infoPlist": {
+            "NSHumanReadableCopyright": "Copyright (c) 2026 Nicholas K. Dionysopoulos. GNU GPL v3 or later.",
+            "LSApplicationCategoryType": "public.app-category.productivity",
+            "NSAppTransportSecurity": {"NSAllowsArbitraryLoadsInWebContent": true}
+        },
+        "entitlements": {"worker": "build/macos/shell-worker.entitlements"},
+        "resources": {"LICENSE.txt": "LICENSE.txt"},
+        "dmg": {
+            "background": "assets/logo/dmg-background.tiff",
+            "window": [640, 400],
+            "iconSize": 128,
+            "textSize": 13,
+            "positions": {"app": [160, 210], "applications": [480, 210]},
+            "volumeIcon": "assets/logo/Grafida.icns",
+            "volumeName": "Grafida"
+        },
+        "app": "build/shell-macos/{name}.app",
+        "output": "build/dist/Grafida-{version}-macos-{debarch}-shell-preview.dmg"
     }
 }

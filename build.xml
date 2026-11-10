@@ -466,6 +466,22 @@
 		</exec>
 	</target>
 
+	<!--
+	EXPERIMENTAL (gh-88): the macOS (Apple Silicon) disk image for the native shell, built by
+	grafida/shell-packager from shell-package.json. Not a dependency of `package`, `all` or
+	`release` either, and it needs no Boson compile. Signed and notarised with macos.sign.identity
+	and macos.notary.profile from build.properties when they are set, ad hoc otherwise.
+	-->
+	<target name="package-shell-macos-arm" depends="prepare" description="EXPERIMENTAL: the native-shell macOS (Apple Silicon) .dmg">
+		<exec executable="bash" dir="${dirs.root}" passthru="true" checkreturn="true">
+			<arg value="-c" />
+			<arg value="export MACOS_SIGN_IDENTITY=&quot;$1&quot;; export MACOS_NOTARY_PROFILE=&quot;$2&quot;; exec bash scripts/make-shell-macos-dmg.sh" />
+			<arg value="phing" />
+			<arg value="${macos.sign.identity}" />
+			<arg value="${macos.notary.profile}" />
+		</exec>
+	</target>
+
 	<target name="package-phar" depends="git-phar" description="Package the cross-platform PHAR">
 		<exec executable="bash" dir="${dirs.root}" passthru="true" checkreturn="true">
 			<arg value="scripts/make-phar-dist.sh" />

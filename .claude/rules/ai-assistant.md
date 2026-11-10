@@ -111,7 +111,11 @@ The PHP-side service inventory stays in `CLAUDE.md`'s `src/Ai/` Layout bullet.
   as a network `TypeError` just like a CORS failure, so `sendChat()` silently takes the same synchronous
   proxy path even with CORS fully enabled server-side. `scripts/make-macos-app.sh` sets
   `NSAppTransportSecurity → NSAllowsArbitraryLoadsInWebContent` in the generated `Info.plist` to lift
-  this for the webview specifically (Joomla REST calls are unaffected — those go through PHP `curl`
+  this for the webview specifically (under the native shell, gh-88, the same key comes from
+  `shell-package.json`'s `macos.infoPlist`; it is deliberately not the narrower
+  `NSAllowsLocalNetworking`, which misses a private-IP host behind an ordinary name such as
+  `*.lan` or a tailnet name, which `UrlPolicy` allows over cleartext; and the dev-mode shell has no
+  `Info.plist`, so ATS is only ever testable on the packaged app) (Joomla REST calls are unaffected — those go through PHP `curl`
   server-side, never through the webview, so ATS never applied to them). Linux (WebKitGTK) and Windows
   (WebView2) have no equivalent restriction.
 - **The API key is handed to local JS per call.** This is a deliberate desktop-only trade-off (JS and

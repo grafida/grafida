@@ -144,10 +144,15 @@ warn+skip), but a failing compile or a genuine packaging-tool error is fatal. Pi
 `build/dist/Grafida-<v>-linux-<arch>-shell-preview.tar.gz` + `.sha256`. ⚠️ **It must never become a
 dependency of `package`/`all`/`release`**: release builds stay on Boson until the switch-over (gh-82).
 
-- **Pins:** `shell-package.json`'s `runtimes` pin the shell + launcher (a grafida/shell release tag)
-  and the SFX (an **immutable** grafida/phpmicro `sfx-<YYYYMMDD>.<run>` release, never the rolling
-  `sfx-latest`) by per-arch SHA-256; a mismatch is fatal. To bump one: take the new release's
-  `.sha256` assets, update the URL and both hashes, rebuild. Downloads are cached in
+- **Pins:** `shell-package.json`'s `runtimes` is grouped by platform (`linux`, `macos`, gh-88) and
+  pins the shell + launcher (a grafida/shell release tag) and the SFX (an **immutable**
+  grafida/phpmicro `sfx-<YYYYMMDD>.<run>` release, never the rolling `sfx-latest`) by per-arch
+  SHA-256; a mismatch is fatal. ⚠️ **Never type a hash.** To bump one, download the release asset,
+  compute its SHA-256 from the bytes, update the URL and the hashes, then prove every pin with
+  `vendor/bin/shell-packager fetch --config=shell-package.json --arch=<x86_64|aarch64>
+  [--platform=macos]` (one hand-typed digit was caught that way in shell-packager's own fixture).
+  The Linux pins are still shell 0.1.0, the build #86's clean-VM runs verified; macOS pins shell
+  0.2.0 and `sfx-20261109.15`. Downloads are cached in
   `~/.cache/grafida-shell-packager`, **never `build/sfx/`**: `compile-target.php` injects any
   `build/sfx/linux-*.standard.sfx` into the Boson Linux build.
 - **The Linux SFX links glibc dynamically** (2.35 floor, = the shell's), everything else static: musl
@@ -169,6 +174,46 @@ dependency of `package`/`all`/`release`**: release builds stay on Boson until th
   `PackagedWorkerTest` (Help from `phar://` docs, the `Resources::base()` extraction, a body at the
   limit). The shell-packager build itself runs the worker before writing (ini probe + `ready`) on a
   Linux host of the same arch.
+
+## Native-shell macOS disk image (experimental, gh-88)
+
+`composer build:shell-macos [-- --no-style]` / Phing `package-shell-macos-arm` →
+`scripts/make-shell-macos-dmg.sh` → `vendor/bin/shell-packager macos-app` (into
+`build/shell-macos/Grafida.app`) then `macos-dmg --app=…` → `build/dist/Grafida-<v>-macos-arm64-shell-preview.dmg`
++ `.sha256`. **Apple Silicon only**: there is no Intel shell, SFX pin or image. It stamps `App::VERSION`
+and `SOURCE_DATE_EPOCH` as the Linux build does, but only the PHAR inside is reproducible (`codesign`
+and `hdiutil` are not). ⚠️ Like the Linux tarball, never a dependency of `package`/`all`/`release`.
+
+- **Signing comes from the environment**, the variables Boson's scripts read: `MACOS_SIGN_IDENTITY`
+  (Developer ID, with a secure timestamp) and `MACOS_NOTARY_PROFILE` (notarytool submit, staple,
+  validate, `spctl`). The Phing target fills them from `macos.sign.identity`/`macos.notary.profile`
+  in `build/build.properties`; `composer build:shell-macos` uses whatever the shell's environment
+  has, so without them the build is ad hoc (but still under the hardened runtime). Verified:
+  Gatekeeper reports "Notarized Developer ID" for the image and for the app inside it.
+- **`Info.plist` is generated** by shell-packager from `shell.json` (`CFBundleIdentifier`
+  `app.grafida`, the name), the CHANGELOG version and the shell's macOS 12.0 floor
+  (`LSMinimumSystemVersion`, checked against every binary's `LC_BUILD_VERSION`). Grafida adds only
+  `shell-package.json`'s `macos.infoPlist`: the copyright, the category and
+  `NSAppTransportSecurity → NSAllowsArbitraryLoadsInWebContent` (see the AI assistant rules). A key
+  shell-packager computes is an error there, which is why `NSHighResolutionCapable` is not listed.
+  This replaces the `App::MIN_MACOS` coupling below **for the shell build only**.
+- **Entitlements**: the shell none, the worker `com.apple.security.cs.allow-jit` only
+  (`build/macos/shell-worker.entitlements`, whitelisted in `build/.gitignore`), because PCRE's JIT
+  needs MAP_JIT under the hardened runtime. shell-packager reads every signature back and fails
+  unless it carries exactly the configured set. Add one only with the test that fails without it.
+- **Testing a packaged build:** `GRAFIDA_PIPE_WORKER="$PWD/build/shell-macos/Grafida.app/Contents/MacOS/grafida-worker"
+  composer test:pipe` (111 tests, none skipped); `../shell/scripts/dev/parity-macos.sh` with
+  `GRAFIDA_PACKAGED=build/shell-macos/Grafida.app SHELL_BIN=<debug automation shell>` runs the
+  in-page checks against a copy with only the shell swapped. The pipe tests know macOS keeps the
+  data in `~/Library/Application Support/Grafida`.
+- **Checking a shell-packager bump.** Build the Linux tarballs and `phing package-macos-arm
+  -Dmacos.sign.identity= -Dmacos.notary.profile=` (ad hoc, so signatures do not differ) before and
+  after, and compare. Boson's own output is not byte-reproducible: two unchanged builds give the
+  app's payload different bytes (entry metadata) and a different DMG. What does reproduce, and what
+  to compare: `build/phar/grafida.phar` byte for byte, the payload entry by entry by content, the
+  stub with `codesign --remove-signature`, and the bundle's other files. A dev-dependency bump then
+  shows only Composer's metadata naming it (`installed.php`, the class maps) in Boson's payload,
+  and only the autoloader's lock-derived class suffix in the shell PHAR (gh-88's 0.1.0 → 0.2.0).
 
 **⚠️ The minimum macOS version is set by the vendored library, not by us.** `boson-php/saucer`
 ships a prebuilt `libboson-darwin-universal.dylib` which `boson compile` copies verbatim into

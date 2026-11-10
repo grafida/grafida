@@ -44,6 +44,27 @@ tarball (`composer build:shell-linux`, through grafida/shell-packager), never by
   release, which changes what Boson's `release` ships. Commit a Linux-only workflow change with
   `[skip ci]`, then dispatch.
 
+## The macOS runtime for the native shell (gh-88)
+
+The native-shell bundle pins **`sfx-20261109.15`**: `macos-aarch64.standard.sfx`, SHA-256
+`046be1292371b1b59498c5df123956c02079e704dd5877d116b8385412134af4` (PHP 8.4.27, `minos` 12.0). Those
+are the exact bytes `sfx-latest` already held (built by run 15 of `build-sfx.yml`), promoted into an
+immutable release rather than rebuilt, so nothing Boson ships changed.
+
+- **Promotion is a mode of `build-sfx.yml`**: `gh workflow run build-sfx.yml -R grafida/phpmicro
+  --ref sibling-phar -f platforms=promote-macos-aarch64 -f sha256=<hash>` downloads the asset from
+  `sfx-latest`, checks it against the given hash **and** the published `.sha256`, runs
+  `.github/scripts/check-macos-sfx.sh` on it, and publishes `sfx-<YYYYMMDD>.<run>` with
+  `--latest=false`, never touching `sfx-latest`. When GitHub has no arm64 macOS runner (it happened
+  four times in a row), the release can be published by hand from a Mac on a signed tag on the commit
+  that built the bytes; `sfx-20261109.15` was, and its notes say so.
+- **`check-macos-sfx.sh`** gates every macOS SFX: thin `EXPECT_ARCH`, `minos` ≤ 12.0 from
+  `LC_BUILD_VERSION`, only system libraries linked, and every payload mode: appended; sibling
+  `<self>.phar`; the bundle layout (`Contents/MacOS/<stub>` + `Contents/Resources/<stub>.phar`) behind
+  an extra-INI block; a symlink from another directory; ad-hoc and hardened-runtime signatures.
+- **Every non-rebuild commit to `sibling-phar` carries `[skip ci]`**: a push rebuilds and rewrites
+  `sfx-latest`, and with it what Boson's next release ships.
+
 ## When Boson bumps its PHP version
 
 Boson's runtime PHP version and our SFX **must match the same minor** (the SFX

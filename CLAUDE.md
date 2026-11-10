@@ -67,6 +67,23 @@ serves the SPA from inside the PHAR. Every binary is pinned by tag + SHA-256 in 
 `tests/Pipe` runs against a packaged worker with `GRAFIDA_PIPE_WORKER=…/grafida-worker`; the detail
 is in `.claude/rules/build-and-packaging.md`.
 
+**Phase 4 (gh-88) packages it for macOS (Apple Silicon only), experimentally**: `composer
+build:shell-macos` (Phing `package-shell-macos-arm`, which passes `macos.sign.identity` and
+`macos.notary.profile` from `build/build.properties` as `MACOS_SIGN_IDENTITY`/`MACOS_NOTARY_PROFILE`)
+runs shell-packager's `macos-app` + `macos-dmg` over the same `shell-package.json` (its `macos`
+section) and writes `build/dist/Grafida-<v>-macos-arm64-shell-preview.dmg`, signed and notarised when
+the identity and profile are set, ad hoc otherwise. Like the Linux tarball it is in no way part of
+`composer build`, `phing package` or `phing release`. The bundle is `Grafida.app` with
+`CFBundleIdentifier` **`app.grafida`** (the manifest id; Boson's is `app.grafida.desktop`), the shell
+as `Contents/MacOS/Grafida`, the SFX stub `Contents/MacOS/grafida-worker` beside it, and
+`grafida-worker.phar`, `shell.json`, `Grafida.icns` and `LICENSE.txt` in `Contents/Resources`.
+⚠️ **Entitlements are per binary and each one is kept only because a test fails without it**: the
+shell has none, the worker has only `com.apple.security.cs.allow-jit`
+(`build/macos/shell-worker.entitlements`), without which PCRE's JIT cannot map memory under the
+hardened runtime and every `preg_*` runs interpreted. Under the shell on macOS the SPA answers the
+real menu bar: `shell:about` opens its About dialog, and the editor maps `beforeinput`
+`historyUndo`/`historyRedo` to TinyMCE's history (`.claude/rules/spa-frontend.md`).
+
 Request flow: `index.php` → `Grafida\FrontController` → `Grafida\Application\Kernel` →
 either `Grafida\Http\ApiController` (paths under `/api/`) or a static asset / the SPA shell.
 **The kernel is a pure `Request → Response` function**, so the whole back-end is testable

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Hardened-runtime entitlements for the native shell's PHP worker (gh-88): Contents/MacOS/grafida-worker,
+  the phpmicro sibling-phar SFX stub. shell-package.json names this file for the worker; the shell
+  itself has none. Each entitlement here is kept because a test fails without it:
+
+    * allow-jit — PCRE's JIT maps its code with MAP_JIT. Without this, every worker start logs
+                  "preg_match(): Allocation of JIT memory failed, PCRE JIT will be disabled" and
+                  every preg_* call runs interpreted (measured on the notarised build, gh-88). With
+                  it, the warning is gone and the worker still answers. allow-jit is the narrowest
+                  JIT exception (MAP_JIT only, not allow-unsigned-executable-memory).
+
+  Boson's build/macos/entitlements.plist is a different file for a different binary and stays as it is.
+-->
+<plist version="1.0">
+<dict>
+    <key>com.apple.security.cs.allow-jit</key>
+    <true/>
+</dict>
+</plist>
