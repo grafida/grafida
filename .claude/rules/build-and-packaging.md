@@ -210,7 +210,9 @@ and `hdiutil` are not). ⚠️ Like the Linux tarball, never a dependency of `pa
   -Dmacos.sign.identity= -Dmacos.notary.profile=` (ad hoc, so signatures do not differ) before and
   after, and compare. Boson's own output is not byte-reproducible: two unchanged builds give the
   app's payload different bytes (entry metadata) and a different DMG. What does reproduce, and what
-  to compare: `build/phar/grafida.phar` byte for byte, the payload entry by entry by content, the
+  to compare: `build/phar/grafida.phar` entry by entry by content (never byte for byte: a PHAR
+  carries per-build timestamped metadata, so two unchanged builds always differ in bytes), the
+  payload entry by entry by content, the
   stub with `codesign --remove-signature`, and the bundle's other files. A dev-dependency bump then
   shows only Composer's metadata naming it (`installed.php`, the class maps) in Boson's payload,
   and only the autoloader's lock-derived class suffix in the shell PHAR (gh-88's 0.1.0 → 0.2.0).
