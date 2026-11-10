@@ -319,7 +319,12 @@ ship inside the app.
   fixed language (e.g. "U.S. English"), text in any other language is flagged wholesale; set to
   "Automatic by Language", per-sentence detection works but **only among the languages enabled in that
   list** (so a German writer must enable German there). Windows/Linux likewise defer to their OS
-  spell-check configuration. This is a documented limitation, not a bug.
+  spell-check configuration. ⚠️ **On Windows, WebView2 checks the user's primary Windows language
+  only** (its profile's `spellcheck.dictionaries` holds that one entry, whatever else Windows has
+  installed), so a Greek Windows checks Greek and an English article goes unmarked; there is no
+  WebView2 API to add a language (grafida/grafida#91). And after a cold boot the first text typed into
+  the editor can stay unmarked until the next edit, which then checks it all, earlier words included:
+  WebView2's start-up, not ours. This is a documented limitation, not a bug.
   **The editor content follows the app's resolved colour scheme, not the webview's lie** (gh-38).
   The content iframe loads the site's `editor.css` (`State.editorCss`), and Boson's webview
   misreports `prefers-color-scheme` to that document exactly as it does everywhere else — always
