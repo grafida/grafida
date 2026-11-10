@@ -37,7 +37,7 @@ and **`bin/worker.php`** (the stdio worker the native shell will spawn; run it a
 `composer test:pipe` (`tests/Pipe/`) spawns the worker over real pipes. It runs every conformance
 fixture against `bin/worker.php`, then replays Feature-suite requests through a worker and through
 `Kernel::handle()` in process and requires byte-identical answers. shell-php is pinned to an **exact
-tag** (`0.2.0`) through a `vcs` repository entry in `composer.json`, until it is on Packagist. To
+tag** (`0.2.1`) through a `vcs` repository entry in `composer.json`, until it is on Packagist. To
 change shell-php and Grafida together, point that entry at a local **path repository**
 (`../shell-php`, `"options": {"symlink": false}`, so the Boson compiler never meets a symlink in
 `vendor/`) and require `dev-main`. Tag shell-php before committing Grafida, and never commit the
