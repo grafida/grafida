@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7fd7c9a464fd026d5e0971ce292a04e7",
+    "content-hash": "f95fecda6913da1ed663587fd7be6119",
     "packages": [
         {
             "name": "boson-php/cpu-info",
@@ -1010,16 +1010,16 @@
         },
         {
             "name": "grafida/shell-php",
-            "version": "0.2.0",
+            "version": "0.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/grafida/shell-php.git",
-                "reference": "eef8d6ce39bf785a1c0ec78ee0811022a944c100"
+                "reference": "f1f95fd8efd64f3e21c8d83cf9d10547ced1f3bf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/grafida/shell-php/zipball/eef8d6ce39bf785a1c0ec78ee0811022a944c100",
-                "reference": "eef8d6ce39bf785a1c0ec78ee0811022a944c100",
+                "url": "https://api.github.com/repos/grafida/shell-php/zipball/f1f95fd8efd64f3e21c8d83cf9d10547ced1f3bf",
+                "reference": "f1f95fd8efd64f3e21c8d83cf9d10547ced1f3bf",
                 "shasum": ""
             },
             "require": {
@@ -1061,10 +1061,10 @@
             "description": "PHP worker side of the Grafida desktop shell: request/response types, the framed stdio worker loop and static-file serving.",
             "homepage": "https://github.com/grafida/shell-php",
             "support": {
-                "source": "https://github.com/grafida/shell-php/tree/0.2.0",
+                "source": "https://github.com/grafida/shell-php/tree/0.2.1",
                 "issues": "https://github.com/grafida/shell-php/issues"
             },
-            "time": "2026-11-09T11:23:42+00:00"
+            "time": "2026-11-10T17:09:29+00:00"
         },
         {
             "name": "joomla/database",

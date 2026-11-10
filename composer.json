@@ -26,7 +26,7 @@
         "php": "^8.4",
         "boson-php/runtime": "^0.19",
         "boson-php/webview-ext-web-components": "^0.19",
-        "grafida/shell-php": "0.2.0",
+        "grafida/shell-php": "0.2.1",
         "joomla/database": "^4.0",
         "joomla/di": "^4.0",
         "joomla/language": "^3.0",
