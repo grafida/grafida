@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d471ceca6f5f70bc4af2441740fb51ce",
+    "content-hash": "7fd7c9a464fd026d5e0971ce292a04e7",
     "packages": [
         {
             "name": "boson-php/cpu-info",
@@ -3081,16 +3081,16 @@
         },
         {
             "name": "grafida/shell-packager",
-            "version": "0.1.0",
+            "version": "0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/grafida/shell-packager.git",
-                "reference": "f7f7e69b9859fa1ce296da01416d1a0dc79775a7"
+                "reference": "ef17f2f6781d60998febbfec723039d0ef73ea77"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/grafida/shell-packager/zipball/f7f7e69b9859fa1ce296da01416d1a0dc79775a7",
-                "reference": "f7f7e69b9859fa1ce296da01416d1a0dc79775a7",
+                "url": "https://api.github.com/repos/grafida/shell-packager/zipball/ef17f2f6781d60998febbfec723039d0ef73ea77",
+                "reference": "ef17f2f6781d60998febbfec723039d0ef73ea77",
                 "shasum": ""
             },
             "require": {
@@ -3122,7 +3122,7 @@
             },
             "scripts": {
                 "test": [
-                    "phpunit"
+                    "@php -d phar.readonly=0 vendor/bin/phpunit"
                 ],
                 "linter:check": [
                     "phpstan analyse --memory-limit=1G"
@@ -3140,10 +3140,10 @@
             "description": "Build and packaging tooling for apps on the Grafida desktop shell: PHAR building, runtime fetch-and-verify, macOS/Windows/Linux bundling, signing and notarisation.",
             "homepage": "https://github.com/grafida/shell-packager",
             "support": {
-                "source": "https://github.com/grafida/shell-packager/tree/0.1.0",
+                "source": "https://github.com/grafida/shell-packager/tree/0.2.0",
                 "issues": "https://github.com/grafida/shell-packager/issues"
             },
-            "time": "2026-11-09T13:24:05+00:00"
+            "time": "2026-11-10T09:10:12+00:00"
         },
         {
             "name": "justinrainbow/json-schema",

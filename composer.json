@@ -41,7 +41,7 @@
     "require-dev": {
         "boson-php/compiler": "^0.19",
         "friendsofphp/php-cs-fixer": "^3.88",
-        "grafida/shell-packager": "0.1.0",
+        "grafida/shell-packager": "0.2.0",
         "phpstan/phpstan": "^2.1",
         "phpstan/phpstan-strict-rules": "^2.0",
         "phpunit/phpunit": "^12.4",
