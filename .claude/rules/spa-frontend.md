@@ -393,6 +393,14 @@ ship inside the app.
   `insertDroppedImages()` read each image through its token, store it offline via `api.uploadMedia()`
   like a paste, and insert it at the drop point (`editor.selection.placeCaretAt()`), ignoring
   non-images and drops outside the editing area.
+  **On macOS the shell has a real menu bar** (gh-88), which the page has to answer twice. Its app
+  menu's **About** sends a `shell:about` DOM event instead of showing a native panel, and
+  `window.addEventListener('shell:about', …)` opens `showAboutDialog()`, but never over another
+  modal (it would cut that flow short) nor before the bootstrap. **Edit ▸ Undo/Redo chosen with the
+  mouse** run WebKit's native undo, which knows nothing of an edit TinyMCE made by script (a paste, a
+  plain-text paste); WebKit announces them as a cancelable `beforeinput` `historyUndo`/`historyRedo`,
+  and the editor's `setup` hands those to `editor.undoManager`. The keyboard never needs this: the
+  shell gives Cmd+Z to the page first, and TinyMCE takes it.
   The active site is remembered **server-side**: `rememberLastSite()` persists it via
   `POST /api/settings/last-site` (`Site\LastSiteService`, the generic `settings` key/value store —
   key `last_site`, so no migration) and it rides back in the `bootstrap` payload as `lastSiteId`

@@ -4749,6 +4749,21 @@ async function initTinyMCE(draft) {
             });
             bindPastePlainShortcut(editor);
 
+            // Edit ▸ Undo/Redo chosen from the menu bar (the native shell's macOS menu, gh-88) run
+            // WebKit's own undo, which knows nothing of what TinyMCE did by script — a paste, a
+            // plain-text paste — and so undoes nothing, or the wrong thing. WebKit announces it
+            // first as a `beforeinput` historyUndo/historyRedo: hand those to TinyMCE's history.
+            // Cmd+Z itself never gets here, since TinyMCE takes the key before the menu does.
+            editor.on('beforeinput', (e) => {
+                if (e.inputType === 'historyUndo') {
+                    e.preventDefault();
+                    editor.undoManager.undo();
+                } else if (e.inputType === 'historyRedo') {
+                    e.preventDefault();
+                    editor.undoManager.redo();
+                }
+            });
+
             // meta+s is TinyMCE's own alias for ctrl+s on Windows/Linux and
             // cmd+s on macOS. The editor's iframe has its own document, so the
             // document-level Ctrl/Cmd+S listener in app.js never fires while
@@ -10052,6 +10067,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const sidebarFooter = document.getElementById('sidebar-footer');
     if (sidebarFooter) sidebarFooter.addEventListener('click', showAboutDialog);
+
+    // Under the native shell, the macOS app menu's About item asks the page for its own About
+    // dialog with a `shell:about` event; the shell shows no native panel (gh-88). Never over
+    // another dialog, whose flow it would cut short, nor before the bootstrap has named the app.
+    window.addEventListener('shell:about', () => {
+        const overlay = document.getElementById('modal-overlay');
+        if (!State.app || (overlay && !overlay.classList.contains('hidden'))) return;
+        showAboutDialog();
+    });
 
     const btnAddSite = document.getElementById('btn-add-site');
     if (btnAddSite) btnAddSite.addEventListener('click', openAddSiteModal);

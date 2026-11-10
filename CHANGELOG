@@ -4,6 +4,7 @@ Grafida 1.0
 + `bin/worker.php`: the back-end as a stdio worker for the upcoming native shell, tested over real pipes (gh-84)
 + Runs in the native shell on Linux in dev mode (`composer shell:dev`); file dialogs hand out tokens, not paths (gh-85)
 + Experimental Linux tarball for the native shell (`composer build:shell-linux`), built with grafida/shell-packager (gh-86)
++ Native shell on macOS: the app menu's About opens Grafida's About, and Edit ▸ Undo follows the editor's history
 ~ Settings is split into General, Editor, AI Assistant and Advanced tabs; long explanations fold away
 ~ Connection test no longer tries the never-valid /index.php/api URL
 ~ The Windows build no longer enables opcache, matching every other platform
