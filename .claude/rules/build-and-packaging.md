@@ -152,7 +152,7 @@ dependency of `package`/`all`/`release`**: release builds stay on Boson until th
   `vendor/bin/shell-packager fetch --config=shell-package.json --arch=<x86_64|aarch64>
   [--platform=macos|windows]` (one hand-typed digit was caught that way in shell-packager's own
   fixture). The Linux pins are still shell 0.1.0, the build #86's clean-VM runs verified; macOS pins
-  shell 0.2.0 and `sfx-20261109.15`; Windows pins shell 0.3.0 and `sfx-20261110.27`. Downloads are cached in
+  shell 0.2.0 and `sfx-20261109.15`; Windows pins shell 0.3.1 and `sfx-20261110.27`. Downloads are cached in
   `~/.cache/grafida-shell-packager`, **never `build/sfx/`**: `compile-target.php` injects any
   `build/sfx/linux-*.standard.sfx` into the Boson Linux build.
 - **The Linux SFX links glibc dynamically** (2.35 floor, = the shell's), everything else static: musl

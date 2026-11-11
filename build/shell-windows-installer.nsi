@@ -11,7 +11,7 @@
 ;
 ;   SRCDIR APPNAME APPID APPEXE WORKEREXE WORKERPHAR ICONFILE APPVERSION VIVERSION PUBLISHER OUTFILE
 ;   SHELL_PACKAGER_SIGN   only when signing: the command that signs the uninstaller
-;   APPURL DISPLAYNAME    from shell-package.json's windows.installer.defines
+;   APPURL DISPLAYNAME COPYRIGHT   from shell-package.json's windows.installer.defines
 ;
 ; It installs SIDE BY SIDE with Boson's build (build/windows-installer.nsi) and touches nothing of
 ; it: Boson's goes to %LOCALAPPDATA%\Programs\Grafida under the uninstall key "Grafida"; this one
@@ -42,6 +42,8 @@ Unicode true
 Name "${DISPLAYNAME}"
 OutFile "${OUTFILE}"
 RequestExecutionLevel user
+; The footer of every page names the product, not the tool (NSIS's default is its own name).
+BrandingText "${DISPLAYNAME} ${APPVERSION}"
 InstallDir "$LOCALAPPDATA\Programs\${APPID}"
 InstallDirRegKey HKCU "${UNINSTKEY}" "InstallLocation"
 SetCompressor /SOLID lzma
@@ -49,7 +51,7 @@ VIProductVersion "${VIVERSION}"
 VIAddVersionKey "ProductName"     "${APPNAME}"
 VIAddVersionKey "FileDescription" "${DISPLAYNAME} installer"
 VIAddVersionKey "CompanyName"     "${PUBLISHER}"
-VIAddVersionKey "LegalCopyright"  "Copyright (c) 2026 ${PUBLISHER}"
+VIAddVersionKey "LegalCopyright"  "${COPYRIGHT}"
 VIAddVersionKey "FileVersion"     "${APPVERSION}"
 VIAddVersionKey "ProductVersion"  "${APPVERSION}"
 

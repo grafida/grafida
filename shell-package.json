@@ -56,8 +56,8 @@
         },
         "windows": {
             "shell": {
-                "url": "https://github.com/grafida/shell/releases/download/0.3.0/grafida-shell-windows-x86_64.exe",
-                "sha256": {"x86_64": "f1974a330ca993c6d28e6c65734b06c9bdd83d08e5ee3672bf130ea24939ac54"}
+                "url": "https://github.com/grafida/shell/releases/download/0.3.1/grafida-shell-windows-x86_64.exe",
+                "sha256": {"x86_64": "073111199b66b4c0cbb2b0f9c433f2dc8e1628b7374c484219926384cbbe4b8c"}
             },
             "sfx": {
                 "url": "https://github.com/grafida/phpmicro/releases/download/sfx-20261110.27/windows-x86_64.standard.sfx",
@@ -107,14 +107,18 @@
         "name": "Grafida",
         "icon": "assets/logo/Grafida.ico",
         "version": {
-            "companyName": "Nicholas K. Dionysopoulos",
+            "companyName": "Akeeba Ltd",
             "legalCopyright": "Copyright (c) 2026 Nicholas K. Dionysopoulos. GNU GPL v3 or later.",
             "workerDescription": "Grafida worker"
         },
         "files": {"LICENSE.txt": "LICENSE.txt"},
         "installer": {
             "script": "build/shell-windows-installer.nsi",
-            "defines": {"DISPLAYNAME": "Grafida (shell preview)", "APPURL": "https://grafida.app"}
+            "defines": {
+                "DISPLAYNAME": "Grafida (shell preview)",
+                "APPURL": "https://grafida.app",
+                "COPYRIGHT": "Copyright (c) 2026 Nicholas K. Dionysopoulos. GNU GPL v3 or later."
+            }
         },
         "tree": "build/shell-windows/{name}",
         "output": "build/dist/Grafida-{version}-windows-{debarch}-shell-preview-Setup.exe"

@@ -11,6 +11,8 @@ Grafida 1.0
 ~ Phing brings the Composer dependencies in line with composer.lock before every build, not only when vendor/ is missing
 ~ The native-shell installers build their worker in about a second instead of half a minute (grafida/shell-packager 0.3.1, gh-91)
 ~ Windows signing defaults to the akeeba-signing/AkeebaPublic profile; the signing notes say what to check on a 403
+~ Native-shell Windows installer: Akeeba Ltd as publisher (as the signature), and the app's name in every page's footer (gh-91)
+~ Native shell on Windows: no 5-second busy pointer at launch on Windows 10, and the app's icon in the title bar (grafida/shell 0.3.1, gh-91)
 ~ Settings is split into General, Editor, AI Assistant and Advanced tabs; long explanations fold away
 ~ Connection test no longer tries the never-valid /index.php/api URL
 ~ The Windows build no longer enables opcache, matching every other platform
