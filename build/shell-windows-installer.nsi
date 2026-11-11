@@ -75,6 +75,35 @@ VIAddVersionKey "ProductVersion"  "${APPVERSION}"
 !insertmacro MUI_LANGUAGE "English"
 
 ; The WebView2 Evergreen runtime, per machine or per user (Microsoft's documented detection).
+; A running Grafida holds its two executables open, and then an install cannot write them (NSIS's
+; "Error opening file for writing", Abort/Retry/Ignore) and an uninstall skips them without a word
+; while reporting success, its key already gone (both seen on the clean guests, gh-91). So before
+; touching a file, each side opens the installed executables for writing: a running one refuses.
+; Only this install's own files are probed, never Boson's grafida.exe. Silent mode cannot ask: it
+; ends with exit code 2 and changes nothing.
+!macro ENSURE_NOT_RUNNING
+  retry:
+  ClearErrors
+  ${If} ${FileExists} "$INSTDIR\${APPEXE}"
+    FileOpen $9 "$INSTDIR\${APPEXE}" a
+    IfErrors busy
+    FileClose $9
+  ${EndIf}
+  ${If} ${FileExists} "$INSTDIR\${WORKEREXE}"
+    FileOpen $9 "$INSTDIR\${WORKEREXE}" a
+    IfErrors busy
+    FileClose $9
+  ${EndIf}
+  Goto free
+  busy:
+  IfSilent 0 +3
+    SetErrorLevel 2
+    Abort
+  MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "${APPNAME} is running. Close it, then click Retry." IDRETRY retry
+  Abort
+  free:
+!macroend
+
 Function .onInit
   ReadRegStr $0 HKLM "SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\${WEBVIEW2_GUID}" "pv"
   ${If} $0 == ""
@@ -91,6 +120,7 @@ Function .onInit
 FunctionEnd
 
 Section "Install"
+  !insertmacro ENSURE_NOT_RUNNING
   SetOutPath "$INSTDIR"
   File "${SRCDIR}\${APPEXE}"
   File "${SRCDIR}\${WORKEREXE}"
@@ -119,6 +149,7 @@ SectionEnd
 ; What the installer wrote, and nothing else: not %APPDATA%\Grafida (the user's data, shared with
 ; Boson's build), not the WebView2 profile in %LOCALAPPDATA%\${APPID}.
 Section "Uninstall"
+  !insertmacro ENSURE_NOT_RUNNING
   Delete "$INSTDIR\${APPEXE}"
   Delete "$INSTDIR\${WORKEREXE}"
   Delete "$INSTDIR\${WORKERPHAR}"
