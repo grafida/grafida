@@ -12,7 +12,7 @@ Grafida is also available on [iPad / iPhone](https://github.com/grafida/grafida-
 ## What's this?
 
 Grafida is an offline-first article editor for Windows, Linux, and macOS desktops and laptops.
-It lets writers connect to  one or more Joomla! 4+ sites, create or edit articles locally, manage
+It lets writers connect to one or more Joomla! 5.4 or 6.x sites, create or edit articles locally, manage
 article metadata and media, and publish through Joomla's Web Services API only when they are ready.
 
 Drafts remain in the app's on-device database, while API tokens are protected by your OS. The

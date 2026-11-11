@@ -300,8 +300,8 @@ The version comes from the CHANGELOG's top entry; `-Dversion=X.Y.Z` overrides it
 `App::VERSION`.
 
 1. **Release notes.** `RELEASENOTES.md` (GitHub-flavoured Markdown) must target the upcoming
-   version, reviewed against the CHANGELOG. Its Downloads table must use **linked** filenames
-   (see "Release-notes downloads" below).
+   version, reviewed against the CHANGELOG, and end with that version's CHANGELOG pasted in (see
+   "Release-notes layout" below). Paste it again whenever the CHANGELOG changes before the release.
 2. **Check credentials.** `build/build.properties` must have non-blank `github.*` and `cdn.ftp.*`
    values, or the release fails early.
 3. **Full packaging build.** Clear stale `build/dist/*` first, then `phing package -Dversion=X.Y.Z`.
@@ -335,20 +335,18 @@ between versions. That is also why it is not a Phing target. See
 
 The whole flow builds no feature branch — commit on `main`.
 
-## Release-notes downloads
+## Release-notes layout
 
-In `RELEASENOTES.md` the Downloads table must **link** each filename to its GitHub release asset,
-not list bare filenames, so a reader can click straight through. The URL is entirely predictable —
-`https://github.com/grafida/grafida/releases/download/<TAG>/<FILENAME>`, where `<TAG>` is the version
-number (e.g. `0.1`). So a row is:
+`RELEASENOTES.md` is the GitHub release's description, sent as it is (`GitHubRelease`'s `bodyFile`):
+nothing is added to it at release time. It is the hand-written sections (Highlights, Notable fixes,
+Coming from an earlier version), then **`### CHANGELOG` at the very bottom**: the upcoming version's
+CHANGELOG entries pasted in as a list, each prefix turned into its emoji (`!` ‼️, `+` ✨, `-` ✂️,
+`~` ✏️, `#` 🐞 keeping its `[HIGH]`/`[MEDIUM]`/`[LOW]`; 🚨 for a security update), followed by the
+`Legend:` list of the six, as Panopticon's release notes do.
 
-```
-| macOS (Apple Silicon) | [`Grafida-<v>-macos-arm64.dmg`](https://github.com/grafida/grafida/releases/download/<v>/Grafida-<v>-macos-arm64.dmg) |
-```
-
-Do this for every platform row when writing release notes for a new version: the two DMGs (`arm64`,
-`amd64`), the two Linux tarballs and the Windows installer, with a sentence saying each has a
-`.sha256` beside it.
+- **No downloads list and no download links.** GitHub lists the release's assets, the `.sha256`
+  files included, below the description; a table of them only repeats that and goes stale.
+- **No link to the `CHANGELOG` file.** The changelog is the section at the bottom.
 
 ## CHANGELOG style
 

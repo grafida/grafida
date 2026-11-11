@@ -24,8 +24,8 @@ restarts. Nothing is packaged. It needs a Rust toolchain, and on Linux the WebKi
 development packages. Add `-- --automation` to open the shell's debug automation channel.
 
 **Packaging** is done by [grafida/shell-packager](https://github.com/grafida/shell-packager), a
-development dependency, which reads [`shell-package.json`](shell-package.json) and the app manifest
-[`shell.json`](shell.json). There is no compile step. For each package it:
+development dependency, which reads [`shell-package.json`](../../shell-package.json) and the app manifest
+[`shell.json`](../../shell.json). There is no compile step. For each package it:
 
 - builds the worker PHAR (`bin/worker.php`, `src/`, the SPA under `assets/`, `docs/`, `language/`,
   the SQL migrations and the PHP files of a `composer install --no-dev` staging copy, so no
@@ -39,7 +39,7 @@ Everything is built **on a Mac**: the macOS bundles need `codesign`, `notarytool
 the Windows installer's tools (`makensis`, Jsign, `osslsigncode`) run there too. The Linux tarballs
 and the Windows installer can also be built on Linux.
 
-The build is driven by [`build.xml`](build.xml) (Phing) alongside the one-shot
+The build is driven by [`build.xml`](../../build.xml) (Phing) alongside the one-shot
 `scripts/build-all.sh` pipeline. Both call the same per-platform `scripts/make-*.sh` helpers, so they
 produce the same artifacts in **`build/dist/`**:
 
@@ -78,7 +78,7 @@ What each package holds:
   worker stub (`grafida-worker`) and `grafida-worker.phar`, `shell.json`, the desktop entry, the
   icons and `install.sh`, which installs the desktop entry and icons for the current user.
 - **Windows**: a per-user NSIS installer, built from
-  [`build/shell-windows-installer.nsi`](build/shell-windows-installer.nsi), which installs
+  [`build/shell-windows-installer.nsi`](../../build/shell-windows-installer.nsi), which installs
   `Grafida.exe` (the shell), `grafida-worker.exe` and `grafida-worker.phar` into
   `%LOCALAPPDATA%\Programs\Grafida`. It needs NSIS's `makensis` 3.08 or later, which runs natively
   on macOS and Linux (`brew install makensis`); there is no portable `.zip` fallback.
@@ -87,7 +87,7 @@ The worker is a phpmicro self-executable stub with its PHAR kept as a **separate
 That split is what makes signing possible: signing a stub with the PHAR appended to it would put the
 signature past the PHAR, corrupt it, and the app would die at startup.
 
-**The application version is the topmost entry of the [`CHANGELOG`](CHANGELOG)** (e.g. `Grafida
+**The application version is the topmost entry of the [`CHANGELOG`](../../CHANGELOG)** (e.g. `Grafida
 0.4`). Every packaging script stamps it into `App::VERSION` first, so the package and the About
 dialog report it; set `GRAFIDA_VERSION=…` to override the CHANGELOG. The scripts also set
 `SOURCE_DATE_EPOCH` to the commit time, so one commit builds the same PHAR (and the same Linux
@@ -110,8 +110,8 @@ which is enough to run the app on the build machine, and the Windows installer i
   shell, the worker stub, the uninstaller and the installer — four signatures a build — with the
   other `windows.sign.*` properties.
 
-The full recipes are in [`build/readme/01-macos-signing.md`](build/readme/01-macos-signing.md)
-(macOS) and [`build/readme/04-exe-signing-on-macos.md`](build/readme/04-exe-signing-on-macos.md)
+The full recipes are in [`build/readme/01-macos-signing.md`](../../build/readme/01-macos-signing.md)
+(macOS) and [`build/readme/04-exe-signing-on-macos.md`](../../build/readme/04-exe-signing-on-macos.md)
 (Windows).
 
 ## Application icons
@@ -147,4 +147,4 @@ composer docs:publish                # upload over SFTP
 This is deliberately not a release step: the app serves Help out of its own binary, so a corrected
 page is worth publishing the day it is committed. Configure the destination with the `docs.sftp.*`
 properties in `build/build.properties` — see
-[`build/readme/05-documentation-publishing.md`](build/readme/05-documentation-publishing.md).
+[`build/readme/05-documentation-publishing.md`](../../build/readme/05-documentation-publishing.md).

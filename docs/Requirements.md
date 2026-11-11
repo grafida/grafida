@@ -28,4 +28,4 @@ For spell checking you also need a Hunspell dictionary for each language you wri
 
 ## Server
 
-On the server side, you need a Joomla **5.4, or 6.x** site, and a Joomla API token for a user account that is allowed to use these features. Super User accounts can do this out of the box. Other accounts, such as Authors, need a little set-up on the site first; on Joomla 5.4.8, 6.1.3 and later that includes one extra permission, which does not give them back-end access. Please read the [Custom API access](Custom-API-Access) page.
+On the server side, you need a Joomla **5.4 or 6.x** site, and a Joomla API token for a user account that is allowed to use these features. Super User accounts can do this out of the box. Other accounts, such as Authors, need a little set-up on the site first; on Joomla 5.4.8, 6.1.3 and later that includes one extra permission, which does not give them back-end access. Please read the [Custom API access](Custom-API-Access) page.

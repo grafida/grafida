@@ -1,6 +1,6 @@
 # Requirements
 
-- A Joomla **4.0 or later** site with the Web Services API enabled, and an API token for an account
+- A Joomla **5.4 or 6.x** site with the Web Services API enabled, and an API token for an account
   authorised for API access. Super Users work by default. Authors and other non-Super-User accounts need
   some set-up on the site; on Joomla 5.4.8, 6.1.3 and later that includes "Access Administration
   Interface" on Articles, Media and Tags, which does not give them back-end access. See
