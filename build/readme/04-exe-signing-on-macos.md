@@ -10,6 +10,38 @@ Azure Artifact Signing (formerly "Azure Trusted Signing") is Microsoft's cloud-b
 
 **SmartScreen caveat**: Signing does not eliminate SmartScreen warnings for new files. SmartScreen reputation accumulates based on download volume over time. For tools with a small install base, users will still need to click "More info → Run anyway". What signing does provide is that the warning shows your publisher name instead of "Unknown Publisher", and it improves behaviour with enterprise AV/EDR tools and Windows AppLocker policies.
 
+> [!IMPORTANT]
+> **Signing fails with `HTTP Error 403 - Forbidden`? Check these two things first, in this order.**
+>
+> 1. **The names in `build/build.properties`.** The signing account is **`akeeba-signing`** and the
+>    certificate profile **`AkeebaPublic`**, so `windows.sign.alias=akeeba-signing/AkeebaPublic`, and
+>    `windows.sign.keystore` must be the Account URI the portal shows for that account
+>    (`weu.codesigning.azure.net` for West Europe). A machine set up from an older copy of these notes
+>    can carry other names and fail with nothing else wrong. The native-shell build prints the profile
+>    it uses on its first line (`signed: Trusted Signing (<account>/<profile>)`): compare it with the
+>    portal before anything else.
+> 2. **New terms of service.** Microsoft changes the Artifact Signing terms from time to time, and
+>    signing is refused until they are accepted again. Portal → **Artifact Signing Accounts** →
+>    **akeeba-signing** → **Objects** → **Identity validations**: if it asks you to accept updated
+>    terms, accept them. Nothing else tells you; Jsign only reports the 403.
+>
+> Jsign hides Azure's reason. To read it, right after a failed build (the Azure CLI is still logged in
+> as the service principal):
+>
+> ```sh
+> TOKEN=$(az account get-access-token --resource https://codesigning.azure.net --query accessToken -o tsv)
+> curl -sS -i -X POST \
+>   "https://weu.codesigning.azure.net/codesigningaccounts/akeeba-signing/certificateprofiles/AkeebaPublic/sign?api-version=2022-06-15-preview" \
+>   -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+>   -d "{\"signatureAlgorithm\":\"RS256\",\"digest\":\"$(head -c 32 /dev/zero | base64)\"}"
+> ```
+>
+> Then, if it is neither of the above: the subscription is still **Active** (Subscriptions → Overview;
+> an expired card disables it, and its resources answer 403), the certificate profile is **Active**,
+> and the service principal still holds **Artifact Signing Certificate Profile Signer** on the account
+> (Access control (IAM) → Role assignments). A 401 rather than a 403 is the token itself, not any of
+> these.
+
 ---
 
 ## Local Prerequisites
@@ -64,7 +96,7 @@ Western Europe is the appropriate region for Cyprus/EU.
 
 ```sh
 az trustedsigning create \
-  --name grafida-signing \
+  --name akeeba-signing \
   --resource-group GrafidaCodeSigning \
   --location westeurope \
   --sku Basic
@@ -76,7 +108,7 @@ Before you can submit an identity validation request in the portal, your Azure u
 
 ```sh
 RESOURCE_ID=$(az trustedsigning show \
-  --name grafida-signing \
+  --name akeeba-signing \
   --resource-group GrafidaCodeSigning \
   --query id -o tsv)
 
@@ -98,7 +130,7 @@ In the Azure Portal ([portal.azure.com](https://portal.azure.com)):
 
 1. Use the search bar at the top and search for **"Trusted Signing"**.
 2. In the results, click **Artifact Signing Accounts** (under Services). Note: the portal uses the old name "Trusted Signing" in search but lists the resource as "Artifact Signing Accounts".
-3. Click on **grafida-signing**.
+3. Click on **akeeba-signing**.
 4. In the left menu, find **Identity validation** and click **New identity validation**.
 5. Select **Individual**.
 6. Fill in Nicholas K. Dionysopoulos' identity details as requested by the portal.
@@ -108,11 +140,11 @@ Nothing in the steps below is possible until identity validation is approved.
 
 ### Step 7: Create a Certificate Profile
 
-Once identity validation is approved, return to the **grafida-signing** account in the portal:
+Once identity validation is approved, return to the **akeeba-signing** account in the portal:
 
 1. In the left menu, click **Certificate profiles** → **New**.
 2. Set the profile type to **Public Trust**. This is mandatory — "Private Trust" profiles are for internal enterprise apps only and will not produce publicly trusted signatures.
-3. Name it `GrafidaPublic` (or similar — note the exact name).
+3. Name it `AkeebaPublic` (or similar — note the exact name, and put it in `windows.sign.alias`).
 
 ### Step 8: Create a Service Principal for Non-Interactive Signing
 
@@ -136,7 +168,7 @@ The output looks like:
 
 ```sh
 RESOURCE_ID=$(az trustedsigning show \
-  --name grafida-signing \
+  --name akeeba-signing \
   --resource-group GrafidaCodeSigning \
   --query id -o tsv)
 
@@ -179,7 +211,7 @@ jsign \
   --storepass "$(az account get-access-token \
     --resource https://codesigning.azure.net \
     --query accessToken -o tsv)" \
-  --alias grafida-signing/GrafidaPublic \
+  --alias akeeba-signing/AkeebaPublic \
   --tsaurl http://timestamp.acs.microsoft.com \
   --tsmode RFC3161 \
   grafida.exe

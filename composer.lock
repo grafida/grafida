@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f100b740c8cc1512612fb3720309e45d",
+    "content-hash": "f6004fe026aa345fff8271b53723f301",
     "packages": [
         {
             "name": "boson-php/cpu-info",
@@ -3081,16 +3081,16 @@
         },
         {
             "name": "grafida/shell-packager",
-            "version": "0.3.0",
+            "version": "0.3.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/grafida/shell-packager.git",
-                "reference": "d75b5d9b8540d22ff1df24af33c8d071dae67190"
+                "reference": "99fbbff253d4f800bb79fc90c2e7df85632f10cd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/grafida/shell-packager/zipball/d75b5d9b8540d22ff1df24af33c8d071dae67190",
-                "reference": "d75b5d9b8540d22ff1df24af33c8d071dae67190",
+                "url": "https://api.github.com/repos/grafida/shell-packager/zipball/99fbbff253d4f800bb79fc90c2e7df85632f10cd",
+                "reference": "99fbbff253d4f800bb79fc90c2e7df85632f10cd",
                 "shasum": ""
             },
             "require": {
@@ -3141,10 +3141,10 @@
             "description": "Build and packaging tooling for apps on the Grafida desktop shell: PHAR building, runtime fetch-and-verify, macOS/Windows/Linux bundling, signing and notarisation.",
             "homepage": "https://github.com/grafida/shell-packager",
             "support": {
-                "source": "https://github.com/grafida/shell-packager/tree/0.3.0",
+                "source": "https://github.com/grafida/shell-packager/tree/0.3.1",
                 "issues": "https://github.com/grafida/shell-packager/issues"
             },
-            "time": "2026-11-10T22:26:35+00:00"
+            "time": "2026-11-11T07:21:42+00:00"
         },
         {
             "name": "justinrainbow/json-schema",

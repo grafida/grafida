@@ -58,7 +58,7 @@ if [ -n "$OP_ITEM" ]; then
   WINDOWS_SIGN_TOKEN="$(az account get-access-token --resource https://codesigning.azure.net --query accessToken -o tsv)"
   export WINDOWS_SIGN_TOKEN
   export WINDOWS_SIGN_ENDPOINT="${WINDOWS_SIGN_KEYSTORE:-weu.codesigning.azure.net}"
-  export WINDOWS_SIGN_PROFILE="${WINDOWS_SIGN_ALIAS:-grafida-signing/GrafidaPublic}"
+  export WINDOWS_SIGN_PROFILE="${WINDOWS_SIGN_ALIAS:-akeeba-signing/AkeebaPublic}"
   export WINDOWS_SIGN_TSAURL="${WINDOWS_SIGN_TSAURL:-http://timestamp.acs.microsoft.com}"
   SIGNED="Trusted Signing ($WINDOWS_SIGN_PROFILE)"
 else

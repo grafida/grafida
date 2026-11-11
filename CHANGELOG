@@ -8,6 +8,9 @@ Grafida 1.0
 + Native shell on macOS: the app menu's About opens Grafida's About, and Edit ▸ Undo follows the editor's history
 + Experimental Windows (x64) installer for the native shell (`composer build:shell-windows`), beside Boson's install (gh-91)
 ~ Native shell on Windows: the worker no longer polls its stdin while idle (grafida/shell-php 0.2.1, gh-91)
+~ Phing brings the Composer dependencies in line with composer.lock before every build, not only when vendor/ is missing
+~ The native-shell installers build their worker in about a second instead of half a minute (grafida/shell-packager 0.3.1, gh-91)
+~ Windows signing defaults to the akeeba-signing/AkeebaPublic profile; the signing notes say what to check on a 403
 ~ Settings is split into General, Editor, AI Assistant and Advanced tabs; long explanations fold away
 ~ Connection test no longer tries the never-valid /index.php/api URL
 ~ The Windows build no longer enables opcache, matching every other platform

@@ -15,7 +15,6 @@
 	<property name="compile.target.script" value="${dirs.root}/build/tasks/compile-target.php" />
 	<property name="setversion.script" value="${dirs.root}/build/tasks/set-version.php" />
 	<property name="assets.marker" value="${dirs.root}/assets/private/js/tinymce/tinymce.min.js" />
-	<property name="composer.marker" value="${dirs.root}/vendor/autoload.php" />
 
 	<!--
 	Private build configuration (secrets): GitHub Releases + CDN FTP credentials for publishing
@@ -47,7 +46,7 @@
 	<property name="windows.sign.op-field-password" value="password" />
 	<property name="windows.sign.op-field-tenant" value="tenant" />
 	<property name="windows.sign.keystore" value="weu.codesigning.azure.net" />
-	<property name="windows.sign.alias" value="grafida-signing/GrafidaPublic" />
+	<property name="windows.sign.alias" value="akeeba-signing/AkeebaPublic" />
 	<property name="windows.sign.tsaurl" value="http://timestamp.acs.microsoft.com" />
 
 	<!--
@@ -77,8 +76,7 @@
 	front-end libraries and the per-platform icons all have to exist first. Phing runs each target at
 	most once per invocation, so the six per-platform targets share a single preparation pass. Every
 	sub-target is guarded — skipped when its output is already in place (pass -Drefresh.assets=1 to
-	force a re-vendor). The order matters: Composer's post-install-cmd itself runs `vendor:assets`, so
-	on a fresh clone prepare-composer populates the assets too and prepare-assets then skips.
+	force a re-vendor). prepare-composer is the exception: it always runs, see below.
 	-->
 	<target name="prepare" depends="prepare-composer,prepare-icons,prepare-assets,set-version"
 			description="Ensure dependencies, icons + front-end libraries are on disk before compiling" />
@@ -95,20 +93,19 @@
 	</target>
 
 	<!--
-	Fresh-clone case: `git clone … && phing`. The Composer dependencies (including the Boson compiler in
-	require-dev) are gitignored, so install them if vendor/autoload.php is absent. `composer install`
-	fires post-install-cmd → `vendor:assets`, so this also vendors the front-end libraries on a fresh
-	checkout (prepare-assets then no-ops).
+	Composer runs on every invocation, not only when vendor/ is missing: `composer install` brings
+	vendor/ in line with composer.lock, so a pull or a different machine never builds against stale
+	dependencies (a stale grafida/shell-packager once failed with "Unknown command"). Nothing to do
+	costs under a second. `no-scripts`, because post-install-cmd is `vendor:assets` (npm, ~5 s), which
+	prepare-assets runs when its marker is missing, so a fresh clone still vendors the front-end
+	libraries.
 	-->
-	<condition property="composer.present">
-		<available file="${composer.marker}" type="file" />
-	</condition>
-
-	<target name="prepare-composer" unless="composer.present"
-			description="Install the Composer dependencies (only if vendor/ is missing)">
-		<echo>Composer dependencies missing — running composer install</echo>
+	<target name="prepare-composer"
+			description="Bring the Composer dependencies in line with composer.lock">
 		<exec executable="composer" dir="${dirs.root}" passthru="true" checkreturn="true">
 			<arg value="install" />
+			<arg value="--no-scripts" />
+			<arg value="--no-interaction" />
 		</exec>
 	</target>
 
@@ -489,19 +486,21 @@
 	`all` or `release`, and it needs no Boson compile. Signed with Azure Trusted Signing through the
 	same windows.sign.* properties as Boson's Windows build when windows.sign.op-item is set,
 	unsigned otherwise. It installs side by side with Boson's build.
+	Each property goes in behind a "=" that the script strips: Phing drops an empty <arg>, so a blank
+	windows.sign.op-item shifted every later argument one place and the item was looked up as "appId".
 	-->
 	<target name="package-shell-windows-x86" depends="prepare" description="EXPERIMENTAL: the native-shell Windows (x64) installer">
 		<exec executable="bash" dir="${dirs.root}" passthru="true" checkreturn="true">
 			<arg value="-c" />
-			<arg value="export WINDOWS_SIGN_OP_ITEM=&quot;$1&quot;; export WINDOWS_SIGN_OP_FIELD_APPID=&quot;$2&quot;; export WINDOWS_SIGN_OP_FIELD_PASSWORD=&quot;$3&quot;; export WINDOWS_SIGN_OP_FIELD_TENANT=&quot;$4&quot;; export WINDOWS_SIGN_KEYSTORE=&quot;$5&quot;; export WINDOWS_SIGN_ALIAS=&quot;$6&quot;; export WINDOWS_SIGN_TSAURL=&quot;$7&quot;; exec bash scripts/make-shell-windows-installer.sh" />
+			<arg value="export WINDOWS_SIGN_OP_ITEM=&quot;${1#=}&quot;; export WINDOWS_SIGN_OP_FIELD_APPID=&quot;${2#=}&quot;; export WINDOWS_SIGN_OP_FIELD_PASSWORD=&quot;${3#=}&quot;; export WINDOWS_SIGN_OP_FIELD_TENANT=&quot;${4#=}&quot;; export WINDOWS_SIGN_KEYSTORE=&quot;${5#=}&quot;; export WINDOWS_SIGN_ALIAS=&quot;${6#=}&quot;; export WINDOWS_SIGN_TSAURL=&quot;${7#=}&quot;; exec bash scripts/make-shell-windows-installer.sh" />
 			<arg value="phing" />
-			<arg value="${windows.sign.op-item}" />
-			<arg value="${windows.sign.op-field-appid}" />
-			<arg value="${windows.sign.op-field-password}" />
-			<arg value="${windows.sign.op-field-tenant}" />
-			<arg value="${windows.sign.keystore}" />
-			<arg value="${windows.sign.alias}" />
-			<arg value="${windows.sign.tsaurl}" />
+			<arg value="=${windows.sign.op-item}" />
+			<arg value="=${windows.sign.op-field-appid}" />
+			<arg value="=${windows.sign.op-field-password}" />
+			<arg value="=${windows.sign.op-field-tenant}" />
+			<arg value="=${windows.sign.keystore}" />
+			<arg value="=${windows.sign.alias}" />
+			<arg value="=${windows.sign.tsaurl}" />
 		</exec>
 	</target>
 

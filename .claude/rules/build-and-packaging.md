@@ -297,12 +297,19 @@ can live in `build/.temp/`), drops the stale box/entrypoint cache, then runs `bo
 `pack` target runs `compile-target.php --pack-only` (`boson pack`), every `git-*` target depends on it
 and passes `--no-pack` (`boson compile --no-pack`, which also tells the script *not* to drop the PHAR it
 is about to compile). Phing runs a shared dependency once per invocation; running the script without
-either flag still packs and compiles in one go (what `build-all.sh --all` uses). `pack` depends on a guarded `prepare`
-(sub-targets `prepare-composer` + `prepare-icons` + `prepare-assets`) that, only when their output is missing, runs `composer install`
-(so a fresh `git clone … && phing` bootstraps itself — and since Composer's post-install-cmd runs
-`vendor:assets`, that also vendors the front-end libraries), re-rasterises the icons, and vendors the
-front-end libraries (force a re-vendor with `-Drefresh.assets=1`); Phing runs `prepare` once per
-invocation. `prepare` also runs **`set-version`** (`build/tasks/set-version.php`): the **`CHANGELOG`
+either flag still packs and compiles in one go (what `build-all.sh --all` uses). `pack` depends on `prepare`
+(sub-targets `prepare-composer` + `prepare-icons` + `prepare-assets`). **`prepare-composer` runs
+`composer install --no-scripts` on every invocation**, so vendor/ always matches `composer.lock` after a
+pull or on another machine (a stale grafida/shell-packager once failed a build with "Unknown command");
+it costs under a second when there is nothing to do, and `--no-scripts` keeps the ~5 s npm
+post-install-cmd out of it. The other two are guarded: they re-rasterise the icons and vendor the
+front-end libraries only when their output is missing (force a re-vendor with `-Drefresh.assets=1`),
+which is also how a fresh `git clone … && phing` gets its front-end libraries. Phing runs `prepare` once
+per invocation.
+⚠️ **Phing drops an empty `<arg>`**, so a target that hands properties to a script positionally
+shifts every later one when a property is blank. `package-shell-windows-x86` passes each one as
+`=${prop}` and the script strips the `=` (`${1#=}`); a blank `windows.sign.op-item` used to make the
+item `appId`. Phing's `<env>` is no way out: it pastes `export K=V;` into a shell line unquoted. `prepare` also runs **`set-version`** (`build/tasks/set-version.php`): the **`CHANGELOG`
 is the single source of truth for the version** — its topmost entry's heading ends with the version
 number (the project convention, e.g. `Grafida 0.1`), and the step
 stamps it into `App::VERSION` in `src/Support/App.php` before every compile (idempotent; no-ops when
