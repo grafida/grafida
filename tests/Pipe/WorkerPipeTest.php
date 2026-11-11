@@ -158,7 +158,10 @@ final class WorkerPipeTest extends TestCase
         self::assertSame(69, $code, $stderr);
         self::assertSame('', $stdout, 'no ready frame, nothing at all on the frame stream');
         self::assertStringStartsWith('Grafida could not start.', $stderr);
-        self::assertStringContainsString('could not open its database', $stderr);
+        // A packaged worker writes its resources into the data folder before it opens the database
+        // (Resources::base()), so that is where it fails; this worker opens the database first.
+        $isPackaged = \is_string($packaged) && $packaged !== '';
+        self::assertStringContainsString($isPackaged ? 'could not write to its data folder (' . $blocker . '/data' : 'could not open its database (' . $blocker . '/data', $stderr);
         $lines = explode("\n", rtrim($stderr));
         self::assertLessThanOrEqual(40, \count($lines), 'the sentence stays inside the alert\'s 40-line tail');
     }

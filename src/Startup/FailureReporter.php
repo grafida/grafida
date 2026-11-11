@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Grafida\Startup;
 
+use Grafida\Support\DataDirectoryException;
 use Joomla\Database\Exception\ConnectionFailureException;
 
 /**
@@ -18,8 +19,9 @@ use Joomla\Database\Exception\ConnectionFailureException;
  *
  * The native shell owns every failure that happens before PHP runs (a too-old macOS, a missing
  * WebKitGTK or WebView2) and reports it itself. What is left for us is the worker dying while it
- * builds the app: most often a database it cannot open (a data folder that is not writable, a full
- * disk). `bin/worker.php` writes this text to stderr ahead of the stack trace, and the shell's alert
+ * builds the app: most often a data folder it cannot write to (not writable, under a file, a full
+ * disk). In development that shows as a database it cannot open; the packaged worker writes its
+ * language files and migrations into that folder first, so there it is a DataDirectoryException. `bin/worker.php` writes this text to stderr ahead of the stack trace, and the shell's alert
  * is the tail of the worker's stderr, so it opens with something a person can act on.
  *
  * ⚠️ The text is **hard-coded English**: it runs before the language files are loaded, or instead
@@ -43,6 +45,13 @@ final class FailureReporter
             . 'report it with the details below.';
 
         for ($cause = $e; $cause !== null; $cause = $cause->getPrevious()) {
+            if ($cause instanceof DataDirectoryException) {
+                $advice = 'It could not write to its data folder (' . $cause->path . '). Check that the '
+                    . 'folder exists and that you can write to it, and that the disk is not full.';
+
+                break;
+            }
+
             if ($cause instanceof ConnectionFailureException || $cause instanceof \PDOException) {
                 $advice = 'It could not open its database'
                     . ($databaseFile !== null ? ' (' . $databaseFile . ')' : '')

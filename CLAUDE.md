@@ -580,8 +580,12 @@ the shell, PHP's `UrlOpener` and `ClipboardService` answer instead.
   (opens an external http(s) URL in the OS default browser; backs `POST /api/open-url`).
   The sidebar footer shows the version and opens an About dialog using this metadata.
 - `src/Startup/` — `FailureReporter::describe()`, the one thing left of the start-up checks (gh-92):
-  the sentence a person can act on when the **worker** cannot build the app, most often a database
-  it cannot open (named, with its path). `bin/worker.php` catches a failure while it builds the
+  the sentence a person can act on when the **worker** cannot build the app, most often a data
+  folder it cannot write to (named, with its path). ⚠️ **That failure looks different per mode**:
+  the packaged worker writes its language files and migrations into the data folder
+  (`Resources::base()`) *before* it opens the database, so there it is a
+  `Support\DataDirectoryException`, and only in development is it the database that fails; the Pipe
+  test asserts each, so run it with `GRAFIDA_PIPE_WORKER` too. `bin/worker.php` catches a failure while it builds the
   container and the `FrontController`, writes that sentence to stderr, then the stack trace cut to
   20 frames, and exits `FailureReporter::EXIT_FAILED` (69) without sending `ready`. ⚠️ **The cut is
   load-bearing**: the shell's failure alert is the last 40 lines of the worker's stderr, and a

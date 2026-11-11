@@ -97,6 +97,12 @@ final class Resources
             @mkdir($destination, 0700, true);
         }
 
+        // Without this, a data directory we cannot write to surfaced as the iterator below failing
+        // to open the folder, which FailureReporter could not tell from any other bug (gh-92).
+        if (!is_dir($destination)) {
+            throw new DataDirectoryException($destination);
+        }
+
         $shipped  = [];
         $iterator = new \RecursiveIteratorIterator(
             new \RecursiveDirectoryIterator($source, \FilesystemIterator::SKIP_DOTS),
