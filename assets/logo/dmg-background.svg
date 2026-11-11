@@ -5,7 +5,7 @@
   GNU General Public License version 3, or later.
 
   Master artwork for the macOS disk-image (.dmg) background. It fills the DMG
-  Finder window's 640x400 content area 1:1; scripts/make-dmg.sh positions the
+  Finder window's 640x400 content area 1:1; shell-packager's macos-dmg positions the
   app icon at {160,210} and the /Applications symlink at {480,210} (icon size
   128) ON TOP of this image, so the arrow sits in the gap between them and the
   header stays clear of both glyphs. Run scripts/make-dmg-background.sh to

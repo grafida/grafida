@@ -25,7 +25,7 @@ two-space continuation indent are the original bullet formatting.
   (gh-36): `MediaRepository` still stores the bytes in `media_blobs` (now also carrying
   `updated_at`/`width`/`height`/`size`, added by `storage/migrations/07_media_blobs_local.sql` —
   not re-runnable, following the `04_ai_chat_response_chain.sql` pattern), but the editor
-  references it by a **local URL the Boson kernel itself serves**:
+  references it by a **local URL the worker itself serves**:
   `boson://app/api/media/{id}/raw?rev=<token>` (`MediaController::mediaBlobRaw()`, ~60 bytes
   regardless of image size, vs. a 2.3 MiB screenshot's ~3.1 MiB of base64 previously sitting in
   the editor DOM, `State` *and* the `drafts.html` column — which is what made the CodeMirror
@@ -55,8 +55,8 @@ two-space continuation indent are the original bullet formatting.
   context toolbar too, via `localMediaEditorDescriptorBase(entry, afterSave)`, which factors out
   everything but what happens after a successful save: the grid re-renders itself, an in-article
   edit has no grid on screen to touch), plus rename, save-to-disk
-  (`POST /api/media/{id}/save-to-disk`, folder picker + server write, since Boson has no Save-As
-  dialog) and delete.
+  (`POST /api/media/{id}/save-to-disk`, the shell's folder picker + a server write under the blob's
+  own file name) and delete.
   ⚠️ **Editing a blob's bytes in place leaves every `<img>` that references it wearing a stale,
   possibly-distorted `width`/`height`** (gh-43) — TinyMCE bakes the *intrinsic* size onto every
   inserted image (its paste/drop path inserts `<img width="…" height="…">`, and the Insert/Edit
@@ -267,8 +267,8 @@ two-space continuation indent are the original bullet formatting.
   doubling to 2rem in the built-in-CSS branch. Editor-only, like the `img` rule — `editor.css` never reaches
   the published article.
   TinyMCE's own **"Upload" tab is disabled** (`image_uploadtab: false`) because its "Browse for an image"
-  dropzone creates a plain `<input type="file">` that Boson's webview never opens (see the native
-  file-dialog note in `CLAUDE.md`) — so local uploads go exclusively through the Source-field "Choose file…",
+  dropzone creates a plain `<input type="file">`, and files reach the page only through the shell's
+  own dialog (see the file-picker note in `CLAUDE.md`; Boson's webview never opened that input) — so local uploads go exclusively through the Source-field "Choose file…",
   which calls the native picker. The **quickbars insert toolbar is disabled** for the same reason
   (`quickbars_insert_toolbar: false`, gh-6): the toolbar it pops up on every empty line offers a
   `quickimage` button that clicks that same dead `<input type="file">`. The `quickbars` plugin stays

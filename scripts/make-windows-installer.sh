@@ -4,159 +4,71 @@
 # Copyright (c) 2026 Nicholas K. Dionysopoulos
 # GNU General Public License version 3, or later.
 #
-# Packages the compiled Windows binary (build/windows/amd64/) into an NSIS
-# installer. makensis runs natively on macOS/Linux, so the installer
-# cross-compiles from this host (no Wine/Docker/Windows). If makensis is absent
-# it falls back to a portable .zip.
+# The Windows (x64) installer (gh-91, gh-92): Grafida on the native shell, built by
+# grafida/shell-packager from shell-package.json and build/shell-windows-installer.nsi. Called by
+# `phing package-windows-x86` and scripts/build-all.sh. It installs per user where Boson's build did,
+# under its identity (Programs\Grafida, the uninstall key Grafida, its Start menu entry), removing a
+# Boson or preview install first.
 #
-# Usage:  scripts/make-windows-installer.sh
+# Usage:  scripts/make-windows-installer.sh [shell-packager options, e.g. --no-check]
 #
-# Output: build/dist/Grafida-<version>-windows-amd64-Setup.exe   (NSIS), or
-#         build/dist/Grafida-<version>-windows-amd64.zip          (fallback)
+# Output: build/dist/Grafida-<version>-windows-amd64-Setup.exe (+ .sha256)
+#
+# Runs on the Mac (or Linux): makensis, Jsign and osslsigncode run there; the shell and the phpmicro
+# SFX are downloaded from the releases pinned in shell-package.json and verified by SHA-256 (cached
+# in ~/.cache/grafida-shell-packager, never build/sfx/). The packaged worker is run only on a
+# Windows host, so here shell-packager says it skipped that check; the test guests run it.
+#
+# Signing: from build/build.properties through the Phing target (windows.sign.*). With WINDOWS_SIGN_OP_ITEM set, the 1Password item
+# gives the service principal, the Azure CLI logs in and fetches an access token, and shell-packager
+# gets it as WINDOWS_SIGN_ENDPOINT / _PROFILE / _TOKEN / _TSAURL; it signs the shell, the worker stub,
+# the uninstaller and the installer. Without it, everything is unsigned. Azure Artifact Signing's
+# Basic tier is capped at 5,000 signatures a month: a signed build costs four.
 
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT"
 
-SRC_DIR="$ROOT/build/windows/amd64"
-WIN_BIN="$SRC_DIR/grafida.exe"
-if [ ! -f "$WIN_BIN" ]; then
-  echo "Compiled binary not found at $WIN_BIN — run 'phing git-win-x86' first." >&2
-  exit 1
-fi
+[ -x vendor/bin/shell-packager ] || { echo "vendor/bin/shell-packager is missing: run composer install." >&2; exit 1; }
 
-VERSION="${GRAFIDA_VERSION:-$(sed -nE "s/.*VERSION = '([^']+)'.*/\1/p" "$ROOT/src/Support/App.php" | head -1)}"
-ICON_DIR="$ROOT/assets/logo"
-DIST="$ROOT/build/dist"
-mkdir -p "$DIST"
+# The PHAR carries src/Support/App.php, so stamp App::VERSION from the CHANGELOG first
+# (idempotent; GRAFIDA_VERSION overrides).
+php build/tasks/set-version.php
+VERSION="$(php build/tasks/set-version.php --print)"
 
-# Sign the compiled binary itself first, so both the NSIS installer and the
-# portable .zip fallback below carry a signed grafida.exe. A no-op unless
-# WINDOWS_SIGN_OP_ITEM is set (see scripts/sign-windows-exe.sh) — never runs
-# for a local 'phing git-win-x86' compile, only from packaging.
-#
-# CRUCIAL: grafida.exe is a phpmicro self-executable — the PE stub with the
-# application PHAR appended after it. Authenticode signing appends its
-# certificate table at EOF, i.e. AFTER the PHAR, which corrupts the PHAR's own
-# trailing signature and makes the app die at startup with "grafida.exe has a
-# broken signature" (Phar::mapPhar). So we must NEVER sign the combined binary.
-#
-# When grafida.exe was compiled against the patched sibling-payload SFX
-# (build/sfx/windows-x86_64.standard.sfx, from the grafida/phpmicro
-# `sibling-phar` fork — see build/readme/02-signing-architecture.md), we split
-# it, exactly like scripts/make-macos-app.sh does for the .app bundle: the clean
-# PE stub becomes grafida.exe and the payload becomes a sibling grafida.phar the
-# patched stub loads at run time. Only the clean stub is signed. Everything
-# packaged below (NSIS installer or portable .zip) is built from PKG_DIR.
-SIGNING=0
-[ -n "${WINDOWS_SIGN_OP_ITEM:-}" ] && SIGNING=1
+# The PHAR inside is the same for one commit (signatures and the NSIS archive are not reproducible).
+export SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(git log -1 --format=%ct)}"
 
-PKG_DIR="$SRC_DIR"   # what we package; the split staging dir when applicable
-HAVE_PHAR=0
+# makensis 3.13 on macOS aborts with std::bad_alloc, even on an empty script, when no locale is set
+# (an agent's or a CI shell can have none).
+export LANG="${LANG:-en_US.UTF-8}"
 
-if LC_ALL=C grep -aq "next to this executable" "$WIN_BIN"; then
-  # Patched, sibling-capable stub: split at phpmicro's SFX size (the section
-  # end; pe-sfxsize.php also asserts Boson's extra-ini magic sits there).
-  SFXSIZE="$(php "$ROOT/build/tasks/pe-sfxsize.php" "$WIN_BIN")" || {
-    echo "ERROR: patched Windows SFX detected but could not locate the appended payload in" >&2
-    echo "       $WIN_BIN (see the message above). Refusing to package a broken binary." >&2
-    exit 1
-  }
-  STAGE_SPLIT="$ROOT/build/.stage-win-split"
-  rm -rf "$STAGE_SPLIT"; mkdir -p "$STAGE_SPLIT"
-  echo "Patched sibling-payload SFX detected: splitting $(( $(stat -f%z "$WIN_BIN") - SFXSIZE )) payload bytes into grafida.phar"
-  head -c "$SFXSIZE" "$WIN_BIN" > "$STAGE_SPLIT/grafida.exe"
-  tail -c "+$((SFXSIZE + 1))" "$WIN_BIN" > "$STAGE_SPLIT/grafida.phar"
-  # The runtime DLL and UI assets must sit beside the exe (NSIS/zip copy them).
-  cp "$SRC_DIR"/*.dll "$STAGE_SPLIT/" 2>/dev/null || true
-  [ -d "$SRC_DIR/assets" ] && cp -R "$SRC_DIR/assets" "$STAGE_SPLIT/assets"
-  PKG_DIR="$STAGE_SPLIT"
-  HAVE_PHAR=1
-  # Sign the CLEAN stub (no appended payload) — this is the entire point.
-  "$ROOT/scripts/sign-windows-exe.sh" "$STAGE_SPLIT/grafida.exe"
-elif [ "$SIGNING" = 1 ]; then
-  echo "" >&2
-  echo "ERROR: cannot Authenticode-sign $WIN_BIN." >&2
-  echo "  It was compiled against a STOCK Boson SFX, whose appended PHP payload sits" >&2
-  echo "  after the executable. Signing it would append the certificate past the PHAR" >&2
-  echo "  and corrupt its trailing signature (Phar::mapPhar fails at startup)." >&2
-  echo "  Build the patched sibling-payload SFX into build/sfx/windows-x86_64.standard.sfx" >&2
-  echo "  (scripts/fetch-sfx.sh) and recompile — see build/readme/02-signing-architecture.md." >&2
-  exit 1
+OP_ITEM="${WINDOWS_SIGN_OP_ITEM:-}"
+if [ -n "$OP_ITEM" ]; then
+  for bin in az jsign op osslsigncode makensis; do
+    command -v "$bin" >/dev/null 2>&1 || {
+      echo "ERROR: '$bin' is required for a signed Windows build but was not found on PATH." >&2
+      echo "       Install with: brew install azure-cli jsign 1password-cli osslsigncode makensis" >&2
+      exit 1
+    }
+  done
+  APP_ID="$(op item get "$OP_ITEM" --fields "label=${WINDOWS_SIGN_OP_FIELD_APPID:-appId}")"
+  APP_SECRET="$(op item get "$OP_ITEM" --fields "label=${WINDOWS_SIGN_OP_FIELD_PASSWORD:-password}" --reveal)"
+  TENANT="$(op item get "$OP_ITEM" --fields "label=${WINDOWS_SIGN_OP_FIELD_TENANT:-tenant}")"
+  az login --service-principal -u "$APP_ID" -p "$APP_SECRET" --tenant "$TENANT" --output none
+  unset APP_SECRET
+  WINDOWS_SIGN_TOKEN="$(az account get-access-token --resource https://codesigning.azure.net --query accessToken -o tsv)"
+  export WINDOWS_SIGN_TOKEN
+  export WINDOWS_SIGN_ENDPOINT="${WINDOWS_SIGN_KEYSTORE:-weu.codesigning.azure.net}"
+  export WINDOWS_SIGN_PROFILE="${WINDOWS_SIGN_ALIAS:-akeeba-signing/AkeebaPublic}"
+  export WINDOWS_SIGN_TSAURL="${WINDOWS_SIGN_TSAURL:-http://timestamp.acs.microsoft.com}"
+  SIGNED="Trusted Signing ($WINDOWS_SIGN_PROFILE)"
 else
-  echo "Note: unpatched Boson SFX — shipping the UNSIGNED combined grafida.exe (it works," >&2
-  echo "      but is not code-signed). Add build/sfx/windows-x86_64.standard.sfx to sign it." >&2
+  # Never sign with whatever happens to be in the environment: only the configured item signs.
+  unset WINDOWS_SIGN_ENDPOINT WINDOWS_SIGN_PROFILE WINDOWS_SIGN_TOKEN WINDOWS_SIGN_PKCS12 WINDOWS_SIGN_PKCS12_PASSWORD
+  SIGNED="no (windows.sign.op-item is empty)"
 fi
 
-# Bundle the Visual C++ 2015-2022 runtime app-local (next to grafida.exe). Boson's
-# libboson-windows-x86_64.dll imports MSVCP140*/VCRUNTIME140*, absent on a clean
-# Windows (especially Server), so without these the app dies at startup with an FFI
-# "The specified module could not be found" on libboson. Windows resolves a DLL's
-# imports from the app directory first, so shipping them beside the exe makes the
-# per-user, no-admin installer self-contained. Fetched by scripts/fetch-sfx.sh into
-# build/sfx/vc-runtime/. Best-effort: a build without them just omits them (the user
-# then needs the "Microsoft Visual C++ 2015-2022 Redistributable (x64)" installed).
-VCRT_DIR="$ROOT/build/sfx/vc-runtime"
-if ls "$VCRT_DIR"/*.dll >/dev/null 2>&1; then
-  cp "$VCRT_DIR"/*.dll "$PKG_DIR/"
-  echo "Bundled app-local VC++ runtime: $(cd "$VCRT_DIR" && ls *.dll | tr '\n' ' ')"
-else
-  echo "Warning: build/sfx/vc-runtime/ has no DLLs — NOT bundling the VC++ runtime. A clean" >&2
-  echo "         Windows will need the 'Microsoft Visual C++ 2015-2022 Redistributable (x64)'." >&2
-  echo "         Run scripts/fetch-sfx.sh to fetch it, then repackage." >&2
-fi
-
-MAKENSIS="$(command -v makensis 2>/dev/null || true)"
-
-if [ -n "$MAKENSIS" ]; then
-  echo "Packaging Windows (amd64, version: $VERSION): NSIS installer (native makensis)"
-  SETUP="$DIST/Grafida-${VERSION}-windows-amd64-Setup.exe"
-  # VIProductVersion needs exactly four numeric components (X.X.X.X) — pad/encode
-  # the human version (which may carry an alpha/beta/rc suffix) accordingly.
-  VIVERSION="$(php "$ROOT/build/tasks/vi-version.php" "$VERSION")"
-  # A split build ships grafida.phar beside the stub; tell the installer to
-  # bundle it (the .nsi guards the extra File on HAVE_PHAR).
-  NSIS_ARGS=(
-    "-DSRCDIR=$PKG_DIR"
-    "-DOUTFILE=$SETUP"
-    "-DLICENSEFILE=$ROOT/LICENSE.txt"
-    "-DICONFILE=$ICON_DIR/Grafida.ico"
-    "-DAPPVERSION=$VERSION"
-    "-DVIVERSION=$VIVERSION"
-  )
-  [ "$HAVE_PHAR" = 1 ] && NSIS_ARGS+=("-DHAVE_PHAR=1")
-  # makensis chdir's to the script dir, so pass ABSOLUTE source/output paths.
-  "$MAKENSIS" -V2 "${NSIS_ARGS[@]}" "$ROOT/build/windows-installer.nsi"
-  # Sign the installer executable itself too — it is a PE file end users run
-  # directly. (It carries NSIS's own overlay, not a PHAR, so the sign guard in
-  # sign-windows-exe.sh lets it through.)
-  "$ROOT/scripts/sign-windows-exe.sh" "$SETUP"
-  echo "Done: $SETUP"
-  exit 0
-fi
-
-# ---------------------------------------------------------------------------
-# Fallback: a portable .zip when no NSIS compiler is available.
-# ---------------------------------------------------------------------------
-echo "Packaging Windows (amd64, version: $VERSION): portable .zip (no makensis found)"
-echo "  Install NSIS ('brew install makensis') for a native Windows installer." >&2
-
-if ! command -v zip >/dev/null 2>&1; then
-  echo "ERROR: neither 'makensis' nor 'zip' is available — cannot package Windows." >&2
-  exit 1
-fi
-
-STAGE_ROOT="$ROOT/build/.stage-win"
-STAGE="$STAGE_ROOT/Grafida"
-rm -rf "$STAGE_ROOT"; mkdir -p "$STAGE"
-# PKG_DIR is the split staging dir (stub + grafida.phar + dll + assets) when the
-# binary was split above, otherwise the original compiled output.
-cp -R "$PKG_DIR/." "$STAGE/"
-cp "$ICON_DIR/Grafida.ico" "$STAGE/Grafida.ico"
-
-ZIP_OUT="$DIST/Grafida-${VERSION}-windows-amd64.zip"
-rm -f "$ZIP_OUT"
-( cd "$STAGE_ROOT" && zip -qr "$ZIP_OUT" "Grafida" )
-rm -rf "$STAGE_ROOT"
-
-echo "Done: $ZIP_OUT"
+echo "==> Grafida $VERSION, Windows x64, signed: $SIGNED"
+php vendor/bin/shell-packager windows-installer --config="$ROOT/shell-package.json" --app-version="$VERSION" "$@"

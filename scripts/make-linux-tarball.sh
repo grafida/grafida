@@ -4,56 +4,36 @@
 # Copyright (c) 2026 Nicholas K. Dionysopoulos
 # GNU General Public License version 3, or later.
 #
-# Packages the compiled Linux binary (build/linux/<arch>/) into a portable
-# .tar.gz: the binary + the libboson runtime .so + the bundled assets, plus the
-# application icon, the .desktop launcher and the per-user XDG installer
-# (build/linux-install.sh, renamed install.sh inside the archive).
+# The Linux tarballs (gh-86, gh-92): Grafida on the native shell, built by grafida/shell-packager
+# from shell-package.json. Called by `phing package-linux-x86|-arm` and scripts/build-all.sh.
 #
-# Usage:  scripts/make-linux-tarball.sh [arch]      (arch: amd64|arm64, default amd64)
+# Usage:  scripts/make-linux-tarball.sh [arch ...]   (amd64|arm64; default: both)
 #
-# Output: build/dist/Grafida-<version>-linux-<arch>.tar.gz
+# Output: build/dist/Grafida-<version>-linux-<arch>.tar.gz (+ .sha256)
+#
+# The shell, the launcher and the phpmicro SFX are downloaded from the releases pinned in
+# shell-package.json and verified by SHA-256 (cached in ~/.cache/grafida-shell-packager). On a Linux
+# host of the same architecture the packaged worker is also run before the tarball is written.
 
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-ARCH="${1:-amd64}"
+cd "$ROOT"
 
-# Boson names the Linux arm64 output directory "aarch64"; amd64 stays "amd64".
-case "$ARCH" in
-  amd64|x86_64)  ARCH=amd64; BOSON_DIR=amd64 ;;
-  arm64|aarch64) ARCH=arm64; BOSON_DIR=aarch64 ;;
-  *) echo "Unknown arch: $ARCH" >&2; exit 1 ;;
-esac
+[ -x vendor/bin/shell-packager ] || { echo "vendor/bin/shell-packager is missing: run composer install." >&2; exit 1; }
 
-SRC_DIR="$ROOT/build/linux/$BOSON_DIR"
-LINUX_BIN="$SRC_DIR/grafida"
-if [ ! -f "$LINUX_BIN" ]; then
-  echo "Compiled binary not found at $LINUX_BIN — run 'phing git-linux-$([ "$ARCH" = amd64 ] && echo x86 || echo arm)' first." >&2
-  exit 1
-fi
+# The PHAR carries src/Support/App.php, so stamp App::VERSION from the CHANGELOG first
+# (idempotent; GRAFIDA_VERSION overrides).
+php build/tasks/set-version.php
+VERSION="$(php build/tasks/set-version.php --print)"
 
-VERSION="${GRAFIDA_VERSION:-$(sed -nE "s/.*VERSION = '([^']+)'.*/\1/p" "$ROOT/src/Support/App.php" | head -1)}"
-ICON_DIR="$ROOT/assets/logo"
-DIST="$ROOT/build/dist"
-mkdir -p "$DIST"
+# One commit builds one tarball: every timestamp in the PHAR and the archive is the commit's.
+export SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(git log -1 --format=%ct)}"
 
-echo "Packaging Linux ($ARCH, version: $VERSION): .tar.gz"
+ARCHES=("$@")
+[ ${#ARCHES[@]} -gt 0 ] || ARCHES=(amd64 arm64)
 
-STAGE_ROOT="$ROOT/build/.stage-linux-$BOSON_DIR"
-STAGE="$STAGE_ROOT/grafida"
-rm -rf "$STAGE_ROOT"; mkdir -p "$STAGE"
-cp -R "$SRC_DIR/." "$STAGE/"
-
-# Desktop integration: ship the icon, the .desktop launcher and the per-user
-# installer (see build/linux-install.sh).
-cp "$ICON_DIR/grafida.png"     "$STAGE/grafida.png"
-cp "$ICON_DIR/grafida.desktop" "$STAGE/grafida.desktop"
-cp "$ROOT/build/linux-install.sh" "$STAGE/install.sh"
-chmod +x "$STAGE/install.sh" "$STAGE/grafida"
-
-TGZ="$DIST/Grafida-${VERSION}-linux-${ARCH}.tar.gz"
-rm -f "$TGZ"
-tar -czf "$TGZ" -C "$STAGE_ROOT" grafida
-rm -rf "$STAGE_ROOT"
-
-echo "Done: $TGZ"
+for arch in "${ARCHES[@]}"; do
+  echo "==> Grafida $VERSION, Linux $arch"
+  php vendor/bin/shell-packager linux-tarball --config="$ROOT/shell-package.json" --arch="$arch" --app-version="$VERSION"
+done

@@ -17,8 +17,8 @@ are not configured, so a clean checkout is green.
 | Suite | What it covers |
 |---|---|
 | **unit** (`tests/Unit/`) | Pure PHP units — the Joomla API client, HTML splitting/rebasing, secret stores, repositories, the AI provider table and proxy. Fast, no network, in-memory SQLite. |
-| **feature** (`tests/Feature/`) | The back end end-to-end through the kernel. The kernel is a pure `Request → Response` function, so the whole API is testable **without opening a window** — no Boson, no webview. |
-| **integration** (`tests/Integration/`) | Boson application stubs, plus the **live AI provider tests** below. |
+| **feature** (`tests/Feature/`) | The back end end-to-end through the kernel. The kernel is a pure `Request → Response` function, so the whole API is testable **without opening a window** — no shell, no webview, no worker process. |
+| **integration** (`tests/Integration/`) | The **live AI provider tests** below, skipped unless configured. |
 | **js** (`tests/js/`) | The AI transport, `assets/private/js/ai/providers.js`. |
 
 ### The conformance corpus
@@ -67,7 +67,7 @@ and what the results mean.
 ### Why there is a JavaScript suite
 
 The AI provider call **runs in the SPA's JavaScript**, not in PHP — that is what makes streaming
-possible (the `boson://` kernel buffers whole responses and cannot stream). PHPUnit therefore
+possible (the worker buffers whole responses and cannot stream). PHPUnit therefore
 cannot reach `providers.js` at all, and it is the riskiest code in the AI feature: three wire
 dialects, two SSE formats, a CORS fallback and a retry path.
 

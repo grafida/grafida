@@ -60,7 +60,7 @@ Please note that the Help page displays a snapshot of the documentation for the 
 
 _Not shown in the screenshot at the top of the page_.
 
-Below the Menu and towards the bottom of the window you will see an update notification _if there is a newer version available_. Clicking on it will take you to the download page for the latest version of Grafida. You can then download and install it. Remember to close and restart Grafida!
+Below the Menu and towards the bottom of the window you will see an update notification _if there is a newer version available_. It only tells you about a version that supports your computer's operating system, its version and your processor. Clicking on it will take you to the download page for the latest version of Grafida. You can then download and install it. Remember to close and restart Grafida!
 
 ## Version information
 

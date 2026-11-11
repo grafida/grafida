@@ -99,8 +99,10 @@ Two things trip people up.
 > *Enable CORS* in its server settings.
 >
 > Without it Grafida still works, by routing the call through its own back end, but that path
-> cannot stream: the reply arrives all at once, and while it is being generated the rest of the
-> interface stops responding. If your local model makes Grafida “freeze”, this is why.
+> cannot stream: the reply arrives all at once. While it is being generated the window still
+> responds, but anything else that needs Grafida's back end — saving, opening another screen,
+> loading a list — waits until the reply is complete. If Grafida seems stuck while your local model
+> answers, this is why.
 
 > [!IMPORTANT]
 > **On macOS, a plain `http://` endpoint on another machine** — a LAN box at

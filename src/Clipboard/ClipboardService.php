@@ -116,11 +116,12 @@ final class ClipboardService
      * as the fallback for a host without FFI.
      *
      * ⚠️ **The order matters and is not a micro-optimisation.** A
-     * `powershell.exe` spawn costs the best part of a second, the `boson://`
-     * kernel is single-threaded, and this runs under a *keystroke* — so on the
-     * PowerShell path every plain-text paste would freeze the UI for about a
-     * second. That is the same stall that pushed the DPAPI secret store and the
-     * theme probe onto FFI. `-Raw` is required in the fallback: without it
+     * `powershell.exe` spawn costs the best part of a second, the worker answers
+     * one request at a time, and this runs under a *keystroke* — so on the
+     * PowerShell path every plain-text paste would wait a second for its text,
+     * and every request queued behind it with it (under Boson the whole window
+     * froze too). That is the same cost that pushed the DPAPI secret store and
+     * the theme probe onto FFI. `-Raw` is required in the fallback: without it
      * Get-Clipboard returns an array of lines and the text comes back reflowed.
      */
     private function readWindows(): ?string

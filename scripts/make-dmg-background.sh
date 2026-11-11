@@ -5,7 +5,8 @@
 # GNU General Public License version 3, or later.
 #
 # Rasterises the DMG background artwork master (assets/logo/dmg-background.svg)
-# into the assets scripts/make-dmg.sh drops into the disk image:
+# into the assets the disk image's Finder layout uses (shell-package.json's macos.dmg, applied by
+# grafida/shell-packager's macos-dmg):
 #
 #   assets/logo/dmg-background.png     640x400  (1x)
 #   assets/logo/dmg-background@2x.png  1280x800 (2x, retina)

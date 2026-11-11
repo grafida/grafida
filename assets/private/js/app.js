@@ -26,8 +26,9 @@ const State = {
     availableLanguages: {},
     // Interface display-mode preference: 'auto' (follow OS), 'light' or 'dark'.
     displayMode: 'auto',
-    // The OS light/dark preference as probed by the back-end (Boson's webview
-    // does not report `prefers-color-scheme` reliably): true/false, or null when
+    // The OS light/dark preference as probed by the back-end (a webview's
+    // `prefers-color-scheme` is not to be trusted: Boson's always said dark on
+    // macOS): true/false, or null when
     // undetectable (then we fall back to the media query).
     systemPrefersDark: null,
     // The concrete theme currently applied ('light' | 'dark') after resolving
@@ -70,8 +71,9 @@ const State = {
     sites: [],
     currentSiteId: null,
     // The site to re-select on the next launch. Persisted server-side (in the
-    // settings table) because Boson's webview does not keep localStorage across
-    // an app restart. Seeded from the bootstrap payload.
+    // settings table), which outlives anything that clears the webview's storage
+    // (Boson's webview kept no localStorage across a restart at all). Seeded from
+    // the bootstrap payload.
     lastSiteId: null,
     // The draft currently open in the editor. Held in memory and only written to
     // the database on the first Save — a new or remote-imported article leaves no
@@ -681,9 +683,9 @@ async function apiFetch(method, path, body = null, extraHeaders = null) {
         cache: 'no-store',
     };
     if (body !== null) {
-        // Keep this a single string: the patched Linux libboson reads a request body
-        // in ONE read() (gh-79, build/tasks/patch-libboson.php); a Blob/FormData body
-        // could arrive truncated.
+        // Keep this a single string: WKWebView hands the shell's scheme handler no
+        // body for a Blob/File or a FormData with a file part, so the shell makes such a
+        // request to our origin fail with a TypeError rather than arrive empty (gh-88).
         opts.body = JSON.stringify(body);
     }
     netActivityCount++;
@@ -727,24 +729,24 @@ function setAiTools(tools) {
 }
 
 /**
- * Whether the page is hosted by the native shell (grafida/grafida#85) rather than Boson.
+ * Whether the page is hosted by the native shell (grafida/grafida#85), which it always is in the app.
+ * The other host is a plain browser: the `/verify` harness, which drives this SPA against the real
+ * PHP through an HTTP bridge.
  *
- * The two hosts pick files differently. Under Boson, PHP opens the OS dialog itself and answers with
- * the file (`POST /api/dialog/open-file`) or the folder's path. Under the shell, the page opens the
- * shell's own dialog (`/_native/dialog/*`, via `js/shell.js`), which answers with an opaque per-session
- * **token**, never a path, and the page hands that token to PHP in the `X-Shell-File` header; the shell
- * swaps it for the real path on the way. So script in the page can only ever name what the user
- * picked. `GrafidaShell.available()` asks the shell once per page and remembers the answer; under
- * Boson, `/_native/info` reaches PHP, which answers with the SPA page rather than the shell's JSON,
- * so it resolves false and the old flow runs. `typeof` guards a build missing `js/shell.js`.
+ * Files are picked in the shell's own dialog (`/_native/dialog/*`, via `js/shell.js`), which answers
+ * with an opaque per-session **token**, never a path; the page hands that token to PHP in the
+ * `X-Shell-File` header, and the shell swaps it for the real path on the way. So script in the page
+ * can only ever name what the user picked. Without the shell there is no dialog: PHP's
+ * `/api/dialog/*` answer 503. `GrafidaShell.available()` asks the shell once per page and remembers
+ * the answer; in a browser `/_native/info` reaches PHP, which answers with the SPA page rather than
+ * the shell's JSON, so it resolves false. `typeof` guards a build missing `js/shell.js`.
  */
 function underShell() {
     return typeof GrafidaShell !== 'undefined' ? GrafidaShell.available() : Promise.resolve(false);
 }
 
 /**
- * The shell dialog's filters for `api.openFile(filter)`. Mirrors the patterns
- * `SettingsController::openFile()` gives Boson's dialog; the label is the patterns themselves, so it
+ * The shell dialog's filters for `api.openFile(filter)`; the label is the patterns themselves, so it
  * needs no translation.
  */
 const SHELL_FILE_FILTERS = {
@@ -801,8 +803,8 @@ const api = {
     exportDraft: (id, dir) => apiFetch('POST', `/api/drafts/${id}/export`, { directory: dir.path || '' }, folderHeaders(dir)),
     importDraft: (siteId, payload) => apiFetch('POST', '/api/drafts/import', { siteId, payload }),
     importDraftInto: (id, payload) => apiFetch('POST', `/api/drafts/${id}/import`, { payload }),
-    // `{cancelled}`, or `{path}` under Boson / `{token, name}` under the shell: hand the whole object
-    // to the export call, never just a path (see underShell()).
+    // `{cancelled}` or `{token, name}`: hand the whole object to the export call, never just a path
+    // (see underShell()). Without the shell, PHP has no dialog and answers 503.
     selectDirectory: async () => {
         if (await underShell()) {
             const picked = await GrafidaShell.selectFolder();
@@ -850,7 +852,7 @@ const api = {
     openStorageFolder: () => apiFetch('POST', '/api/settings/storage/open'),
     resetStorage: () => apiFetch('POST', '/api/settings/storage/reset'),
     // Under the shell the shell opens it (`_native/open-url`, http/https only), which is also what its
-    // navigation policy does with an off-origin link; under Boson, PHP's UrlOpener does.
+    // navigation policy does with an off-origin link; without the shell, PHP's UrlOpener does.
     openUrl: async (url) => {
         if (await underShell()) {
             await GrafidaShell.openUrl(url);
@@ -1060,8 +1062,8 @@ function rememberLastSite(id) {
         if (numId) localStorage.setItem(LAST_SITE_KEY, String(numId));
     } catch (e) { /* storage may be unavailable */ }
 
-    // Persist across restarts (localStorage does not survive a Boson webview
-    // relaunch). Fire-and-forget, and only when the value actually changed.
+    // Persist server-side, which outlives anything that clears the webview's storage.
+    // Fire-and-forget, and only when the value actually changed.
     if (numId && numId !== State.lastSiteId) {
         State.lastSiteId = numId;
         api.setLastSite(numId).catch(() => { /* best-effort persistence */ });
@@ -3000,7 +3002,7 @@ async function openDraftInEditor(draft) {
  *
  * This used to `await` both fetches before rendering anything, which is how a
  * newly added site could leave the editor screen empty for as long as its
- * server took to answer: Boson serves one `boson://` request at a time, a cold
+ * server took to answer: the worker answers one request at a time, a cold
  * reference cache costs one HTTP request *per custom field*, and the editor CSS
  * used to re-run template discovery plus a walk over every candidate URL on
  * every single open. A slow or half-reachable site therefore held the editor
@@ -4071,7 +4073,7 @@ function shortcutsHelpTab() {
  * extending it, so the built-in names have to be repeated to keep them.
  *
  * ⚠️ No link in this dialog can be opened (gh-21). A TinyMCE dialog renders one
- * as a target="_blank" anchor, and nothing in this app answers that: Boson's
+ * as a target="_blank" anchor, and nothing in this app answers that: the app's
  * webview opens no new window, and the SPA routes every external URL through
  * api.openUrl() explicitly. So the two built-in tabs that are made of links are
  * dealt with here rather than shipped inert — the "Plugins" tab is dropped
@@ -4122,7 +4124,7 @@ function insertReadMore(editor) {
  * there is none (or it could not be turned into one). Not to be confused with
  * editorContentCss(), which names TinyMCE's *built-in* content stylesheet.
  *
- * Boson's webview misreports prefers-color-scheme (always dark on macOS — see
+ * A webview's prefers-color-scheme is not to be trusted (Boson's was always dark on macOS — see
  * Display\DisplayModeService::systemPrefersDark()), so a site editor.css with
  * automatic dark mode (e.g. Bootstrap 5.3's media-query colour mode) rendered
  * the editor content permanently dark, whatever State.resolvedTheme actually
@@ -4310,8 +4312,9 @@ async function initTinyMCE(draft) {
             'insertdatetime', 'media', 'table', 'help', 'wordcount', 'quickbars'
         ],
         // The quick insert toolbar (shown on every empty line) offers "quickimage",
-        // which clicks a plain <input type="file"> — dead in Boson's webview, like
-        // the image dialog's Upload tab disabled below. Drop the whole toolbar; the
+        // which clicks a plain <input type="file">: files reach the page only through
+        // the shell's dialog (a token, never a path), like the image dialog's Upload
+        // tab disabled below (both were dead in Boson's webview). Drop the whole toolbar; the
         // plugin stays for its selection and image context toolbars.
         quickbars_insert_toolbar: false,
         // Tools menu: our "sourcecode" item replaces the dropped "code" item.
@@ -4809,7 +4812,7 @@ async function initTinyMCE(draft) {
             });
         },
         // Pasted / dragged images: store offline and insert the local URL the
-        // Boson kernel serves the blob's bytes back from
+        // worker serves the blob's bytes back from
         // (boson://app/api/media/{id}/raw?rev=…, see MediaController::mediaBlobRaw)
         // rather than the data: URI this used to return. A 2.3 MiB screenshot
         // used to become ~3.1 MiB of base64 sitting in the editor DOM, State
@@ -4835,8 +4838,8 @@ async function initTinyMCE(draft) {
         // The Insert/Edit Image dialog's "browse" button opens the unified picker:
         // browse the site's Media Manager, or "Choose file…" to upload a local one.
         // TinyMCE's own "Upload" tab dropzone ("Browse for an image") creates a
-        // plain <input type="file"> and clicks it — which Boson's webview never
-        // opens (no native file-input open-panel callback). Disable that dead tab;
+        // plain <input type="file"> and clicks it; files reach the page only through
+        // the shell's own dialog (Boson's webview never opened that input at all). Disable the tab;
         // local files are uploaded through the Source field's browse button below,
         // which routes to our native picker via the media browser's "Choose file…".
         image_uploadtab: false,
@@ -4889,7 +4892,7 @@ const MEDIA_REF_PREFIX = 'grafida-media://';
 // match InlineMedia::ATTRIBUTE on the PHP side. PublishService uploads these.
 const GRAFIDA_MEDIA_ATTR = 'data-grafida-media-id';
 
-// Local (not yet published) images are referenced by a URL the Boson kernel
+// Local (not yet published) images are referenced by a URL the worker
 // serves (src/Http/Controller/MediaController::mediaBlobRaw), NOT an inline
 // data: URI — a 2 MiB screenshot became 3 MiB of base64 in the editor DOM, in
 // the draft HTML and in the source-code editor, which is what made the app
@@ -5465,7 +5468,7 @@ async function uploadLocalImage(siteId, cb) {
  * drops instead and hands us tokens with the drop point (`GrafidaShell.onDrop()`); each image is
  * read through the token exactly as after the file dialog, stored offline like a paste, and inserted
  * at the drop point. Anything dropped outside the editing area, or that is not an image, is ignored.
- * Under Boson the event never fires.
+ * Without the shell the event never fires.
  */
 function initShellDrops() {
     if (typeof GrafidaShell === 'undefined') return;
@@ -5586,9 +5589,9 @@ function isPastePlainShortcut(e) {
  *
  * ⚠️ **The keystroke is ours alone on every platform, hence the unconditional
  * `preventDefault()` — which is not cosmetic.** On macOS, Cmd+Shift+V is an
- * AppKit *menu* key equivalent (Edit ▸ Paste and Match Style) and a Boson window
- * has no menu bar, so the key otherwise reaches no responder and **the system
- * beeps**; cancelling the event is what marks it handled and silences that.
+ * AppKit *menu* key equivalent (Edit ▸ Paste and Match Style), which the shell's
+ * Edit menu deliberately leaves unbound (the chord is reserved for the page), so
+ * the key otherwise reaches no responder and **the system beeps**; cancelling the event is what marks it handled and silences that.
  * Cancelling is also why this is a raw keydown handler and not an
  * `editor.addShortcut()` — no reason to hold the clipboard read inside
  * addShortcut's callback when the handler needs the event object anyway.
@@ -5603,9 +5606,9 @@ function isPastePlainShortcut(e) {
  * *user* performs, never perform one. A `paste` event is therefore only
  * available on a webview that binds the chord natively, which WKWebView and
  * WebKitGTK do not. So {@see api.getClipboardText} reads it outside the page:
- * PHP under Boson (`pbpaste` / `wl-paste` / Win32 FFI), the native shell under
- * the shell (GTK's own clipboard, then PHP for the normalisation): no prompt, no
- * callout. Do not "simplify" this back into the page.
+ * the native shell (the OS clipboard, read natively; then PHP for the
+ * normalisation), or without the shell PHP itself (`pbpaste` / `wl-paste` / Win32
+ * FFI): no prompt, no callout. Do not "simplify" this back into the page.
  */
 function bindPastePlainShortcut(editor) {
     editor.on('keydown', (e) => {
@@ -6455,7 +6458,7 @@ async function localMediaRename(entry) {
 
 /**
  * Picks a destination folder via the native dialog and writes a Local Media
- * blob's bytes there — Boson has no Save-As dialog, so this mirrors
+ * blob's bytes there — exports pick a folder, not a file name, so this mirrors
  * `.grafida` export / the Request Log export (folder picker + server-side
  * write under the blob's own stored filename).
  */
@@ -8119,9 +8122,9 @@ async function clearRequestLogHandler() {
 }
 
 /**
- * Writes the current Request Log to a JSON file. Boson has no native Save-As
- * dialog, so — like `.grafida` export (exportCurrentDraft(), above) — this
- * asks for a destination folder first.
+ * Writes the current Request Log to a JSON file. Like `.grafida` export
+ * (exportCurrentDraft(), above), it asks for a destination folder, not a file
+ * name, and the file is written server-side.
  */
 async function exportRequestLogHandler() {
     let dir;
@@ -8335,7 +8338,7 @@ function renderHelpActions() {
 /**
  * One delegated click handler for every link inside a rendered page.
  *
- * ⚠️ **No link in a documentation page may be followed normally.** Boson's
+ * ⚠️ **No link in a documentation page may be followed normally.** The app's
  * webview opens no new window, so a `target="_blank"` anchor does nothing at
  * all, and a same-window navigation would replace the entire SPA with the
  * remote page — with no way back, since there is no chrome and no history UI.
@@ -9361,8 +9364,8 @@ const darkModeQuery = window.matchMedia
     : null;
 
 function systemPrefersDark() {
-    // The back-end probes the OS appearance directly because Boson's webview
-    // does not report `prefers-color-scheme` reliably; trust it when known and
+    // The back-end probes the OS appearance directly because a webview's
+    // `prefers-color-scheme` is not to be trusted; trust the probe when known and
     // only fall back to the media query when the OS preference is undetectable.
     if (State.systemPrefersDark !== null && State.systemPrefersDark !== undefined) {
         return State.systemPrefersDark;
@@ -9403,7 +9406,7 @@ function applyTheme(reinitEditor = false) {
 /**
  * Under the native shell, the window's title bar follows the app's resolved theme (gh-85). The shell
  * is told the *resolved* scheme, not `auto`: the SPA already resolves `auto` from the OS probe, which
- * is more reliable than what the webview reports. Fire-and-forget; under Boson it does nothing.
+ * is more reliable than what the webview reports. Fire-and-forget; without the shell it does nothing.
  */
 function syncShellWindowTheme(resolved) {
     underShell()

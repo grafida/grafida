@@ -5,10 +5,10 @@ description: Drive the real Grafida SPA against the real PHP backend in a browse
 
 # Verifying a Grafida change by running it
 
-Grafida is a Boson desktop app: a native webview whose SPA talks to PHP over the
-`boson://` scheme. You cannot click a native window from here — but you don't
-need to. **The `boson://` scheme handler is the only piece that has to be
-replaced.** Everything behind `Kernel::handle()` and everything in
+Grafida is a desktop app on its own native shell: a native webview whose SPA talks to
+the PHP worker over the `boson://` scheme. You can drive the real window through the
+shell's automation channel (see `CLAUDE.md`), but for most changes you don't need
+to. **The `boson://` scheme handler is the only piece that has to be replaced.** Everything behind `Kernel::handle()` and everything in
 `assets/private` is the shipping code, so an HTTP bridge + Chromium gives you a
 genuine end-to-end run.
 
@@ -23,13 +23,12 @@ $container = ContainerFactory::create([
     'db.path'         => __DIR__ . '/drive.sqlite',   // a file, so it persists across requests
     'base.path'       => '/path/to/grafida',
     'static.provider' => new StaticFiles([]),          // Grafida\Shell\StaticFiles; no roots = finds nothing
-    'dialog'          => null,
     'secret.store'    => false,                        // plaintext fallback: no keychain prompts
 ]);
 $response = $container->get(Kernel::class)->handle(new Request('GET', 'boson://app/api/...'));
 ```
 
-`Request`/`Response` are `Grafida\Shell\*` (grafida/shell-php), not Boson's: `new Request($method,
+`Request`/`Response` are `Grafida\Shell\*` (grafida/shell-php): `new Request($method,
 $url, $headers, $body)`, `$response->status` is an int, `$response->headers` iterates one
 `name => value` pair per value. Pass every container parameter that is an invokable object through
 `ContainerFactory::create()` as-is — it wraps them, because joomla/di would otherwise call them.
@@ -85,6 +84,8 @@ globals (`window.openEditAiServiceModal(1)`); note `State` is a top-level
 - `[data-screen="requestlog"]` is `hidden` until the Request Log setting is on
   (`POST /api/settings/request-log {"enabled":true}`); default off.
 - `bin/worker.php` (the stdio worker) is covered by `composer test:pipe`, not by this skill:
-  a browser cannot speak the frame protocol.
+  a browser cannot speak the frame protocol. In the browser `underShell()` is false, so the
+  file dialogs answer 503 (there is no shell to open one), and `openUrl` and the clipboard go
+  through PHP.
 - Identical image URLs get HTTP-cached by the browser; use distinct filenames
   when measuring per-image latency.

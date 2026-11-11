@@ -1,7 +1,7 @@
 # Code signing
 
-- **macOS** — releases are **signed with a Developer ID and notarised by Apple** (builds made
-  with the patched SFX runtime; see
+- **macOS** — releases, for Apple Silicon and for Intel Macs, are **signed with a Developer ID
+  and notarised by Apple** (see
   [`build/readme/01-macos-signing.md`](build/readme/01-macos-signing.md)). The app opens like
   any other downloaded application. If you run an *older, unsigned* release, right-click
   **Grafida.app** in Finder and choose **Open**, then confirm — or clear the quarantine flag
@@ -9,7 +9,8 @@
   “damaged”.
 - **Windows** — releases are **Authenticode-signed** with Azure Artifact Signing (via
   [Jsign](https://ebourg.github.io/jsign/); see
-  [`build/readme/04-exe-signing-on-macos.md`](build/readme/04-exe-signing-on-macos.md)). Signing
+  [`build/readme/04-exe-signing-on-macos.md`](build/readme/04-exe-signing-on-macos.md)): the
+  installer, the uninstaller, `Grafida.exe` and `grafida-worker.exe` are all signed. Signing
   does not eliminate SmartScreen's "Windows protected your PC" warning for a small install base —
   reputation accumulates with download volume over time — but it shows our publisher name instead
   of "Unknown Publisher" and improves behaviour with enterprise AV/EDR and AppLocker. Click **More

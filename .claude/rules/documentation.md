@@ -50,7 +50,7 @@ The website and app deliberately share one predictable source format.
   slug.
 - **Images live in `docs/images/`, flat, referenced as `images/foo.png`.** The renderer rewrites
   that to `/api/help/image/foo.png` by **basename**, so a subdirectory would 404 in the app.
-  ⚠️ **They ship inside every binary** (`docs/` is in `boson.json`'s `build.directories`), so a
+  ⚠️ **They ship inside every package** (`docs/` is in `shell-package.json`'s `phar.include`), so a
   screenshot's file size is multiplied by every platform we build. Full-resolution 2× PNG captures
   run 0.5–0.7 MB each; run every new one through
   `magick <in> -strip -colors 256 PNG8:<out>` before committing, which is ~3× smaller and visually
@@ -112,7 +112,7 @@ at anything fetched from a site.
 ## ⚠️ No link in a documentation page may be followed normally
 
 This is the rule most easily broken by someone adding a link and assuming a browser is a browser.
-Boson's webview **opens no new window**, so a `target="_blank"` anchor does nothing at all; and a
+The app's webview **opens no new window**, so a `target="_blank"` anchor does nothing at all; and a
 same-window navigation would replace the entire SPA with the remote page, with no way back — there
 is no chrome, no Back button and no history UI. This is the same constraint that made the TinyMCE
 Help dialog's link-only tabs unshippable (gh-21).

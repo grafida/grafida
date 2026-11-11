@@ -20,7 +20,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * The **packaged** worker (gh-86): the phpmicro SFX stub with the PHAR shell-packager builds
  * beside it, as it ships in the Linux tarball. Skipped unless `GRAFIDA_PIPE_WORKER` names one, e.g.
- * the `grafida-worker` of an extracted `Grafida-*-shell-preview.tar.gz`. With it set,
+ * the `grafida-worker` of an extracted `Grafida-*-linux-*.tar.gz`. With it set,
  * {@see WorkerPipeTest}'s handshake, smoke and conformance tests run against it too.
  *
  * What only a packaged worker can show: Help read out of the `phar://` docs, the language files and

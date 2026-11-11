@@ -101,8 +101,8 @@
      * and the URL is the thing that actually rendered. This fallback also keeps a
      * local URL out of the published-image branch below — GET /api/sites/{id}/image
      * would rightly refuse a boson:// URL (SiteImageFetcher only fetches from the
-     * site's own host), but asking costs a round trip through the single-threaded
-     * boson:// kernel, per image, for a guaranteed refusal.
+     * site's own host), but asking costs a round trip through the worker, which
+     * answers one request at a time, per image, for a guaranteed refusal.
      *
      * @param {HTMLImageElement} img
      * @param {number|null} siteId
@@ -820,7 +820,7 @@
      * headings in the panel are noise, not information.
      *
      * Rendering is deferred while the block is collapsed: each render is a
-     * round-trip through the single-threaded `boson://` kernel, and formatting
+     * round-trip through the worker, which answers one request at a time, and formatting
      * text nobody is looking at would compete with the reply's own renders. The
      * accumulated text is kept as an always-safe `textContent` placeholder, so
      * unfolding shows it instantly and the formatting lands a moment later.

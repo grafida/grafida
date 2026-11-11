@@ -17,9 +17,9 @@ Azure Artifact Signing (formerly "Azure Trusted Signing") is Microsoft's cloud-b
 >    certificate profile **`AkeebaPublic`**, so `windows.sign.alias=akeeba-signing/AkeebaPublic`, and
 >    `windows.sign.keystore` must be the Account URI the portal shows for that account
 >    (`weu.codesigning.azure.net` for West Europe). A machine set up from an older copy of these notes
->    can carry other names and fail with nothing else wrong. The native-shell build prints the profile
->    it uses on its first line (`signed: Trusted Signing (<account>/<profile>)`): compare it with the
->    portal before anything else.
+>    can carry other names and fail with nothing else wrong. The build prints the profile it uses on
+>    its first line (`==> Grafida <v>, Windows x64, signed: Trusted Signing (<account>/<profile>)`):
+>    compare it with the portal before anything else.
 > 2. **New terms of service.** Microsoft changes the Artifact Signing terms from time to time, and
 >    signing is refused until they are accepted again. Portal → **Artifact Signing Accounts** →
 >    **akeeba-signing** → **Objects** → **Identity validations**: if it asks you to accept updated
@@ -49,7 +49,7 @@ Azure Artifact Signing (formerly "Azure Trusted Signing") is Microsoft's cloud-b
 Install via Homebrew:
 
 ```sh
-brew install azure-cli jsign osslsigncode 1password-cli
+brew install azure-cli jsign osslsigncode makensis 1password-cli
 ```
 
 Verify:
@@ -58,6 +58,7 @@ Verify:
 az --version
 jsign --version
 op --version
+makensis -VERSION     # 3.08 or later
 ```
 
 The 1Password CLI (`op`) must be signed in (`op signin`) and the service-principal secret from
@@ -184,6 +185,9 @@ az role assignment create \
 
 ## Signing a Binary
 
+By hand, one file at a time. The build does all of this itself (see "Wiring into the build");
+this recipe is for checking the Azure side, or signing something outside the build.
+
 ### Authenticate
 
 ```sh
@@ -231,15 +235,145 @@ osslsigncode verify grafida.exe
 root certificate isn't in this machine's Keychain. Read the rest of `osslsigncode`'s output (the
 signer, timestamp, and certificate chain details) to confirm the signature is actually there and
 correct — don't trust the exit status. Because of this, **`osslsigncode verify`'s exit status must
-never gate the build**; `scripts/sign-windows-exe.sh` runs it for information only and ignores its
-result.
+never gate the build**. shell-packager's own check compares the signed digest with the file and
+checks the chain only when `WINDOWS_SIGN_CAFILE` names the roots (see "Wiring into the build").
 
 ---
 
 ## Wiring into the build
 
-`scripts/sign-windows-exe.sh <path-to-exe>` wraps the `az login` + `jsign` recipe above. It reads
-its configuration from environment variables, which the Phing `package-win-x86` target forwards
+From 0.4 (grafida/grafida#92) the Windows release build is the native shell's x64 installer,
+built **on the Mac** (Linux works too) by grafida/shell-packager's `windows-installer` from
+`shell-package.json` (its `runtimes.windows` and `windows` sections) and Grafida's own NSIS
+script, `build/shell-windows-installer.nsi`. Entry points: `phing package-windows-x86` (part of
+`phing package`), `composer build` (`scripts/build-all.sh`), or `scripts/make-windows-installer.sh`
+(`composer build:windows`; its arguments go to shell-packager). Output:
+`build/dist/Grafida-<version>-windows-amd64-Setup.exe` + `.sha256`.
+
+Install the tools beside `jsign` (makensis 3.08 or later, for `!uninstfinalize`):
+
+```sh
+brew install osslsigncode makensis
+```
+
+⚠️ makensis 3.13 on macOS aborts with `std::bad_alloc`, even on an empty script, when no locale is
+set (an agent's or a CI shell can have none). `make-windows-installer.sh` defaults `LANG` to
+`en_US.UTF-8` for that reason.
+
+What it builds, in `build/shell-windows/Grafida`:
+
+```
+Grafida.exe            the shell (a GUI program), with Grafida's icon and a version resource
+grafida-worker.exe     the phpmicro GUI-subsystem SFX stub ("Grafida worker"), likewise
+grafida-worker.phar    the worker payload (extra-INI block + PHAR), a sibling file
+shell.json
+Grafida.ico
+LICENSE.txt
+```
+
+* **The runtimes are downloaded, never built here.** The shell (a grafida/shell release) and the
+  SFX (the immutable grafida/phpmicro `sfx-20261110.27`) are pinned by SHA-256 in
+  `shell-package.json` and cached in `~/.cache/grafida-shell-packager`, never `build/sfx/`. See
+  [`03-sfx-maintenance.md`](03-sfx-maintenance.md).
+* **No Visual C++ runtime is needed or fetched.** The shell links the CRT statically, and the SFX
+  imports system DLLs only (its CI check fails otherwise).
+* **Icon and version resources are written in PHP** (no `rcedit`), keeping each executable's
+  application manifest. `FileDescription` is what Task Manager names the process by.
+* **The installer** is per user, no elevation, in `%LOCALAPPDATA%\Programs\Grafida` under the
+  uninstall key `Grafida` — the identity Boson's build had. Before it writes anything it removes a
+  Boson install and a gh-91 shell-preview install it finds. The user's data
+  (`%APPDATA%\Grafida`) is never touched. No WebView2 bootstrapper: without the runtime the
+  installer warns and offers the download page.
+* **The worker check** (ini probe + `ready`) runs only on a Windows host, so a Mac build says it
+  skipped it; the test guests run it and `tests/Pipe`.
+
+**Signing.** Phing's `windows.sign.op-item` alone decides whether the build is signed. The
+properties live in `build/build.properties` (gitignored — copy `build/build.sample.properties`
+first):
+
+```properties
+windows.sign.op-item=Code signing secrets
+windows.sign.op-field-appid=appId
+windows.sign.op-field-password=password
+windows.sign.op-field-tenant=tenant
+```
+
+(`windows.sign.keystore` / `windows.sign.alias` / `windows.sign.tsaurl` also exist with sensible
+defaults matching Steps 4/7/the timestamp URL above — override only if you named things
+differently.)
+
+* **`windows.sign.op-item` empty** (the default): `package-windows-x86` runs the script with no
+  signing settings, and nothing is signed. The script also clears any signing credentials it
+  inherits (`WINDOWS_SIGN_ENDPOINT`, `_PROFILE`, `_TOKEN`, `_PKCS12`, `_PKCS12_PASSWORD`), so
+  nothing signs by accident. The same "blank disables it" convention as the macOS
+  `macos.sign.identity`/`macos.notary.profile` properties (see
+  [`01-macos-signing.md`](01-macos-signing.md)).
+* **Set**: the target passes it and the other `windows.sign.*` properties to
+  `scripts/make-windows-installer.sh`, which reads the service principal from 1Password
+  (`op item get`), logs `az` in, fetches an access token for `https://codesigning.azure.net`, and
+  hands shell-packager `WINDOWS_SIGN_ENDPOINT` (the keystore), `WINDOWS_SIGN_PROFILE` (the alias),
+  `WINDOWS_SIGN_TOKEN` and `WINDOWS_SIGN_TSAURL`. A signed build needs `az`, `jsign`, `op`,
+  `osslsigncode` and `makensis` on the PATH; the script stops early, naming the missing one.
+
+shell-packager runs Jsign itself, with the token as an `env:` reference rather than on the command
+line, on **four files a build**: the shell, the worker stub, the uninstaller (from inside makensis,
+through the `.nsi`'s `!uninstfinalize '${SHELL_PACKAGER_SIGN}' = 0`, since the uninstaller lives
+inside the installer and nothing can reach it later) and the installer. It **refuses** to sign
+any PE with data past its image (an SFX with its PHAR still appended), except the installer, whose
+NSIS archive is an overlay by design. Each signature is checked with `osslsigncode`: the signed
+digest must match the file; the certificate chain only when `WINDOWS_SIGN_CAFILE` names its
+roots, which is why an untrusted-root report from a plain `osslsigncode verify` on the Mac never
+fails the build.
+
+**Critical: mind the quota.** Azure Artifact Signing's Basic tier is capped at **5,000
+signatures/month**, and a signed build costs four. Leave `windows.sign.op-item` blank on a dev
+machine, and set it only for release builds.
+
+For a one-off `scripts/build-all.sh` or `scripts/make-windows-installer.sh` run outside Phing,
+export the same settings instead of using `build.properties`:
+
+```bash
+export WINDOWS_SIGN_OP_ITEM="Code signing secrets"
+```
+
+### The stub and its PHAR stay two files
+
+A phpmicro self-executable is a PE stub with the application PHAR appended after it. Authenticode
+writes its certificate into the PE's Attribute Certificate Table, which the PE spec requires to be
+the **last** thing in the file — so Jsign appends it *after* the PHAR. A PHAR stores its own
+signature as the last bytes of the file, and PHP verifies it by seeking to EOF; once the
+certificate sits past the PHAR, the app **dies at startup with "broken signature"**. (The
+Authenticode signature itself is valid — it hashes the overlay too — but that does not help;
+nothing appendable can survive after a PHAR.)
+
+So shell-packager never builds a combined binary: `grafida-worker.exe` is the bare patched SFX
+(the grafida/phpmicro `sibling-phar` fork), signed, and `grafida-worker.phar` sits beside it, a
+plain data file. The patched stub loads `<self-without-.exe>.phar` from its own directory at run
+time, and knows to look past its own certificate table (see
+[`02-signing-architecture.md`](02-signing-architecture.md)).
+
+---
+
+## AV False Positives
+
+Signing reduces but does not eliminate AV false positives. PHAR-based tooling in particular is routinely flagged by antivirus software regardless of signing status. Document this in your release notes and provide users with instructions for adding an exclusion if needed.
+
+---
+
+## Boson, up to 0.3 (historical)
+
+> **Historical.** Up to 0.3 Grafida shipped a Boson-compiled `grafida.exe`, packaged by Boson's
+> `scripts/make-windows-installer.sh` and `build/windows-installer.nsi` and signed by
+> `scripts/sign-windows-exe.sh`. 0.4 deleted that build (grafida/grafida#92): those scripts,
+> `build/tasks/pe-sfxsize.php`, `scripts/fetch-sfx.sh`, `build/sfx/` (with the fetched VC++
+> runtime) and the Phing `git-*` and `package-win-x86` targets no longer exist; the name
+> `make-windows-installer.sh` now belongs to the shell build. The Azure setup above is unchanged.
+> Kept for one release, then archived.
+
+### How the Boson build was wired
+
+`scripts/sign-windows-exe.sh <path-to-exe>` wrapped the `az login` + `jsign` recipe above. It read
+its configuration from environment variables, which the Phing `package-win-x86` target forwarded
 from `build/build.properties` (gitignored — copy `build/build.sample.properties` first):
 
 ```properties
@@ -251,21 +385,12 @@ windows.sign.op-field-tenant=tenant
 
 (`windows.sign.keystore` / `windows.sign.alias` / `windows.sign.tsaurl` also exist with sensible
 defaults matching Steps 4/7/the timestamp URL above — override only if you named things
-differently.) Leaving `windows.sign.op-item` blank (the default) leaves `grafida.exe` and the
+differently.) Leaving `windows.sign.op-item` blank (the default) left `grafida.exe` and the
 installer unsigned — the same "blank disables it" convention as the macOS
 `macos.sign.identity`/`macos.notary.profile` properties (see
 [`01-macos-signing.md`](01-macos-signing.md)).
 
-The native-shell installer (`composer build:shell-windows`, Phing `package-shell-windows-x86`,
-gh-91) reads the same properties: `scripts/make-shell-windows-installer.sh` does the `op` + `az login`
-steps, fetches the access token, and hands it to grafida/shell-packager as `WINDOWS_SIGN_ENDPOINT`
-(the keystore), `WINDOWS_SIGN_PROFILE` (the alias), `WINDOWS_SIGN_TOKEN` and `WINDOWS_SIGN_TSAURL`.
-shell-packager runs Jsign itself, with the token as an `env:` reference rather than on the command
-line, on four files: the shell, the worker stub, the uninstaller (from inside makensis, through the
-`.nsi`'s `!uninstfinalize`) and the installer, and checks each with osslsigncode. Install
-`osslsigncode` and `makensis` beside `jsign` (`brew install osslsigncode makensis`).
-
-### You cannot sign the compiled `grafida.exe` directly — it must be split first
+### You could not sign the compiled `grafida.exe` directly — it had to be split first
 
 `boson compile` produces `grafida.exe` as a **phpmicro self-executable**: a PE stub with the
 application PHAR appended after it. Authenticode writes its certificate into the PE's Attribute
@@ -280,35 +405,25 @@ This is the same trailing-data problem macOS has, and it has the same cure (see
 [`02-signing-architecture.md`](02-signing-architecture.md)). When `grafida.exe` was compiled against
 the patched sibling-payload SFX (`build/sfx/windows-x86_64.standard.sfx`, from the
 `grafida/phpmicro` `sibling-phar` fork — fetched by `scripts/fetch-sfx.sh`),
-`scripts/make-windows-installer.sh` **splits** it into a clean PE stub (`grafida.exe`) plus a sibling
+`scripts/make-windows-installer.sh` **split** it into a clean PE stub (`grafida.exe`) plus a sibling
 `grafida.phar` — using the split offset from `build/tasks/pe-sfxsize.php` — exactly as
-`make-macos-app.sh` splits the `.app`. The patched stub loads `grafida.phar` from its own directory
+`make-macos-app.sh` split the `.app`. The patched stub loaded `grafida.phar` from its own directory
 at run time.
 
-`make-windows-installer.sh` therefore calls `sign-windows-exe.sh` on the **split stub** (never the
-combined binary), then again on the finished `Setup.exe`. NSIS ships `grafida.phar` beside the stub
-(guarded by the `HAVE_PHAR` define). As a tripwire, `sign-windows-exe.sh` runs `pe-sfxsize.php` and
-**refuses** to sign any PE that still carries a PHAR overlay, so a combined binary can never be
-signed by accident. If the patched SFX is absent, the build ships the **unsigned** combined
-`grafida.exe` (which works); if signing is configured but the patched SFX is missing,
-`make-windows-installer.sh` aborts with an explanation rather than producing a broken signed binary.
+`make-windows-installer.sh` therefore called `sign-windows-exe.sh` on the **split stub** (never the
+combined binary), then again on the finished `Setup.exe`. NSIS shipped `grafida.phar` beside the stub
+(guarded by the `HAVE_PHAR` define). As a tripwire, `sign-windows-exe.sh` ran `pe-sfxsize.php` and
+**refused** to sign any PE that still carried a PHAR overlay, so a combined binary could never be
+signed by accident. If the patched SFX was absent, the build shipped the **unsigned** combined
+`grafida.exe` (which works); if signing was configured but the patched SFX was missing,
+`make-windows-installer.sh` aborted with an explanation rather than producing a broken signed binary.
 
-**Critical: signing must only run from packaging, never from a local compile.** Azure Artifact
-Signing's Basic tier is capped at **5,000 signatures/month**; burning that quota on every local dev
-build would be wasteful. `sign-windows-exe.sh` is only ever invoked from
-`scripts/make-windows-installer.sh`, which is itself only reachable from the `package-win-x86` /
+**Signing ran only from packaging, never from a local compile**, to spare the Basic tier's
+**5,000 signatures/month**. `sign-windows-exe.sh` was only ever invoked from
+`scripts/make-windows-installer.sh`, which was itself only reachable from the `package-win-x86` /
 `package` Phing targets (and `scripts/build-all.sh`) — **never** from `git-win-x86` (the plain
-compile used by `phing run`/`phing git`). Do not add a call to it anywhere in the `git-*` path.
+compile used by `phing run`/`phing git`). The shell build has no compile step; there,
+`windows.sign.op-item` is the only switch (see "Wiring into the build").
 
-For a one-off `scripts/build-all.sh` run outside Phing, export the same variables instead of using
-`build.properties`:
-
-```bash
-export WINDOWS_SIGN_OP_ITEM="Code signing secrets"
-```
-
----
-
-## AV False Positives
-
-Signing reduces but does not eliminate AV false positives. PHAR-based tooling in particular is routinely flagged by antivirus software regardless of signing status. Document this in your release notes and provide users with instructions for adding an exclusion if needed.
+For a one-off `scripts/build-all.sh` run outside Phing, the same variables were exported instead
+of using `build.properties`.

@@ -1,31 +1,27 @@
-Grafida 1.0
+Grafida 0.4
 ================================================================================
+! Grafida runs on its own native shell instead of Boson: ~0% CPU when idle, and the window never freezes (gh-82)
 + Distraction-free mode in the article editor: hides the sidebars, toolbar and title so only the editor remains
-+ `bin/worker.php`: the back-end as a stdio worker for the upcoming native shell, tested over real pipes (gh-84)
-+ Runs in the native shell on Linux in dev mode (`composer shell:dev`); file dialogs hand out tokens, not paths (gh-85)
-+ Experimental Linux tarball for the native shell (`composer build:shell-linux`), built with grafida/shell-packager (gh-86)
-+ Experimental macOS (Apple Silicon) disk image for the native shell (`composer build:shell-macos`), notarised (gh-88)
-+ Native shell on macOS: the app menu's About opens Grafida's About, and Edit ▸ Undo follows the editor's history
-+ Experimental Windows (x64) installer for the native shell (`composer build:shell-windows`), beside Boson's install (gh-91)
 + The update check no longer offers a release that does not support this computer's OS, processor or OS version (gh-92)
-~ Native shell on Windows: the worker no longer polls its stdin while idle (grafida/shell-php 0.2.1, gh-91)
++ Intel Macs: a macOS x86_64 build (macOS 12 or later), until Apple drops Intel (gh-92)
++ macOS: a menu bar with Edit and Spelling menus; About opens Grafida's own dialog, Undo follows the editor (gh-88)
++ Windows: the installer upgrades Boson's Grafida in place, keeping your data, settings and taskbar pin (gh-92)
++ Linux: `install.sh` replaces the previous version's desktop entry and icon (gh-92)
+- The cross-platform `.phar` and the portable Windows `.zip` are no longer published (gh-92)
+~ Runs on macOS 12 or later (was macOS 15), Windows 10 22H2 or later, and Linux with WebKitGTK 4.1 2.40 or later (gh-92)
+~ Windows: the installer and the uninstaller ask to close a running Grafida instead of failing or leaving files (gh-91)
+~ Files and folders are picked in the operating system's own dialogs, opened by the native shell (gh-85)
 ~ Phing brings the Composer dependencies in line with composer.lock before every build, not only when vendor/ is missing
-~ The native-shell installers build their worker in about a second instead of half a minute (grafida/shell-packager 0.3.1, gh-91)
 ~ Windows signing defaults to the akeeba-signing/AkeebaPublic profile; the signing notes say what to check on a 403
-~ Native-shell Windows installer: Akeeba Ltd as publisher (as the signature), and the app's name in every page's footer (gh-91)
-~ Native-shell Windows installer and uninstaller ask to close a running Grafida instead of failing or leaving its files behind (gh-91)
-~ Native shell on Windows: no 5-second busy pointer at launch on Windows 10, and the app's icon in the title bar (grafida/shell 0.3.1, gh-91)
 ~ Settings is split into General, Editor, AI Assistant and Advanced tabs; long explanations fold away
 ~ Connection test no longer tries the never-valid /index.php/api URL
 ~ The Windows build no longer enables opcache, matching every other platform
 ~ Documentation: how Authors can use Grafida on Joomla 5.4.8/6.1.3+ without back-end access
 ~ Documentation: Linux needs a Hunspell dictionary per language for spell checking
-~ `phing git` packs the application PHAR once instead of once per platform
 ~ The documentation is published to Grafida.app over SFTP, replacing the copy into a sibling site repository
 ~ The patched PHP runtime is fetched from grafida/phpmicro (moved from nikosdion/phpmicro)
-~ The back-end runs on grafida/shell-php's request/response types; Boson is adapted at index.php only (gh-84)
 ~ When Grafida cannot start, its error says why first, e.g. that its database could not be opened (gh-92)
-# [HIGH] Linux: the app crashed on the first click that saved anything, e.g. saving a site or switching the theme (gh-79)
+# [HIGH] Linux: the app crashed on the first click that saved anything, e.g. saving a site or switching theme (gh-79)
 # [HIGH] Clicking a sidebar menu item while editing an article discarded unsaved changes without asking (gh-80)
 # [HIGH] Publishing an article with a tag that did not exist on the site yet failed with "Invalid field: Parent"
 # [MEDIUM] Users without Edit State, such as Authors, got HTTP 500 updating an article that was ever published

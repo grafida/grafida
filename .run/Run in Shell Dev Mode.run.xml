@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Compile Boson" type="ComposerRunConfigurationType" factoryName="Composer Script">
+  <configuration default="false" name="Run in Shell Dev Mode" type="ComposerRunConfigurationType" factoryName="Composer Script">
     <option name="commandLineParameters" value="" />
     <option name="pathToComposerJson" value="$PROJECT_DIR$/composer.json" />
     <option name="script" value="start" />

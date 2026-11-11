@@ -467,7 +467,7 @@ final class HelpService
      * the rendered HTML would have to guess at quoting and at what is inside a
      * code block.
      *
-     * Anchors are not rewritten so much as *annotated*: nothing in a Boson
+     * Anchors are not rewritten so much as *annotated*: nothing in the app's
      * webview can follow either kind of link on its own (there is no page to
      * navigate to, and an external URL has to go through `api.openUrl()`), so
      * each one is tagged with a `data-help-page` or `data-help-external`
@@ -490,7 +490,7 @@ final class HelpService
 
             if (preg_match('#^https?://#i', $url) === 1) {
                 // Off-app. The SPA hands these to Support\UrlOpener via
-                // api.openUrl(), which is the only way out of a Boson webview —
+                // api.openUrl(), which is the only way out of the app's webview —
                 // following the link normally would replace the whole SPA with
                 // the remote page (and in practice does nothing at all, since
                 // the webview opens no new window). The fragment rides along

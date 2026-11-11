@@ -372,8 +372,8 @@ final class SettingsController extends Controller
     /**
      * Writes the current Request Log to a JSON file in the given directory —
      * the same "ask for a destination folder" pattern as
-     * {@see \Grafida\Http\Controller\DraftController::exportDraft()}, since
-     * Boson has no native Save-As dialog. Redaction is automatic:
+     * {@see \Grafida\Http\Controller\DraftController::exportDraft()}: a folder,
+     * not a file name. Redaction is automatic:
      * {@see RequestRecord::toArray()} is the only way a record is serialised
      * and it always redacts, so there is no separate export-specific
      * redaction path to keep in sync.

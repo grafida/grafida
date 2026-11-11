@@ -18,9 +18,10 @@ use Grafida\Storage\SettingsRepository;
  * next launch instead of falling back to the first defined site.
  *
  * This lives server-side (in the generic `settings` key/value store) rather than
- * in the SPA's `localStorage`, because Boson's webview does not persist
- * `localStorage` across an app restart — the very moment the preference needs to
- * survive. The SPA still validates the id against the current site list, so a
+ * in the SPA's `localStorage`, because a webview's storage can be cleared without
+ * the app's data going with it (and Boson's webview did not persist `localStorage`
+ * across an app restart at all) — and a restart is the very moment the preference
+ * needs to survive. The SPA still validates the id against the current site list, so a
  * stale id (e.g. a since-deleted site) simply falls back to the first site.
  */
 final class LastSiteService

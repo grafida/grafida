@@ -181,11 +181,10 @@ and two-space continuation indent are the original bullet formatting.
   `html`) is handled too: import finishes by running `InlineImageExtractor::extract()` over the
   result, the same conversion a legacy *draft* gets on open (see `src/Media/` below), so an old
   `.grafida` file still ends up with local-URL references. `FORMAT_VERSION` is `2` (informational
-  only — nothing gates on it; the importer handles both shapes unconditionally). Boson has
-  **no native "Save As" dialog** (`DialogApiInterface`
-  only offers open-file/open-directory pickers), so export asks for a destination **folder**
-  (`POST /api/dialog/select-directory` → `selectDirectory()`) and writes `<alias-or-title>
-  .grafida` into it server-side; import reuses the existing open-file dialog with a new
+  only — nothing gates on it; the importer handles both shapes unconditionally). Export asks for a
+  destination **folder** (the shell's `select-folder` dialog; its token comes back as
+  `X-Shell-File-Path`, gh-85) rather than a file name, and writes `<alias-or-title>.grafida` into it
+  server-side; import reuses the existing open-file dialog with a new
   `'grafida'` filter. Two import endpoints: `POST /api/drafts/import` (`importAsNewDraft()`) —
   creates a brand-new draft on the given site — and `POST /api/drafts/{id}/import`
   (`replaceDraft()`) — used by the editor's "Replace from file…" button to overwrite an

@@ -18,7 +18,7 @@ use Grafida\Media\ImageDimensions;
  *
  * An image picked through Grafida's own media flow is inserted as
  * `<img src="boson://app/api/media/{id}/raw?rev=…">` (gh-36: a local blob
- * served by the Boson kernel, so its bytes never sit in the editor DOM or the
+ * served by the worker, so its bytes never sit in the editor DOM or the
  * `drafts.html` column as base64). An image **pasted or dragged straight into
  * the editor** (e.g. dropped from a web page or another app) still lands as a
  * bare `<img src="data:...">` with no tag, because it never went through the
@@ -33,7 +33,7 @@ final class InlineMedia
 {
     public const ATTRIBUTE = 'data-grafida-media-id';
 
-    /** Prefix of the URL the Boson kernel serves a not-yet-published image from (gh-36). */
+    /** Prefix of the URL the worker serves a not-yet-published image from (gh-36). */
     public const LOCAL_URL_PREFIX = 'boson://app/api/media/';
 
     /**
@@ -256,8 +256,8 @@ final class InlineMedia
 
     /**
      * Parses the blob id out of a `boson://app/api/media/{id}/raw?rev=…` src,
-     * tolerating the `?rev=…` query string (and any other query Boson's
-     * kernel is ever given, since it ignores unknown parameters).
+     * tolerating the `?rev=…` query string (and any other query the kernel is
+     * ever given, since it ignores unknown parameters).
      *
      * Public so callers that need to *decide* whether/how to touch a local-URL
      * `<img>` without going through {@see rewriteOfflineImages()}'s upload

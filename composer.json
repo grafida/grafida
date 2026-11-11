@@ -3,7 +3,7 @@
     "name": "grafida/grafida",
     "type": "project",
     "description": "Grafida — a cross-platform desktop application to create and edit Joomla! articles via the Joomla Web Services API.",
-    "keywords": ["joomla", "desktop", "editor", "boson", "articles"],
+    "keywords": ["joomla", "desktop", "editor", "articles"],
     "homepage": "https://github.com/grafida/grafida",
     "license": "GPL-3.0-or-later",
     "authors": [
@@ -24,8 +24,6 @@
     ],
     "require": {
         "php": "^8.4",
-        "boson-php/runtime": "^0.19",
-        "boson-php/webview-ext-web-components": "^0.19",
         "grafida/shell-php": "0.2.1",
         "joomla/database": "^4.0",
         "joomla/di": "^4.0",
@@ -39,9 +37,8 @@
         }
     },
     "require-dev": {
-        "boson-php/compiler": "^0.19",
         "friendsofphp/php-cs-fixer": "^3.88",
-        "grafida/shell-packager": "0.3.1",
+        "grafida/shell-packager": "0.4.0",
         "phpstan/phpstan": "^2.1",
         "phpstan/phpstan-strict-rules": "^2.0",
         "phpunit/phpunit": "^12.4",
@@ -61,7 +58,6 @@
         "phpcs:check": ["phpcs", "cs", "psr", "per"]
     },
     "scripts": {
-        "post-create-project-cmd": "boson init",
         "post-install-cmd": ["@vendor:assets"],
         "post-update-cmd": ["@vendor:assets"],
         "vendor:assets": [
@@ -69,15 +65,13 @@
             "Grafida\\Build\\InstallationScript::copyStatic",
             "Grafida\\Build\\InstallationScript::minify"
         ],
-        "compile": "boson compile",
         "build": "bash scripts/build-all.sh",
         "docs:publish": "bash scripts/upload-docs.sh",
-        "build:git": "phing git",
         "build:package": "phing package",
-        "build:shell-linux": "bash scripts/make-shell-linux-tarball.sh",
-        "build:shell-macos": "bash scripts/make-shell-macos-dmg.sh",
-        "build:shell-windows": "bash scripts/make-shell-windows-installer.sh",
-        "start": "phing run",
+        "build:linux": "bash scripts/make-linux-tarball.sh",
+        "build:macos": "bash scripts/make-macos-dmg.sh",
+        "build:windows": "bash scripts/make-windows-installer.sh",
+        "start": "@shell:dev",
         "test": ["@test:unit", "@test:integration", "@test:feature", "@test:pipe", "@test:js"],
         "test:unit": "phpunit --testsuite=unit --testdox",
         "test:feature": "phpunit --testsuite=feature --testdox",
@@ -95,15 +89,13 @@
     },
     "scripts-descriptions": {
         "vendor:assets": "Fetch the pinned front-end libraries (TinyMCE, CodeMirror, FontAwesome) via npm and copy them into their gitignored locations under assets/private/. Runs automatically after composer install/update.",
-        "compile": "Compile self-contained binaries for every target in boson.json (output under ./build).",
-        "build": "Compile and package Grafida for every platform: macOS .app/.dmg, Linux .tar.gz, Windows installer/zip, and the PHAR (artifacts in build/dist/).",
+        "build": "Package Grafida for every platform with grafida/shell-packager: the macOS arm64 and amd64 disk images (on a Mac), the Linux amd64 and arm64 tarballs and the Windows x64 installer, each with a .sha256, into build/dist/ (scripts/build-all.sh). Signing comes from the environment (MACOS_SIGN_IDENTITY, MACOS_NOTARY_PROFILE, WINDOWS_SIGN_OP_ITEM); `phing package` fills it from build/build.properties.",
         "docs:publish": "Upload docs/ — the Help pages, docs/images/ and _manifest.json — to the Grafida.app Documentation section over SFTP. Configured by docs.sftp.* in build/build.properties; see build/readme/05-documentation-publishing.md. Deliberately NOT a release step. Pass --dry-run to preview the transfer.",
-        "build:git": "Build the native binaries for every platform via Phing (the `git` target) — binaries only, no installers/DMG packaging. Requires Phing on the PATH.",
-        "build:package": "Build AND package the application for every platform via Phing (the `package` target) — macOS .app/.dmg, Linux .tar.gz, Windows installer/zip, and the PHAR into build/dist/. Requires Phing on the PATH.",
-        "build:shell-linux": "EXPERIMENTAL (gh-86): build the native-shell Linux tarballs (amd64 + arm64) with grafida/shell-packager into build/dist/Grafida-<v>-linux-<arch>-shell-preview.tar.gz. Not part of build, build:package or the release, which still ship Boson. Pass an arch to build one: `composer build:shell-linux -- amd64`.",
-        "build:shell-windows": "EXPERIMENTAL (gh-91): build the native-shell Windows (x64) installer with grafida/shell-packager into build/dist/Grafida-<v>-windows-amd64-shell-preview-Setup.exe, on this host (makensis, jsign and osslsigncode). Signed with Azure Trusted Signing when WINDOWS_SIGN_OP_ITEM names the 1Password item (Phing's package-shell-windows-x86 fills it from build.properties), unsigned otherwise. Installs side by side with Boson's build. Not part of build, build:package or the release, which still ship Boson.",
-        "build:shell-macos": "EXPERIMENTAL (gh-88): build the native-shell macOS (Apple Silicon) .app and disk image with grafida/shell-packager into build/dist/Grafida-<v>-macos-arm64-shell-preview.dmg. Signed with MACOS_SIGN_IDENTITY and notarised with MACOS_NOTARY_PROFILE when set (ad hoc otherwise). Not part of build, build:package or the release, which still ship Boson. `-- --no-style` skips the Finder layout.",
-        "start": "Compile the binary for THIS host (the matching git-* target) and launch it, via the Phing `run` target. Requires Phing on the PATH.",
+        "build:package": "Package every platform via Phing (the `package` target), signed and notarised with the macos.sign.* and windows.sign.* properties from build/build.properties. Requires Phing on the PATH.",
+        "build:linux": "Build the Linux tarballs (amd64 + arm64) into build/dist/Grafida-<v>-linux-<arch>.tar.gz. Pass an arch to build one: `composer build:linux -- amd64`.",
+        "build:windows": "Build the Windows (x64) installer into build/dist/Grafida-<v>-windows-amd64-Setup.exe, on this host (makensis, jsign and osslsigncode). Signed with Azure Trusted Signing when WINDOWS_SIGN_OP_ITEM names the 1Password item (Phing's package-windows-x86 fills it from build.properties), unsigned otherwise.",
+        "build:macos": "Build the macOS .app bundles and disk images (arm64 and amd64) into build/dist/Grafida-<v>-macos-<arch>.dmg. Signed with MACOS_SIGN_IDENTITY and notarised with MACOS_NOTARY_PROFILE when set (ad hoc otherwise). Pass an arch to build one, and `-- --no-style` to skip the Finder layout: `composer build:macos -- arm64 -- --no-style`.",
+        "start": "Run Grafida in the native shell's dev mode (`composer shell:dev`).",
         "test:js": "Run the JavaScript unit tests (node's built-in runner; node is already a build prerequisite). Covers assets/private/js/ai/providers.js — the AI transport — which PHPUnit cannot reach because it runs in the SPA.",
         "shell:dev": "Run Grafida in the native shell from this source tree (grafida/grafida#85): builds ../shell (a sibling clone of grafida/shell) and starts it with `--dev .`, so the worker is `php bin/worker.php` and a PHP edit takes effect when the worker restarts. Add `-- --automation` to open the debug automation channel. Needs Rust and the WebKitGTK 4.1 development packages.",
         "test:pipe": "Run Grafida's back-end as the stdio worker (bin/worker.php) over real pipes: the wire-protocol conformance fixtures, and Feature-suite requests compared byte for byte with the in-process kernel.",

@@ -19,8 +19,8 @@ use Grafida\Storage\SettingsRepository;
  *
  * The stored value is one of {@see self::AVAILABLE}; "auto" follows the
  * operating system's light/dark preference. The SPA would normally resolve
- * "auto" against `prefers-color-scheme`, but Boson's webview does not reliably
- * sync that media feature to the OS appearance (on macOS it reports dark
+ * "auto" against `prefers-color-scheme`, but a webview's media feature is not
+ * to be trusted to follow the OS appearance (Boson's reported dark on macOS
  * regardless of the system setting), so {@see self::systemPrefersDark()} probes
  * the OS directly and the result is handed to the SPA as the source of truth.
  */

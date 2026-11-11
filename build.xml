@@ -6,13 +6,11 @@
   ~ @license    GNU General Public License version 3, or later
   -->
 
-<project name="Grafida" description="Grafida — desktop Joomla! article editor" default="git" basedir=".">
+<project name="Grafida" description="Grafida — desktop Joomla! article editor" default="package" basedir=".">
 
 	<property name="dirs.root" value="${phing.dir}" />
 	<property name="dirs.icon" value="${dirs.root}/assets/logo" />
 	<property name="dirs.dist" value="${dirs.root}/build/dist" />
-	<property name="boson.config" value="${dirs.root}/boson.json" />
-	<property name="compile.target.script" value="${dirs.root}/build/tasks/compile-target.php" />
 	<property name="setversion.script" value="${dirs.root}/build/tasks/set-version.php" />
 	<property name="assets.marker" value="${dirs.root}/assets/private/js/tinymce/tinymce.min.js" />
 
@@ -36,10 +34,10 @@
 
 	<!--
 	Windows code-signing defaults (Azure Artifact Signing + Jsign — see
-	build/readme/04-exe-signing-on-macos.md). windows.sign.op-item empty (the default) leaves
-	grafida.exe / the installer unsigned, exactly like the macOS defaults above. Only set these in
-	build.properties, and only sign from package-win-x86 — never git-win-x86 — Azure's Basic tier is
-	capped at 5,000 signatures/month.
+	build/readme/04-exe-signing-on-macos.md). windows.sign.op-item empty (the default) leaves the
+	installer and everything in it unsigned, exactly like the macOS defaults above. Only set these in
+	build.properties: Azure's Basic tier is capped at 5,000 signatures a month, and a signed Windows
+	build costs four (the shell, the worker stub, the uninstaller, the installer).
 	-->
 	<property name="windows.sign.op-item" value="" />
 	<property name="windows.sign.op-field-appid" value="appId" />
@@ -63,27 +61,21 @@
 	====================================================================================================
 	-->
 
-	<!-- Default target: build the native binaries for every platform (no installers / DMG packaging). -->
-	<target name="git"
-			description="Build the application for all platforms (binaries only — no installers/DMG)"
-			depends="git-macos-arm,git-macos-x86,git-win-x86,git-linux-x86,git-linux-arm,git-phar">
-		<echo>Built all Grafida targets (binaries only). Run scripts/build-all.sh for installers/DMG packaging.</echo>
-	</target>
-
 	<!--
-	Everything that must be on disk before a compile. boson.json bundles assets/private (and reads the
-	icons) at COMPILE time, so the Composer dependencies (incl. the Boson compiler), the npm-managed
-	front-end libraries and the per-platform icons all have to exist first. Phing runs each target at
-	most once per invocation, so the six per-platform targets share a single preparation pass. Every
-	sub-target is guarded — skipped when its output is already in place (pass -Drefresh.assets=1 to
-	force a re-vendor). prepare-composer is the exception: it always runs, see below.
+	Everything that must be on disk before a package is built. The worker PHAR that shell-packager
+	builds carries assets/private, and the packages carry the icons, so the Composer dependencies
+	(grafida/shell-packager among them), the npm-managed front-end libraries and the per-platform icons
+	all have to exist first. Phing runs each target at most once per invocation, so the five package
+	targets share a single preparation pass. Every sub-target is guarded — skipped when its output is
+	already in place (pass -Drefresh.assets=1 to force a re-vendor). prepare-composer is the
+	exception: it always runs, see below.
 	-->
 	<target name="prepare" depends="prepare-composer,prepare-icons,prepare-assets,set-version"
-			description="Ensure dependencies, icons + front-end libraries are on disk before compiling" />
+			description="Ensure dependencies, icons + front-end libraries are on disk before packaging" />
 
 	<!--
-	Stamp the application version (App::VERSION) from the topmost CHANGELOG entry before every compile,
-	so the binary and the About dialog report the right version. Runs unguarded (it is a cheap, idempotent
+	Stamp the application version (App::VERSION) from the topmost CHANGELOG entry before every package,
+	so the PHAR and the About dialog report the right version. Runs unguarded (it is a cheap, idempotent
 	regex replace that no-ops when the version already matches). GRAFIDA_VERSION overrides the CHANGELOG.
 	-->
 	<target name="set-version" description="Stamp App::VERSION from the CHANGELOG">
@@ -129,8 +121,8 @@
 	</target>
 
 	<!--
-	The front-end libraries (TinyMCE, CodeMirror, FontAwesome) are npm-managed and gitignored, yet
-	boson.json bundles assets/private at COMPILE time — so they must be vendored first. `vendor:assets`
+	The front-end libraries (TinyMCE, CodeMirror, FontAwesome) are npm-managed and gitignored, yet the
+	worker PHAR carries assets/private — so they must be vendored first. `vendor:assets`
 	is idempotent (an mtime guard skips files already copied). We skip the whole step when the marker
 	file is already present, unless -Drefresh.assets=1 forces a re-vendor.
 	-->
@@ -147,28 +139,6 @@
 		<exec executable="composer" dir="${dirs.root}" passthru="true" checkreturn="true">
 			<arg value="run-script" />
 			<arg value="vendor:assets" />
-		</exec>
-	</target>
-
-	<!--
-	The patched sibling-payload micro.sfx runtimes (built by GitHub Actions on the grafida/phpmicro
-	fork, rolling "sfx-latest" release) make macOS builds Developer-ID signable — see
-	build/readme/01-macos-signing.md. Download them into the gitignored build/sfx/ when missing.
-	Best-effort on purpose (failonerror=false): offline machines still build fine, they just fall
-	back to the stock (unsignable) Boson runtime. scripts/fetch-sfx.sh has a force flag to re-download.
-	-->
-	<condition property="sfx.present">
-		<and>
-			<available file="${dirs.root}/build/sfx/macos-aarch64.standard.sfx" type="file" />
-			<available file="${dirs.root}/build/sfx/macos-x86_64.standard.sfx" type="file" />
-		</and>
-	</condition>
-
-	<target name="prepare-sfx" unless="sfx.present"
-			description="Download the patched signable micro.sfx runtimes (only if missing)">
-		<echo>Fetching the patched micro.sfx runtimes into build/sfx/ (best effort)</echo>
-		<exec executable="bash" dir="${dirs.root}" passthru="true" checkreturn="false">
-			<arg value="scripts/fetch-sfx.sh" />
 		</exec>
 	</target>
 
@@ -190,191 +160,32 @@
 
 	<!--
 	====================================================================================================
-	Tasks - Per-platform binaries
-
-	`boson compile` builds every entry in boson.json's `target` array at once. build/tasks/compile-target.php
-	filters that master config down to a single target at runtime (see its header) so each task below
-	produces exactly one platform's binary.
-	====================================================================================================
-	-->
-
-	<target name="pack" depends="prepare" description="Pack the application PHAR once, for every platform target to reuse">
-		<exec executable="php" dir="${dirs.root}" passthru="true" checkreturn="true">
-			<arg value="${compile.target.script}" />
-			<arg value="--pack-only" />
-		</exec>
-	</target>
-
-	<target name="git-macos-arm" depends="pack,prepare-sfx" description="Compile the macOS (Apple Silicon) binary">
-		<exec executable="php" dir="${dirs.root}" passthru="true" checkreturn="true">
-			<arg value="${compile.target.script}" />
-			<arg value="--type=macos" />
-			<arg value="--arch=arm64" />
-			<arg value="--no-pack" />
-		</exec>
-	</target>
-
-	<target name="git-macos-x86" depends="pack,prepare-sfx" description="Compile the macOS (Intel) binary">
-		<exec executable="php" dir="${dirs.root}" passthru="true" checkreturn="true">
-			<arg value="${compile.target.script}" />
-			<arg value="--type=macos" />
-			<arg value="--arch=amd64" />
-			<arg value="--no-pack" />
-		</exec>
-	</target>
-
-	<target name="git-win-x86" depends="pack,prepare-sfx" description="Compile the Windows (x64) binary">
-		<exec executable="php" dir="${dirs.root}" passthru="true" checkreturn="true">
-			<arg value="${compile.target.script}" />
-			<arg value="--type=windows" />
-			<arg value="--arch=amd64" />
-			<arg value="--no-pack" />
-		</exec>
-	</target>
-
-	<target name="git-linux-x86" depends="pack,prepare-sfx" description="Compile the Linux (x64) binary">
-		<exec executable="php" dir="${dirs.root}" passthru="true" checkreturn="true">
-			<arg value="${compile.target.script}" />
-			<arg value="--type=linux" />
-			<arg value="--arch=amd64" />
-			<arg value="--no-pack" />
-		</exec>
-	</target>
-
-	<target name="git-linux-arm" depends="pack,prepare-sfx" description="Compile the Linux (ARM64) binary">
-		<exec executable="php" dir="${dirs.root}" passthru="true" checkreturn="true">
-			<arg value="${compile.target.script}" />
-			<arg value="--type=linux" />
-			<arg value="--arch=arm64" />
-			<arg value="--no-pack" />
-		</exec>
-	</target>
-
-	<target name="git-phar" depends="pack" description="Compile the cross-platform PHAR">
-		<exec executable="php" dir="${dirs.root}" passthru="true" checkreturn="true">
-			<arg value="${compile.target.script}" />
-			<arg value="--type=phar" />
-			<arg value="--no-pack" />
-		</exec>
-	</target>
-
-	<!--
-	====================================================================================================
 	Tasks - Run
 
-	`run` compiles the binary for the CURRENT host (via the matching git-* target) and launches it.
-	Phing `depends` is static, so the host's OS+arch is resolved at runtime into the run.* properties
-	and the compile is dispatched with <phingcall>. The git-* targets emit a bare self-contained binary
-	(the .app/.dmg/installers belong to the package-* targets), so we execute it directly from its
-	output directory — its dylib/.so and bundled assets sit alongside it there.
+	`run` starts Grafida in the native shell's dev mode on this host: the sibling ../shell clone, built
+	with the automation channel, with the system `php bin/worker.php` as the worker, so a PHP edit
+	takes effect when the worker restarts and nothing is compiled or packaged (`composer shell:dev`).
 	====================================================================================================
 	-->
 
-	<target name="run" depends="run-resolve"
-			description="Compile the binary for THIS host and launch it">
-		<fail unless="run.compile.target"
-			  message="Unsupported host for 'run' (OS/arch not recognised). Supported: macOS &amp; Linux on arm64/x86_64, Windows on x86_64." />
-		<echo>Host: ${run.label} compiling (${run.compile.target}) then launching ${run.bindir}/${run.binname}</echo>
-		<phingcall target="${run.compile.target}" />
-		<exec executable="${run.exec}" dir="${run.bindir}" passthru="true" checkreturn="true" />
-	</target>
-
-	<target name="run-detect-os">
-		<condition property="host.windows"><os family="windows" /></condition>
-		<condition property="host.mac"><os family="mac" /></condition>
-		<condition property="host.linux">
-			<and>
-				<os family="unix" />
-				<not><os family="mac" /></not>
-			</and>
-		</condition>
-	</target>
-
-	<!-- Architecture comes from `uname -m` (arm64/aarch64 vs x86_64). Skipped on Windows, where the
-	     only target is x86_64 and `uname` may be absent. -->
-	<target name="run-detect-arch" depends="run-detect-os" unless="host.windows">
-		<exec executable="uname" outputProperty="host.machine" checkreturn="true">
-			<arg value="-m" />
+	<target name="run" depends="prepare-composer,prepare-assets"
+			description="Run Grafida in the native shell's dev mode (needs the ../shell clone)">
+		<exec executable="composer" dir="${dirs.root}" passthru="true" checkreturn="true">
+			<arg value="shell:dev" />
 		</exec>
 	</target>
 
-	<!-- First-match-wins: Phing properties are immutable, so the first matching <condition> sticks. -->
-	<target name="run-resolve" depends="run-detect-arch">
-		<!-- macOS (Apple Silicon) -->
-		<condition property="run.compile.target" value="git-macos-arm">
-			<and><isset property="host.mac" /><equals arg1="${host.machine}" arg2="arm64" /></and>
-		</condition>
-		<condition property="run.bindir" value="${dirs.root}/build/macos/aarch64">
-			<and><isset property="host.mac" /><equals arg1="${host.machine}" arg2="arm64" /></and>
-		</condition>
-		<condition property="run.label" value="macOS (Apple Silicon)">
-			<and><isset property="host.mac" /><equals arg1="${host.machine}" arg2="arm64" /></and>
-		</condition>
-
-		<!-- macOS (Intel) -->
-		<condition property="run.compile.target" value="git-macos-x86">
-			<and><isset property="host.mac" /><equals arg1="${host.machine}" arg2="x86_64" /></and>
-		</condition>
-		<condition property="run.bindir" value="${dirs.root}/build/macos/amd64">
-			<and><isset property="host.mac" /><equals arg1="${host.machine}" arg2="x86_64" /></and>
-		</condition>
-		<condition property="run.label" value="macOS (Intel)">
-			<and><isset property="host.mac" /><equals arg1="${host.machine}" arg2="x86_64" /></and>
-		</condition>
-
-		<!-- Linux (ARM64) -->
-		<condition property="run.compile.target" value="git-linux-arm">
-			<and><isset property="host.linux" /><equals arg1="${host.machine}" arg2="aarch64" /></and>
-		</condition>
-		<condition property="run.bindir" value="${dirs.root}/build/linux/aarch64">
-			<and><isset property="host.linux" /><equals arg1="${host.machine}" arg2="aarch64" /></and>
-		</condition>
-		<condition property="run.label" value="Linux (ARM64)">
-			<and><isset property="host.linux" /><equals arg1="${host.machine}" arg2="aarch64" /></and>
-		</condition>
-
-		<!-- Linux (x64) -->
-		<condition property="run.compile.target" value="git-linux-x86">
-			<and><isset property="host.linux" /><equals arg1="${host.machine}" arg2="x86_64" /></and>
-		</condition>
-		<condition property="run.bindir" value="${dirs.root}/build/linux/amd64">
-			<and><isset property="host.linux" /><equals arg1="${host.machine}" arg2="x86_64" /></and>
-		</condition>
-		<condition property="run.label" value="Linux (x64)">
-			<and><isset property="host.linux" /><equals arg1="${host.machine}" arg2="x86_64" /></and>
-		</condition>
-
-		<!-- Windows (x64) -->
-		<condition property="run.compile.target" value="git-win-x86"><isset property="host.windows" /></condition>
-		<condition property="run.bindir" value="${dirs.root}/build/windows/amd64"><isset property="host.windows" /></condition>
-		<condition property="run.label" value="Windows (x64)"><isset property="host.windows" /></condition>
-
-		<!-- Launch command: the Windows binary is grafida.exe, everything else the bare ./grafida. -->
-		<condition property="run.binname" value="grafida.exe"><isset property="host.windows" /></condition>
-		<property name="run.binname" value="grafida" />
-		<condition property="run.exec" value="${run.bindir}/grafida.exe"><isset property="host.windows" /></condition>
-		<property name="run.exec" value="${run.bindir}/grafida" />
-	</target>
-
 	<!--
 	====================================================================================================
-	Tasks - Per-platform packages
+	Tasks - Packages (gh-92)
 
-	Each package-* target first builds its platform's binary (depends on the matching git-* target),
-	then wraps it into the distributable in build/dist/ via the scripts/make-*.sh helpers (the same
-	ones scripts/build-all.sh uses). The version comes from App::VERSION unless GRAFIDA_VERSION is set.
-	macOS .app/.dmg packaging needs a macOS host (hdiutil); the Windows installer needs `makensis` on
-	the PATH (else it falls back to a portable .zip).
-	====================================================================================================
-	-->
+	Each package-* target builds one distributable into build/dist/ with grafida/shell-packager, from
+	shell-package.json (pins, names, outputs) and shell.json (the app manifest), through the
+	scripts/make-*.sh helpers that scripts/build-all.sh (`composer build`) also uses. All five are
+	built on the Mac: the macOS bundles need codesign, notarytool and hdiutil; the Windows installer
+	needs makensis, Jsign and osslsigncode, which run there too; the Linux tarballs need nothing
+	native. Each artefact gets a .sha256 beside it.
 
-	<target name="package"
-			description="Build and package the application for all platforms (installers, DMG, tarballs, PHAR)"
-			depends="package-macos-arm,package-macos-x86,package-win-x86,package-linux-x86,package-linux-arm,package-phar">
-		<echo>Packaged all Grafida platforms into build/dist/.</echo>
-	</target>
-
-	<!--
 	Signing credentials are forwarded as POSITIONAL ARGS, not <env> entries, then re-exported inside a
 	one-line bash prologue. Phing 3's ExecTask (in passthru mode) forwards <env> by building an
 	UNESCAPED `export KEY=VALUE; …; cmd` shell string, which breaks on any value containing shell
@@ -382,97 +193,34 @@
 	item name like "Microsoft Account (previously: Hotmail)" (the parentheses trigger a shell syntax
 	error). Args are passed through as argv and properly escaped, so `export VAR="$1"` reconstructs the
 	exact value regardless of its contents. $0 is a throwaway label; the real values start at $1.
+	====================================================================================================
 	-->
-	<target name="package-macos-arm" depends="git-macos-arm" description="Package the macOS (Apple Silicon) .app + .dmg">
+
+	<target name="package"
+			description="Package every platform: the macOS DMGs, the Linux tarballs and the Windows installer"
+			depends="package-macos-arm,package-macos-x86,package-windows-x86,package-linux-x86,package-linux-arm">
+		<echo>Packaged all Grafida platforms into build/dist/.</echo>
+	</target>
+
+	<!--
+	The macOS disk images, one per architecture (arm64; x86_64 for Intel Macs, gh-92). Signed and
+	notarised with macos.sign.identity and macos.notary.profile from build.properties when they are
+	set, ad hoc otherwise.
+	-->
+	<target name="package-macos-arm" depends="prepare" description="Package the macOS (Apple Silicon) .dmg">
 		<exec executable="bash" dir="${dirs.root}" passthru="true" checkreturn="true">
 			<arg value="-c" />
-			<arg value="export MACOS_SIGN_IDENTITY=&quot;$1&quot;; exec bash scripts/make-macos-app.sh arm64" />
-			<arg value="phing" />
-			<arg value="${macos.sign.identity}" />
-		</exec>
-		<exec executable="bash" dir="${dirs.root}" passthru="true" checkreturn="true">
-			<arg value="-c" />
-			<arg value="export MACOS_SIGN_IDENTITY=&quot;$1&quot;; export MACOS_NOTARY_PROFILE=&quot;$2&quot;; exec bash scripts/make-dmg.sh arm64" />
+			<arg value="export MACOS_SIGN_IDENTITY=&quot;$1&quot;; export MACOS_NOTARY_PROFILE=&quot;$2&quot;; exec bash scripts/make-macos-dmg.sh arm64" />
 			<arg value="phing" />
 			<arg value="${macos.sign.identity}" />
 			<arg value="${macos.notary.profile}" />
 		</exec>
 	</target>
 
-	<target name="package-macos-x86" depends="git-macos-x86" description="Package the macOS (Intel) .app + .dmg">
+	<target name="package-macos-x86" depends="prepare" description="Package the macOS (Intel) .dmg">
 		<exec executable="bash" dir="${dirs.root}" passthru="true" checkreturn="true">
 			<arg value="-c" />
-			<arg value="export MACOS_SIGN_IDENTITY=&quot;$1&quot;; exec bash scripts/make-macos-app.sh amd64" />
-			<arg value="phing" />
-			<arg value="${macos.sign.identity}" />
-		</exec>
-		<exec executable="bash" dir="${dirs.root}" passthru="true" checkreturn="true">
-			<arg value="-c" />
-			<arg value="export MACOS_SIGN_IDENTITY=&quot;$1&quot;; export MACOS_NOTARY_PROFILE=&quot;$2&quot;; exec bash scripts/make-dmg.sh amd64" />
-			<arg value="phing" />
-			<arg value="${macos.sign.identity}" />
-			<arg value="${macos.notary.profile}" />
-		</exec>
-	</target>
-
-	<target name="package-win-x86" depends="git-win-x86" description="Package the Windows (x64) installer (or portable .zip)">
-		<exec executable="bash" dir="${dirs.root}" passthru="true" checkreturn="true">
-			<arg value="-c" />
-			<arg value="export WINDOWS_SIGN_OP_ITEM=&quot;$1&quot;; export WINDOWS_SIGN_OP_FIELD_APPID=&quot;$2&quot;; export WINDOWS_SIGN_OP_FIELD_PASSWORD=&quot;$3&quot;; export WINDOWS_SIGN_OP_FIELD_TENANT=&quot;$4&quot;; export WINDOWS_SIGN_KEYSTORE=&quot;$5&quot;; export WINDOWS_SIGN_ALIAS=&quot;$6&quot;; export WINDOWS_SIGN_TSAURL=&quot;$7&quot;; exec bash scripts/make-windows-installer.sh" />
-			<arg value="phing" />
-			<arg value="${windows.sign.op-item}" />
-			<arg value="${windows.sign.op-field-appid}" />
-			<arg value="${windows.sign.op-field-password}" />
-			<arg value="${windows.sign.op-field-tenant}" />
-			<arg value="${windows.sign.keystore}" />
-			<arg value="${windows.sign.alias}" />
-			<arg value="${windows.sign.tsaurl}" />
-		</exec>
-	</target>
-
-	<target name="package-linux-x86" depends="git-linux-x86" description="Package the Linux (x64) .tar.gz">
-		<exec executable="bash" dir="${dirs.root}" passthru="true" checkreturn="true">
-			<arg value="scripts/make-linux-tarball.sh" />
-			<arg value="amd64" />
-		</exec>
-	</target>
-
-	<target name="package-linux-arm" depends="git-linux-arm" description="Package the Linux (ARM64) .tar.gz">
-		<exec executable="bash" dir="${dirs.root}" passthru="true" checkreturn="true">
-			<arg value="scripts/make-linux-tarball.sh" />
-			<arg value="arm64" />
-		</exec>
-	</target>
-
-	<!--
-	EXPERIMENTAL (gh-86): the Linux tarball for the native shell, built by grafida/shell-packager from
-	shell-package.json. Deliberately NOT a dependency of `package`, `all` or `release`, which keep
-	shipping Boson until the switch-over (gh-82 Phase 6); it needs no Boson compile either.
-	-->
-	<target name="package-shell-linux-x86" depends="prepare" description="EXPERIMENTAL: the native-shell Linux (x64) .tar.gz">
-		<exec executable="bash" dir="${dirs.root}" passthru="true" checkreturn="true">
-			<arg value="scripts/make-shell-linux-tarball.sh" />
-			<arg value="amd64" />
-		</exec>
-	</target>
-
-	<target name="package-shell-linux-arm" depends="prepare" description="EXPERIMENTAL: the native-shell Linux (ARM64) .tar.gz">
-		<exec executable="bash" dir="${dirs.root}" passthru="true" checkreturn="true">
-			<arg value="scripts/make-shell-linux-tarball.sh" />
-			<arg value="arm64" />
-		</exec>
-	</target>
-
-	<!--
-	EXPERIMENTAL (gh-88): the macOS (Apple Silicon) disk image for the native shell, built by
-	grafida/shell-packager from shell-package.json. Not a dependency of `package`, `all` or
-	`release` either, and it needs no Boson compile. Signed and notarised with macos.sign.identity
-	and macos.notary.profile from build.properties when they are set, ad hoc otherwise.
-	-->
-	<target name="package-shell-macos-arm" depends="prepare" description="EXPERIMENTAL: the native-shell macOS (Apple Silicon) .dmg">
-		<exec executable="bash" dir="${dirs.root}" passthru="true" checkreturn="true">
-			<arg value="-c" />
-			<arg value="export MACOS_SIGN_IDENTITY=&quot;$1&quot;; export MACOS_NOTARY_PROFILE=&quot;$2&quot;; exec bash scripts/make-shell-macos-dmg.sh" />
+			<arg value="export MACOS_SIGN_IDENTITY=&quot;$1&quot;; export MACOS_NOTARY_PROFILE=&quot;$2&quot;; exec bash scripts/make-macos-dmg.sh amd64" />
 			<arg value="phing" />
 			<arg value="${macos.sign.identity}" />
 			<arg value="${macos.notary.profile}" />
@@ -480,27 +228,23 @@
 	</target>
 
 	<!--
-	EXPERIMENTAL (gh-91): the Windows (x64) installer for the native shell, built by
-	grafida/shell-packager from shell-package.json and build/shell-windows-installer.nsi, on this
-	host (makensis, Jsign and osslsigncode run on macOS and Linux). Not a dependency of `package`,
-	`all` or `release`, and it needs no Boson compile. Signed with Azure Trusted Signing through the
-	same windows.sign.* properties as Boson's Windows build when windows.sign.op-item is set,
-	unsigned otherwise. It installs side by side with Boson's build.
-	windows.sign.op-item is the one switch: empty, no signing step at all (the script is called with
-	no signing settings); set, a signed build with the rest of the windows.sign.* properties.
+	The Windows (x64) installer, signed with Azure Trusted Signing through the windows.sign.*
+	properties. windows.sign.op-item is the one switch: empty, no signing step at all (the script is
+	called with no signing settings); set, a signed build with the rest of the windows.sign.*
+	properties.
 	-->
-	<target name="package-shell-windows-x86" depends="prepare" description="EXPERIMENTAL: the native-shell Windows (x64) installer">
+	<target name="package-windows-x86" depends="prepare" description="Package the Windows (x64) installer">
 		<if>
 			<equals arg1="${windows.sign.op-item}" arg2="" />
 			<then>
 				<exec executable="bash" dir="${dirs.root}" passthru="true" checkreturn="true">
-					<arg value="scripts/make-shell-windows-installer.sh" />
+					<arg value="scripts/make-windows-installer.sh" />
 				</exec>
 			</then>
 			<else>
 				<exec executable="bash" dir="${dirs.root}" passthru="true" checkreturn="true">
 					<arg value="-c" />
-					<arg value="export WINDOWS_SIGN_OP_ITEM=&quot;$1&quot;; export WINDOWS_SIGN_OP_FIELD_APPID=&quot;$2&quot;; export WINDOWS_SIGN_OP_FIELD_PASSWORD=&quot;$3&quot;; export WINDOWS_SIGN_OP_FIELD_TENANT=&quot;$4&quot;; export WINDOWS_SIGN_KEYSTORE=&quot;$5&quot;; export WINDOWS_SIGN_ALIAS=&quot;$6&quot;; export WINDOWS_SIGN_TSAURL=&quot;$7&quot;; exec bash scripts/make-shell-windows-installer.sh" />
+					<arg value="export WINDOWS_SIGN_OP_ITEM=&quot;$1&quot;; export WINDOWS_SIGN_OP_FIELD_APPID=&quot;$2&quot;; export WINDOWS_SIGN_OP_FIELD_PASSWORD=&quot;$3&quot;; export WINDOWS_SIGN_OP_FIELD_TENANT=&quot;$4&quot;; export WINDOWS_SIGN_KEYSTORE=&quot;$5&quot;; export WINDOWS_SIGN_ALIAS=&quot;$6&quot;; export WINDOWS_SIGN_TSAURL=&quot;$7&quot;; exec bash scripts/make-windows-installer.sh" />
 					<arg value="phing" />
 					<arg value="${windows.sign.op-item}" />
 					<arg value="${windows.sign.op-field-appid}" />
@@ -514,9 +258,17 @@
 		</if>
 	</target>
 
-	<target name="package-phar" depends="git-phar" description="Package the cross-platform PHAR">
+	<target name="package-linux-x86" depends="prepare" description="Package the Linux (x64) .tar.gz">
 		<exec executable="bash" dir="${dirs.root}" passthru="true" checkreturn="true">
-			<arg value="scripts/make-phar-dist.sh" />
+			<arg value="scripts/make-linux-tarball.sh" />
+			<arg value="amd64" />
+		</exec>
+	</target>
+
+	<target name="package-linux-arm" depends="prepare" description="Package the Linux (ARM64) .tar.gz">
+		<exec executable="bash" dir="${dirs.root}" passthru="true" checkreturn="true">
+			<arg value="scripts/make-linux-tarball.sh" />
+			<arg value="arm64" />
 		</exec>
 	</target>
 
@@ -524,15 +276,16 @@
 	====================================================================================================
 	Tasks - Release
 
-	`all` is an alias for `package` (build + package every platform). `release` is the standard release
-	process: build everything, create a published GitHub release with the installers/DMGs as assets and
-	RELEASENOTES.md as the description, build a grafida.json from that release (UpdateJson) and upload it
-	to the CDN over FTPS. Needs the github.* and cdn.ftp.* properties from build/build.properties.
+	`all` is an alias for `package` (package every platform). `release` is the standard release
+	process: package everything, create a published GitHub release with the five artefacts and their
+	.sha256 files as assets and RELEASENOTES.md as the description, build a grafida.json from that
+	release (UpdateJson, which writes the `requires` table, gh-92) and upload it to the CDN over FTPS.
+	Needs the github.* and cdn.ftp.* properties from build/build.properties.
 	====================================================================================================
 	-->
 
 	<target name="all" depends="package"
-			description="Alias for 'package' — build and package every platform" />
+			description="Alias for 'package' — package every platform" />
 
 	<!--
 	Publishing docs/ to the Grafida.app Documentation section is scripts/upload-docs.sh
@@ -543,7 +296,7 @@
 
 	<target name="release" depends="all"
 			description="Build, publish a GitHub release with the artifacts, and push grafida.json to the CDN">
-		<!-- The version is the topmost CHANGELOG entry (same source the git-* targets stamp into the app). -->
+		<!-- The version is the topmost CHANGELOG entry (the same source set-version stamps into the app). -->
 		<exec executable="php" dir="${dirs.root}" outputProperty="version" checkreturn="true">
 			<arg value="${setversion.script}" />
 			<arg value="--print" />
@@ -563,11 +316,16 @@
 					   bodyFile="${dirs.root}/RELEASENOTES.md"
 					   draft="false">
 			<fileset dir="${dirs.dist}">
-				<include name="Grafida-${version}-macos-*.dmg" />
-				<include name="Grafida-${version}-linux-*.tar.gz" />
+				<include name="Grafida-${version}-macos-arm64.dmg" />
+				<include name="Grafida-${version}-macos-arm64.dmg.sha256" />
+				<include name="Grafida-${version}-macos-amd64.dmg" />
+				<include name="Grafida-${version}-macos-amd64.dmg.sha256" />
+				<include name="Grafida-${version}-linux-amd64.tar.gz" />
+				<include name="Grafida-${version}-linux-amd64.tar.gz.sha256" />
+				<include name="Grafida-${version}-linux-arm64.tar.gz" />
+				<include name="Grafida-${version}-linux-arm64.tar.gz.sha256" />
 				<include name="Grafida-${version}-windows-amd64-Setup.exe" />
-				<include name="Grafida-${version}-windows-amd64.zip" />
-				<include name="Grafida-${version}.phar" />
+				<include name="Grafida-${version}-windows-amd64-Setup.exe.sha256" />
 			</fileset>
 		</githubrelease>
 

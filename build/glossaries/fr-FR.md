@@ -155,7 +155,7 @@ Proper nouns kept as-is: Grafida, Joomla!, API, Markdown, HTML, TinyMCE.
 | attempt (diagnose) | Tentative | A single diagnose attempt against one candidate API base URL. |
 | local media / local image | Médias locaux / image locale | An image stored in `media_blobs`, not yet published to the site (gh-36); tab label "Médias locaux (pas encore envoyés)". |
 | not yet published/uploaded | pas encore envoyé(e) / pas encore publié(e) | State of a local image or article the site does not yet know about. |
-| save to disk | Enregistrer sur le disque | Writes a local media blob's bytes to disk via the native folder picker (Boson has no Save-As dialog). GRAFIDA_BTN_SAVE_TO_DISK. |
+| save to disk | Enregistrer sur le disque | Writes a local media blob's bytes to disk via the native folder picker (exports pick a folder, not a file name). GRAFIDA_BTN_SAVE_TO_DISK. |
 | used by (article) | Utilisée par « %s » | Shows which local article references a local image. GRAFIDA_LBL_MEDIA_USED_BY. |
 | revision (of a local image) | (no dedicated term) | The internal revision token in the local media URL (`rev` parameter); never appears in UI text. |
 | site metadata | Métadonnées du site | The locally cached categories, tags, access levels, languages and custom fields of a site (gh-42). GRAFIDA_LBL_METADATA_CACHE. |

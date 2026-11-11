@@ -161,35 +161,24 @@ uses is an OS setting — see [Editing Articles](Editing-Articles#spell-checking
 
 ### From a source checkout
 
-The straightforward way. Grafida reads `language/` straight out of the project tree, so your file is
-picked up as soon as you restart the application. Choose it under Interface language in
-[Settings](Settings), or leave the setting on (Auto-detect) and start Grafida with the environment
-variable set:
+The only way. Grafida reads `language/` straight out of the project tree, so your file is picked up
+as soon as you restart the application. Running Grafida from a source checkout needs a clone of the
+[grafida/shell](https://github.com/grafida/shell) repository next to it (as `../shell`) and a Rust
+toolchain; on Linux, also the WebKitGTK 4.1 development packages. After `composer install`, choose
+your language under Interface language in [Settings](Settings), or leave the setting on
+(Auto-detect) and start Grafida with the environment variable set:
 
 ```bash
-LANG=nl-NL.UTF-8 php index.php
+LANG=nl-NL.UTF-8 composer shell:dev
 ```
 
 ### Against an installed build
 
-A compiled Grafida keeps its language files inside the binary and extracts them once, on first run,
-into a `resources/language/` folder under its data directory:
-
-| Platform | Data directory |
-|---|---|
-| macOS | `~/Library/Application Support/Grafida/` |
-| Windows | `%APPDATA%\Grafida\` |
-| Linux | `$XDG_DATA_HOME/grafida/` (usually `~/.local/share/grafida/`) |
-
-Dropping a **new** `<tag>/<tag>.ini` into `resources/language/` there works: Grafida never deletes
-files it did not put there, so your language is discovered on the next start and appears in the
-drop-down. This is the quickest way to try a translation without building anything.
-
-> [!WARNING]
-> Editing one of the **shipped** files in that extracted folder is not reliable. On every start
-> Grafida re-copies any bundled file whose extracted copy differs in size from the one inside the
-> binary, so your edits will usually be overwritten — silently, and only sometimes, which is worse
-> than always. Edit a source checkout instead, or test your change as a new tag.
+This does not work. An installed Grafida keeps its language files inside the application and, every
+time it starts, copies them into a `resources/language/` folder under its data directory, making
+that folder an exact copy of the languages it ships. A language file you add there is deleted, and a
+shipped file you edit is overwritten, the next time Grafida starts. Test your translation from a
+source checkout instead.
 
 ### What to look for
 

@@ -11,7 +11,6 @@
                   it, the warning is gone and the worker still answers. allow-jit is the narrowest
                   JIT exception (MAP_JIT only, not allow-unsigned-executable-memory).
 
-  Boson's build/macos/entitlements.plist is a different file for a different binary and stays as it is.
 -->
 <plist version="1.0">
 <dict>

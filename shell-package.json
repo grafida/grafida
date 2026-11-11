@@ -46,12 +46,24 @@
         },
         "macos": {
             "shell": {
-                "url": "https://github.com/grafida/shell/releases/download/0.2.0/grafida-shell-macos-arm64",
-                "sha256": {"aarch64": "b24598ae8062614e19e9dac1c2851b90e739ee006323edd0ef810b54dab1045f"}
+                "url": {
+                    "aarch64": "https://github.com/grafida/shell/releases/download/0.2.0/grafida-shell-macos-arm64",
+                    "x86_64": "https://github.com/grafida/shell/releases/download/0.4.0/grafida-shell-macos-x86_64"
+                },
+                "sha256": {
+                    "aarch64": "b24598ae8062614e19e9dac1c2851b90e739ee006323edd0ef810b54dab1045f",
+                    "x86_64": "8562cda8b87b2b22ddeca5f2842db715e4236e84546a1f9e299a5ed2ebe2903d"
+                }
             },
             "sfx": {
-                "url": "https://github.com/grafida/phpmicro/releases/download/sfx-20261109.15/macos-aarch64.standard.sfx",
-                "sha256": {"aarch64": "046be1292371b1b59498c5df123956c02079e704dd5877d116b8385412134af4"}
+                "url": {
+                    "aarch64": "https://github.com/grafida/phpmicro/releases/download/sfx-20261109.15/macos-aarch64.standard.sfx",
+                    "x86_64": "https://github.com/grafida/phpmicro/releases/download/sfx-20261111.28/macos-x86_64.standard.sfx"
+                },
+                "sha256": {
+                    "aarch64": "046be1292371b1b59498c5df123956c02079e704dd5877d116b8385412134af4",
+                    "x86_64": "a89695ce2b64d124d873b3b8f7291820eedf755a1db58d548c6bf3d4f556d8c8"
+                }
             }
         },
         "windows": {
@@ -79,7 +91,8 @@
             "512": "assets/logo/png/grafida-512.png"
         },
         "files": {"LICENSE.txt": "LICENSE.txt"},
-        "output": "build/dist/Grafida-{version}-linux-{debarch}-shell-preview.tar.gz"
+        "replaces": ["grafida"],
+        "output": "build/dist/Grafida-{version}-linux-{debarch}.tar.gz"
     },
     "macos": {
         "name": "Grafida",
@@ -100,8 +113,8 @@
             "volumeIcon": "assets/logo/Grafida.icns",
             "volumeName": "Grafida"
         },
-        "app": "build/shell-macos/{name}.app",
-        "output": "build/dist/Grafida-{version}-macos-{debarch}-shell-preview.dmg"
+        "app": "build/shell-macos/{debarch}/{name}.app",
+        "output": "build/dist/Grafida-{version}-macos-{debarch}.dmg"
     },
     "windows": {
         "name": "Grafida",
@@ -115,12 +128,12 @@
         "installer": {
             "script": "build/shell-windows-installer.nsi",
             "defines": {
-                "DISPLAYNAME": "Grafida (shell preview)",
+                "DISPLAYNAME": "Grafida",
                 "APPURL": "https://grafida.app",
                 "COPYRIGHT": "Copyright (c) 2026 Nicholas K. Dionysopoulos. GNU GPL v3 or later."
             }
         },
         "tree": "build/shell-windows/{name}",
-        "output": "build/dist/Grafida-{version}-windows-{debarch}-shell-preview-Setup.exe"
+        "output": "build/dist/Grafida-{version}-windows-{debarch}-Setup.exe"
     }
 }

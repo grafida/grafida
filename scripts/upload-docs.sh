@@ -8,8 +8,8 @@
 #
 #     scripts/upload-docs.sh [--dry-run] [--verbose]
 #
-# The pages under docs/ are BOTH the app's own Help (compiled into every binary — boson.json lists
-# docs/ in build.directories) and the public documentation at grafida.app. This script mirrors the
+# The pages under docs/ are BOTH the app's own Help (inside every package's worker PHAR —
+# shell-package.json's phar.include lists docs/) and the public documentation at grafida.app. This script mirrors the
 # second from the first. It uploads the Markdown pages, `_manifest.json` and everything in
 # `docs/images/` — nothing else in the directory, and no other subdirectory, because the
 # documentation set is deliberately flat apart from that one image folder

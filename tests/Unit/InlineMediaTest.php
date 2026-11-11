@@ -64,7 +64,7 @@ final class InlineMediaTest extends TestCase
 
     public function testRewritesLocalMediaUrlImage(): void
     {
-        // The gh-36 common case: an <img> pointing at the Boson-served local
+        // The gh-36 common case: an <img> pointing at the worker-served local
         // blob, with no data: URI at all — only the id, parsed from the URL.
         $html = '<p><img src="boson://app/api/media/42/raw?rev=abc12345"></p>';
 

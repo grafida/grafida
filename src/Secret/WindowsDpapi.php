@@ -16,8 +16,10 @@ namespace Grafida\Secret;
  *
  * {@see WindowsSecretStore} originally shelled out to a whole `powershell.exe`
  * per protect/unprotect. PowerShell cold-starts in roughly a second and, because
- * the `boson://` kernel is single-threaded, that call froze the entire UI — and
- * it ran on every request that needed a stored secret (site token, AI key). DPAPI
+ * the worker answers one request at a time, every request behind that call
+ * waited for it (under Boson, whose kernel ran on the UI thread, the whole window
+ * froze) — and it ran on every request that needed a stored secret (site token,
+ * AI key). DPAPI
  * is just a pair of native Win32 functions, so calling them directly is
  * sub-millisecond and spawns nothing.
  *

@@ -8,8 +8,8 @@
  * window.GrafidaCssTheme = { resolveColorScheme }.
  *
  * Why this exists: the TinyMCE content iframe loads the site's editor.css
- * (State.editorCss, see src/Reference/EditorCssService.php). Boson's webview
- * does not report `prefers-color-scheme` reliably — it always reports "dark"
+ * (State.editorCss, see src/Reference/EditorCssService.php). A webview's
+ * `prefers-color-scheme` is not to be trusted — Boson's always reported "dark"
  * on macOS, which is why Display\DisplayModeService::systemPrefersDark() probes
  * the OS directly instead of trusting the media query for the app chrome. That
  * workaround only covers the app UI; the content iframe is a different document

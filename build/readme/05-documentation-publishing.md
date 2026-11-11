@@ -1,7 +1,7 @@
 # Publishing the documentation
 
-The pages under `docs/` are used twice. They are compiled into every binary (`boson.json` lists
-`docs/` in `build.directories`) and shown by the in-app **Help** screen, and they are the public
+The pages under `docs/` are used twice. They ship inside every package's worker PHAR
+(`shell-package.json`'s `phar.include` lists `docs/`) and shown by the in-app **Help** screen, and they are the public
 documentation served in the Documentation section of [Grafida.app](https://grafida.app).
 `scripts/upload-docs.sh` mirrors the second from the first over SFTP.
 

@@ -204,9 +204,9 @@ that is all you get. There is no mode to switch on first and no second <kbd>Ctrl
 > back and turn it off again. The shortcut affects one paste and nothing else, so your next ordinary
 > <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>V</kbd> still keeps its formatting.
 
-> **Note for macOS users:** this shortcut is also what the system offers as *Paste and Match Style*
-> in applications that have an Edit menu. Grafida has no menu bar, so before this shortcut existed
-> the key combination did nothing but beep.
+> **Note for macOS users:** in other applications this key combination is the Edit menu's *Paste
+> and Match Style*. Grafida's Edit menu deliberately has no such item; in Grafida the key
+> combination is this shortcut.
 
 ## Images in the article body
 

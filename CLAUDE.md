@@ -2,7 +2,7 @@
 
 Grafida is a cross-platform **desktop application** (macOS, Windows, Linux) for creating
 and editing **Joomla! articles** through the Joomla Web Services (REST) API. It is built in
-**PHP 8.4** with [**Boson**](https://bosonphp.com), uses **SQLite** for all local storage
+**PHP 8.4** on its own native shell ([grafida/shell](https://github.com/grafida/shell)), uses **SQLite** for all local storage
 (via **`joomla/database`**'s `SqliteDriver`, wired through a **`joomla/di`** container),
 and **TinyMCE 8** as the HTML editor. Licensed **GNU GPL v3 or later**. Dev happens on macOS.
 
@@ -18,127 +18,110 @@ authored in TinyMCE; images go through Grafida's own offline media picker (see `
 not a site-side media-manager plugin. Don't add features that depend on server-side editor
 plugins or builder shortcodes.
 
-## How Boson works here (important)
+## How the native shell works here (important)
 
-Boson runs a native webview and bundles a PHP runtime. There is **no `webview->bind` RPC**.
-Instead `index.php` registers a handler for the `boson://` scheme; every request arrives as a
-Boson request, and **`Grafida\Application\BosonBridge` converts it at that one boundary** into a
-`Grafida\Shell\Request` and the answer back from a `Grafida\Shell\Response`. Nothing behind
-`index.php` uses a Boson HTTP type any more (gh-84). The front-end (a plain HTML/CSS/JS SPA under
-`assets/private`) talks to PHP by calling `fetch('boson://app/api/...')`.
+Grafida runs on its **own native shell**, grafida/shell (Rust; umbrella gh-82, switch-over gh-92).
+Up to 0.3 it ran on Boson; Boson the runtime is gone from the tree, `composer.json` and every
+artefact, but **`boson` the scheme stays**: the page origin is byte-identical `boson://app` on every
+platform (`shell.json`'s `"scheme": "boson"`), because `Media\LocalMediaUrl` writes
+`boson://app/api/media/{id}/raw?rev=…` into stored drafts and `.grafida` exports,
+`Html\InlineMedia::LOCAL_URL_PREFIX` parses it back, `localStorage` is per-origin, and users'
+local AI servers allow that origin. Never rename it.
 
-**Boson is being replaced by a self-owned native shell** (umbrella gh-82; Phase 1 is gh-84). The
-HTTP types, the frame codec, the stdio worker loop and `StaticFiles` come from the MIT package
-**[grafida/shell-php](https://github.com/grafida/shell-php)**, which speaks the wire protocol
-specified in **grafida/shell** (`protocol/v1.md`, with conformance fixtures). There are now **two
-entry points over one container**: `index.php` (Boson, what ships until the switch-over release)
-and **`bin/worker.php`** (the stdio worker the native shell will spawn; run it as
-`php bin/worker.php`). Both build the same `FrontController`, which is a shell-php `Handler`.
-`composer test:pipe` (`tests/Pipe/`) spawns the worker over real pipes. It runs every conformance
-fixture against `bin/worker.php`, then replays Feature-suite requests through a worker and through
-`Kernel::handle()` in process and requires byte-identical answers. shell-php is pinned to an **exact
-tag** (`0.2.1`) through a `vcs` repository entry in `composer.json`, until it is on Packagist. To
-change shell-php and Grafida together, point that entry at a local **path repository**
-(`../shell-php`, `"options": {"symlink": false}`, so the Boson compiler never meets a symlink in
-`vendor/`) and require `dev-main`. Tag shell-php before committing Grafida, and never commit the
-path entry: it breaks every checkout that lacks the sibling clone. shell-php's `Request`/`Response` keep Boson's positional constructors and
-`Headers` iterates one `name => value` pair per value, which is why the Feature suite switched type
-with no assertion edits.
+**Two processes.** The shell owns the window and the webview (WKWebView, WebKitGTK 4.1, WebView2) and
+answers `boson://app/_native/*` itself (dialogs, open-url, window theme, quit, info); every other
+`boson://` request is a frame on the stdin of **one worker process**, Grafida's PHP back-end, and
+the answer comes back on its stdout. The worker is **`bin/worker.php`** (the container + shell-php's
+`Worker::run()`), the only entry point: packaged, the phpmicro sibling-phar SFX stub
+(`grafida-worker`) runs it out of its sibling `grafida-worker.phar`; in dev mode it is the system
+`php bin/worker.php`. Requests are serialised in the worker, as they always were, but PHP never runs
+on the UI thread any more, so a slow request no longer freezes the window. The HTTP types, the frame
+codec, the stdio loop and `StaticFiles` come from the MIT package
+**[grafida/shell-php](https://github.com/grafida/shell-php)**, which speaks the wire protocol specified
+in **grafida/shell** (`protocol/v1.md`, with conformance fixtures). `composer test:pipe`
+(`tests/Pipe/`) spawns the worker over real pipes: every conformance fixture against `bin/worker.php`,
+then Feature-suite requests replayed through a worker and through `Kernel::handle()` in process,
+which must answer byte for byte the same. shell-php is pinned to an **exact tag** (`0.2.1`) through a
+`vcs` repository entry in `composer.json`, until it is on Packagist. To change shell-php and Grafida
+together, point that entry at a local **path repository** (`../shell-php`, `"options": {"symlink":
+false}`) and require `dev-main`. Tag shell-php before committing Grafida, and never commit the path
+entry: it breaks every checkout that lacks the sibling clone. shell-php's `Request`/`Response` keep
+positional constructors and `Headers` iterates one `name => value` pair per value, which is what let
+the Feature suite (the API contract) switch type with no assertion edits.
 
-**Phase 2 (gh-85) runs Grafida in the shell on Linux in dev mode**: `composer shell:dev` builds the
-sibling `../shell` clone and starts it with `--dev .`, which reads the repo-root **`shell.json`** (the
-app manifest: id, window, worker, `noStorePaths: ["/api/"]`, `devtools: "env:GRAFIDA_DEBUG"`, the
-reserved Cmd/Ctrl+Shift+V chord) and runs its `dev.worker`, `php bin/worker.php`. `shell.json` sits
-at the root on purpose: no Boson build bundles it. The shell's debug automation channel
+**The manifest is the repo-root `shell.json`** (id `app.grafida`, title, window, worker,
+`noStorePaths: ["/api/"]`, `devtools: "env:GRAFIDA_DEBUG"`, the reserved Cmd/Ctrl+Shift+V chord), read
+by the shell in dev mode and shipped beside it in every package. **Dev mode** is `composer shell:dev`
+(also `composer start`, `phing run`): it builds the sibling `../shell` clone with the debug automation
+channel and starts it with `--dev .`, which reads `shell.json` and runs `php bin/worker.php`, so a PHP
+edit takes effect when the worker restarts and nothing is compiled. The automation channel
 (`composer shell:dev -- --automation`, then `../shell/scripts/dev/automation.py eval|screenshot|pick`)
-is how the real window is driven from here; see grafida/shell's CLAUDE.md. Run it with
-`HOME`/`XDG_*` pointed at a throwaway directory unless you mean to use your own data.
+is how the real window is driven from here; see grafida/shell's CLAUDE.md. ⚠️ **No release shell
+carries the automation channel, and no build opens a remote-debugging port**: packaged builds are
+verified with a separate debug shell (the shell's `debug-automation-*` workflow artifacts) swapped into
+a copy of the installed app. Run dev mode with `HOME`/`XDG_*` pointed at a throwaway directory unless
+you mean to use your own data.
 
-**Phase 3 (gh-86) packages it for Linux, experimentally**: `composer build:shell-linux` (Phing
-`package-shell-linux-x86|-arm`) runs **grafida/shell-packager** (a dev dependency pinned to an exact
-tag) over the repo-root **`shell-package.json`** and writes
-`build/dist/Grafida-<v>-linux-<arch>-shell-preview.tar.gz`. It is in no way part of `composer build`,
-`phing package` or `phing release`, which ship Boson until the switch-over. The tarball holds the
-static launcher (`grafida`), the shell (`grafida-shell`), the phpmicro SFX stub (`grafida-worker`)
-and its sibling `grafida-worker.phar` (an extra-INI block + a PHAR of `bin/worker.php` built from a
-`--no-dev` install), `shell.json`, `app.grafida.desktop` (named after the manifest `id`, which is the
-window's Wayland app_id), the icons and `install.sh`. There is no `assets/` beside it: the worker
-serves the SPA from inside the PHAR. Every binary is pinned by tag + SHA-256 in `shell-package.json`.
-`tests/Pipe` runs against a packaged worker with `GRAFIDA_PIPE_WORKER=…/grafida-worker`; the detail
-is in `.claude/rules/build-and-packaging.md`.
+**What the shell does that PHP used to** (deleted with Boson, gh-92): a too-old macOS is refused by
+`LSMinimumSystemVersion` 12.0, which LaunchServices enforces; a missing WebKitGTK by the Linux
+launcher; a missing WebView2 by the shell and the Windows installer; `WebContinuousSpellCheckingEnabled`
+is set by the shell in process; the Windows worker is a GUI-subsystem SFX started with
+`CREATE_NO_WINDOW`, so no console exists to hide. What is left to PHP is a worker that cannot start
+(see `src/Startup/`).
 
-**Phase 4 (gh-88) packages it for macOS (Apple Silicon only), experimentally**: `composer
-build:shell-macos` (Phing `package-shell-macos-arm`, which passes `macos.sign.identity` and
-`macos.notary.profile` from `build/build.properties` as `MACOS_SIGN_IDENTITY`/`MACOS_NOTARY_PROFILE`)
-runs shell-packager's `macos-app` + `macos-dmg` over the same `shell-package.json` (its `macos`
-section) and writes `build/dist/Grafida-<v>-macos-arm64-shell-preview.dmg`, signed and notarised when
-the identity and profile are set, ad hoc otherwise. Like the Linux tarball it is in no way part of
-`composer build`, `phing package` or `phing release`. The bundle is `Grafida.app` with
-`CFBundleIdentifier` **`app.grafida`** (the manifest id; Boson's is `app.grafida.desktop`), the shell
-as `Contents/MacOS/Grafida`, the SFX stub `Contents/MacOS/grafida-worker` beside it, and
-`grafida-worker.phar`, `shell.json`, `Grafida.icns` and `LICENSE.txt` in `Contents/Resources`.
-⚠️ **Entitlements are per binary and each one is kept only because a test fails without it**: the
-shell has none, the worker has only `com.apple.security.cs.allow-jit`
-(`build/macos/shell-worker.entitlements`), without which PCRE's JIT cannot map memory under the
-hardened runtime and every `preg_*` runs interpreted. Under the shell on macOS the SPA answers the
-real menu bar: `shell:about` opens its About dialog, and the editor maps `beforeinput`
-`historyUndo`/`historyRedo` to TinyMCE's history (`.claude/rules/spa-frontend.md`).
+**Packages**, all built on the Mac by **grafida/shell-packager** (a dev dependency pinned to an exact
+tag) over the repo-root **`shell-package.json`**, each with a `.sha256` beside it: two macOS disk
+images (`Grafida-<v>-macos-arm64.dmg`, `-macos-amd64.dmg` for Intel Macs), two Linux tarballs
+(`-linux-amd64.tar.gz`, `-linux-arm64.tar.gz`) and the Windows installer
+(`-windows-amd64-Setup.exe`). Every fetched binary is pinned by tag + SHA-256 in `shell-package.json`;
+the detail, the per-platform layouts and their tests are in `.claude/rules/build-and-packaging.md`.
+- **macOS:** `Grafida.app`, `CFBundleIdentifier` **`app.grafida`** (the manifest id), one bundle per
+  architecture. ⚠️ **x86_64 is tested only under Rosetta 2** in Apple Silicon guests; Intel Macs are
+  deprecated when macOS 28 drops Intel and Rosetta 2, and dropped when macOS 29 lands (the update
+  check's `requires` then stops offering them releases). ⚠️ **Entitlements are per binary and each one
+  is kept only because a test fails without it**: the shell has none, the worker only
+  `com.apple.security.cs.allow-jit` (`build/macos/shell-worker.entitlements`), without which PCRE's JIT
+  cannot map memory under the hardened runtime. The shell has a real menu bar: `shell:about` opens the
+  SPA's About dialog, and the editor maps `beforeinput` `historyUndo`/`historyRedo` to TinyMCE's
+  history (`.claude/rules/spa-frontend.md`).
+- **Linux:** a tarball holding the static launcher (`grafida`), the shell (`grafida-shell`), the SFX
+  stub and its PHAR, `shell.json`, `app.grafida.desktop` (named after the manifest id, the window's
+  Wayland app_id), the icons and `install.sh`, which also removes Boson's `grafida.desktop` entry
+  (`linux.replaces`). There is no `assets/` beside it: the worker serves the SPA from inside the PHAR.
+- **Windows:** a per-user NSIS installer built **on the Mac** (makensis, Jsign, osslsigncode; icon and
+  version resources written in PHP) from Grafida's own **`build/shell-windows-installer.nsi`**. It
+  **takes over Boson's identity**: `%LOCALAPPDATA%\Programs\Grafida` (honouring
+  `HKCU\Software\Grafida\InstallDir`), the uninstall key `Grafida`, the Start menu entry
+  `Grafida\Grafida.lnk`; before it writes anything it checks neither Grafida is running and removes a
+  Boson or preview (`app.grafida`) install, leaving `%APPDATA%\Grafida` alone. Signed through Azure
+  Trusted Signing when `windows.sign.op-item` is set (four signatures a build). There is no WebView2
+  bootstrapper: the installer warns and links when the runtime is missing, and the shell alerts.
 
-**Phase 5 (gh-91) packages it for Windows (x64), experimentally**: `composer build:shell-windows`
-(Phing `package-shell-windows-x86`, which passes the `windows.sign.*` properties Boson's Windows build
-uses) runs shell-packager's `windows-installer` over the same `shell-package.json` (its `windows`
-section) and Grafida's own NSIS script, **`build/shell-windows-installer.nsi`**, and writes
-`build/dist/Grafida-<v>-windows-amd64-shell-preview-Setup.exe`. It builds **on the Mac** (or Linux):
-makensis, Jsign and osslsigncode all run there, and shell-packager writes the icon and version
-resources in PHP. Signed through Azure Trusted Signing when `windows.sign.op-item` is set (the
-script gets the token with `op` + `az`; four signatures a build: shell, worker stub, uninstaller,
-installer), unsigned otherwise. Like the others it is in no way part of `composer build`,
-`phing package` or `phing release`. It installs **per user, side by side with Boson's build**:
-`%LOCALAPPDATA%\Programs\app.grafida` under the uninstall key `app.grafida`, against Boson's
-`Programs\Grafida` and `Grafida`, with its own Start menu entry; both use the same
-`%APPDATA%\Grafida` data, which the uninstaller leaves. The tree is `Grafida.exe` (the shell, a GUI
-program with Grafida's icon and a version resource whose `FileDescription` names it in Task
-Manager), `grafida-worker.exe` (the phpmicro **GUI** SFX stub, `Grafida worker`) and
-`grafida-worker.phar` beside it, `shell.json`, `Grafida.ico`, `LICENSE.txt`. There is no WebView2
-bootstrapper: the installer warns and links when the runtime is missing, and the shell alerts.
-`tests/Pipe` runs against an installed worker with `GRAFIDA_PIPE_WORKER=…\grafida-worker.exe`; the
-detail is in `.claude/rules/build-and-packaging.md`.
+Request flow: shell → frame → `bin/worker.php` → `Grafida\FrontController` →
+`Grafida\Application\Kernel` → either `Grafida\Http\ApiController` (paths under `/api/`) or a static
+asset / the SPA shell. **The kernel is a pure `Request → Response` function**, so the whole back-end is
+testable without a window or a process (see `tests/Feature/ApiRoutingTest.php`).
 
-Request flow: `index.php` → `Grafida\FrontController` → `Grafida\Application\Kernel` →
-either `Grafida\Http\ApiController` (paths under `/api/`) or a static asset / the SPA shell.
-**The kernel is a pure `Request → Response` function**, so the whole back-end is testable
-without opening a window (see `tests/Feature/ApiRoutingTest.php`).
-
-**The composition root is a DI container, not the Kernel.** `index.php` builds a
+**The composition root is a DI container, not the Kernel.** `bin/worker.php` builds a
 `Grafida\Application\Container` (a thin `Joomla\DI\Container` subclass — see `src/Application/`)
-via `ContainerFactory::create()` and pulls `FrontController` out of it; `Kernel` is now just
+via `ContainerFactory::create()` and pulls `FrontController` out of it; `Kernel` is
 `(StaticFiles $static, ApiController $api)`. Nothing is `new`ed ad-hoc and there is
 no global/singleton database object — add a service by registering it in a **service provider**
 (`src/Application/Provider/`), not by editing a constructor chain.
 
-**File pickers must go through the native dialog, not `<input type="file">`.** Boson's
-webview does not wire up the HTML file-input open-panel callback (WKWebView on macOS,
-WebKitGTK on Linux), so an in-page `<input type="file">` `.click()` silently does nothing.
-`index.php` therefore passes `$app->dialog` (Boson's `DialogApiInterface`) into the container
-as the **`dialog` parameter**, from where it reaches `SettingsController`, and the SPA opens
-files via `POST /api/dialog/open-file` (`api.openFile(filter)`, filter
-`image`/`markdown`/`any`): `SettingsController::openFile()` calls `selectFile()`, reads the
-chosen file and returns `{name, mime, dataBase64}` (or `{cancelled:true}`). `uploadLocalImage()`
-(intro/full-text images, the in-editor/media-browser "Choose file…" button) and
-`importMarkdown()` consume it. The dialog dependency is **nullable** so the kernel stays
-window-free in tests (a null dialog makes the endpoint return 503).
-**Under the native shell (gh-85) the same SPA calls pick files the other way**, and `api.openFile()` /
-`api.selectDirectory()` choose per host through `underShell()` (`GrafidaShell.available()`, from the
-vendored `js/shell.js`). The shell's own dialog (`/_native/dialog/*`) answers with an opaque
-per-session **token, never a path**; the SPA sends it back as `X-Shell-File`, and the shell forwards the
-resolved path as `X-Shell-File-Path`, which `Grafida\Http\ShellFile` reads: `openFile()` returns that
-file, and the three folder exports (`.grafida` draft, Request Log, Local Media "save to disk") take it
-over the body's `directory`. So under the shell no path ever comes from JS, and a folder pick is
-`{token, name}`, not `{path}`: pass the whole `dir` object to the export call. `api.openUrl()` likewise
-goes to the shell's `_native/open-url`, and the title bar follows the resolved theme
-(`_native/window/theme`). ⚠️ **`BosonBridge` drops
-both headers**: under Boson there is no shell to strip them, and trusting one would let any script in
-the page read any file.
+**Files are picked in the shell's own dialogs, never through `<input type="file">`.** The shell's
+dialog (`/_native/dialog/*`, `js/shell.js` from shell-php) answers with an opaque per-session
+**token, never a path**; the SPA sends it back as `X-Shell-File`, and the shell — which strips any
+`X-Shell-File-Path` the page sends — forwards the resolved path as `X-Shell-File-Path`, which
+`Grafida\Http\ShellFile` reads: `SettingsController::openFile()` returns that file as `{name, mime,
+dataBase64}`, and the three folder exports (`.grafida` draft, Request Log, Local Media "save to disk")
+take the folder over the body's `directory`. So no path ever comes from JS, and a folder pick is
+`{token, name}`: pass the whole `dir` object to the export call. A dialog request without the header
+answers **503** (`/api/dialog/open-file`, `/api/dialog/select-directory`): that is what a plain
+browser gets, the `/verify` harness, whose `underShell()` is false. `api.openUrl()` goes to the
+shell's `_native/open-url`, the clipboard for Cmd/Ctrl+Shift+V is read by the shell
+(`X-Shell-Clipboard`), and the title bar follows the resolved theme (`_native/window/theme`); without
+the shell, PHP's `UrlOpener` and `ClipboardService` answer instead.
 
 ## Layout
 
@@ -152,8 +135,8 @@ the page read any file.
   `db.path` (default `Paths::databaseFile()`; `':memory:'` in tests), `migrations.dir`,
   `base.path`, `docs.dir` (default `Resources::docsDir()` — note it does **not** go through
   `Resources::base()`, since the docs are read straight out of the phar rather than extracted),
-  `static.provider` (a `Grafida\Shell\StaticFiles`; no default, each entry point supplies it),
-  `dialog` (nullable), and `secret.store` — which is
+  `static.provider` (a `Grafida\Shell\StaticFiles`; no default, `bin/worker.php` and the tests
+  supply it), and `secret.store` — which is
   **tri-state**: `null` → `SecretStoreFactory::secureStore()` (production), `false` → no store
   (forces the insecure-plaintext fallback path), a `SecretStore` instance → used as-is.
   The `DatabaseInterface` factory **connects *and* migrates**, so every consumer receives a
@@ -161,24 +144,6 @@ the page read any file.
   ⚠️ **joomla/di calls any callable value as a factory**, so `create()` wraps a parameter that is
   an invokable object before sharing it. `StaticFiles` is one: it is a shell-php `Handler`, and
   without the wrap the container calls `StaticFiles::__invoke($container)` instead of returning it.
-  It also holds the two classes that make the **native event loop** affordable: `BosonApplication`
-  (the `Boson\Application` `index.php` actually instantiates) and `EventLoopThrottle`.
-  ⚠️ **Boson's event loop is a busy-wait and costs about half a CPU core with the app idle.**
-  `Application::run()` calls `$poller->next()` forever; the stock poller separates two iterations by
-  `usleep(1)` — one microsecond — and every third iteration crosses FFI into
-  `saucer_application_run_once()`, a full native event-pump round trip. Measured with Grafida idle
-  on the Articles screen: ~49% of a core in the PHP process, against 0.0% for the WebKit content
-  process actually showing it. `EventLoopThrottle` is a `PollerInterface` **decorator** that adds a
-  2 ms sleep after an idle iteration, taking that to ~1%. It is a decorator, not a replacement,
-  because the poller the parent builds carries a deferred task that flips `Application::$isRunning`
-  and fires `ApplicationStarted` — a closure over `private(set)`/private state a subclass cannot
-  reach; wrapping also keeps us out of Boson's `@internal` microtask bookkeeping.
-  ⚠️ **The throttle is a latency trade, so it must be woken.** A sleeping loop picks a `boson://`
-  request up to 3 sleeps late, which is nothing once but is paid *per request* — so `index.php`
-  calls `$app->wake()` after every request the front controller answers, and the loop runs
-  unthrottled for 100 ms. A page's worth of API calls therefore runs at the upstream loop's full
-  speed and only a genuinely quiet app is throttled. Anything else that learns the app is busy
-  should wake it too.
 - `src/Http/` — `HttpClient` (curl/stream transport to Joomla), `Json`, and the internal API.
   `ApiController` is only a **dispatcher**; a real `Router` route table resolves each handler's
   controller from the container on match, so a request builds one controller, not nine. The
@@ -401,9 +366,9 @@ the page read any file.
   browser via `api.openUrl()`. The Kernel wires it with a short-timeout `HttpClient(5)`.
 - `src/Display/DisplayModeService.php` — persists the interface display-mode preference
   (`auto`/`light`/`dark`) in `settings`; sent to the SPA as the `bootstrap` payload's
-  `displayMode` key and written via `POST /api/settings/display-mode`. Because Boson's
-  webview does **not** report `prefers-color-scheme` reliably (on macOS it always reports
-  dark), `systemPrefersDark()` probes the OS appearance directly (macOS `defaults read -g
+  `displayMode` key and written via `POST /api/settings/display-mode`. Because a webview's
+  `prefers-color-scheme` is not to be trusted (Boson's always reported dark on macOS),
+  `systemPrefersDark()` probes the OS appearance directly (macOS `defaults read -g
   AppleInterfaceStyle`, Windows `AppsUseLightTheme` registry DWORD, Linux the freedesktop
   **appearance portal** `org.freedesktop.appearance color-scheme` via `gdbus`, falling back to gsettings
   `color-scheme`/`gtk-theme`) → `true`/`false`/`null` when undetectable. ⚠️ The portal must stay first:
@@ -438,8 +403,9 @@ the page read any file.
   installed wins) and on Windows **`WindowsClipboard`**, a direct FFI read of `CF_UNICODETEXT`
   via user32/kernel32, with `powershell Get-Clipboard -Raw` only as the no-FFI fallback — the
   third instance of the pattern set by `Secret\WindowsDpapi` and `Display\WindowsThemeReader`,
-  for the same reason: a PowerShell spawn costs about a second, the kernel is single-threaded, and
-  this runs under a *keystroke*. ⚠️ Its `decodeUtf16LE()` is `public static` and FFI-free so the one
+  for the same reason: a PowerShell spawn costs about a second, the worker answers one request at a
+  time, and this runs under a *keystroke* (under Boson, whose kernel ran on the UI thread, the whole
+  window froze too). ⚠️ Its `decodeUtf16LE()` is `public static` and FFI-free so the one
   fiddly part is testable off Windows — **the NUL terminator must be found on a code-unit boundary**,
   since scanning for a zero *byte* truncates at `U+0100` or mid-surrogate (an emoji).
   It backs the editor's **Cmd/Ctrl+Shift+V paste-as-plain-text** shortcut, and it exists because
@@ -450,10 +416,10 @@ the page read any file.
   subprocess, no prompt. Returns **null** for an unreadable clipboard but the **empty string** for
   an empty one, and the two must not be conflated (empty = paste nothing, unreadable = tell the
   user). **Under the native shell (gh-85) PHP does not read the clipboard at all**: the shell owns the
-  window and reads GTK's clipboard itself (no `wl-paste`/`xclip` needed, which a desktop may not
+  window and reads the OS clipboard itself (GTK's on Linux) (no `wl-paste`/`xclip` needed, which a desktop may not
   have), and hands the text over as the request body with `X-Shell-Clipboard: text`
   (`Grafida\Http\ShellClipboard`); `clipboardText()` then applies the same line-ending and content
-  normalisation. `BosonBridge` drops that header, so under Boson only PHP's own read happens. Line endings are normalised to `\n`, because TinyMCE's plain-text conversion splits on it
+  normalisation. Without the header (a plain browser) PHP reads it itself. Line endings are normalised to `\n`, because TinyMCE's plain-text conversion splits on it
   and a stray `\r` survives into the pasted paragraph. See the shortcut's own notes in
   `.claude/rules/spa-frontend.md` for which webview owns the chord and why that decides everything.
 - `src/Editor/SlashToolsService.php` — persists whether the editor's slash-command menu is
@@ -468,8 +434,8 @@ the page read any file.
   `SlashToolsService`. The stored value drives TinyMCE's `browser_spellcheck`, i.e. the editing
   body's `spellcheck` attribute — the **authoritative per-element gate**: WebKit will not check an
   element with `spellcheck="false"` even when its global continuous-checking flag is on, so this
-  preference alone turns the underlining off on every platform. The macOS master flag
-  ({@see MacSpellCheck}) stays **unconditionally enabled** at startup precisely so the attribute
+  preference alone turns the underlining off on every platform. The macOS master flag (set by the
+  shell, in process, before it creates the webview) stays **unconditionally enabled** precisely so the attribute
   can toggle it live: `WebContinuousSpellCheckingEnabled` is read once and cached by WebKit, so
   forcing *it* false would need a restart to re-enable — the per-element attribute, which WebKit
   re-evaluates immediately, is what the toggle drives (`applySpellCheckChange()` also updates an
@@ -530,7 +496,7 @@ the page read any file.
   ⚠️ **Detail is in `.claude/rules/documentation.md`** (and the procedure in
   `build/readme/05-documentation-publishing.md`), which loads when you touch `docs/`, `src/Help/` or
   `scripts/upload-docs.sh`. Two rules worth carrying without it: **no link in a
-  documentation page may be followed normally** — Boson's webview opens no new window and a
+  documentation page may be followed normally** — the app's webview opens no new window and a
   same-window navigation would replace the SPA with no way back, so an external URL leaves through
   `api.openUrl()` and anything unclassified has its click swallowed (`mailto:` is deliberately
   *not* tagged external, because `UrlOpener` accepts http(s) only and would answer with an error
@@ -613,25 +579,17 @@ the page read any file.
   disclaimer — sent to the SPA in the `bootstrap` payload's `app` key), and `UrlOpener`
   (opens an external http(s) URL in the OS default browser; backs `POST /api/open-url`).
   The sidebar footer shows the version and opens an About dialog using this metadata.
-  `App` also holds **`MIN_MACOS`** (+ `MIN_MACOS_NAME`), the single source of truth for the
-  minimum macOS version — see `src/Startup/` below.
-- `src/Startup/` — the two things that run **before the Boson application exists**, and therefore
-  before the webview, the container, the database and the SPA: `StartupCheck` (is this OS able to
-  load the webview library at all?) and `FailureReporter` (say why we are dying). Wired straight
-  into `index.php`: the pre-flight sits right after the autoloader, and `new Application(...)` — the
-  single call that dlopens the native library, checks its ABI and creates the window — is the
-  **only** thing inside the `try`, so an application bug further down keeps its ordinary stack
-  trace. Both exit `StartupCheck::EXIT_UNSUPPORTED` (69, `EX_UNAVAILABLE`).
-  ⚠️ Three rules that are not guessable from the code. **Nothing here can be translated** — it runs
-  before `UiStrings`, so the text is hard-coded English, like `App::JOOMLA_DISCLAIMER`; **the checks
-  fail open** (an undetectable or unparseable OS version lets the launch proceed, because refusing
-  to start on a machine we merely could not identify is worse than the crash we are preventing, and
-  the `catch` explains it a moment later anyway); and **stderr is not a user-facing channel** — a
-  macOS `.app` sends it to unified logging and `index.php` has already hidden the Windows console —
-  so the message also goes to a native alert (`osascript`, `MessageBoxA`, `zenity`/`kdialog`), with
-  the stack trace kept to stderr. `App::MIN_MACOS` is dictated by the prebuilt Boson library we
-  vendor, not by our own code; the coupling and its regression guard are in
-  `.claude/rules/build-and-packaging.md` (gh-58).
+- `src/Startup/` — `FailureReporter::describe()`, the one thing left of the start-up checks (gh-92):
+  the sentence a person can act on when the **worker** cannot build the app, most often a database
+  it cannot open (named, with its path). `bin/worker.php` catches a failure while it builds the
+  container and the `FrontController`, writes that sentence to stderr, then the stack trace cut to
+  20 frames, and exits `FailureReporter::EXIT_FAILED` (69) without sending `ready`. ⚠️ **The cut is
+  load-bearing**: the shell's failure alert is the last 40 lines of the worker's stderr, and a
+  chained trace alone ran to ~70, which would push the sentence out of it. The text is hard-coded
+  English: it runs before the language files are loaded, or instead of them.
+  `tests/Pipe/WorkerPipeTest::testAWorkerThatCannotStartSaysWhyInTheShellsAlertWindow` pins it.
+  Everything that used to be here (`StartupCheck`, the native alerts, `App::MIN_MACOS`) was the
+  process that owned the window, and the shell does it now (see the top of this file).
 - `assets/private/` — SPA (`view/index.html`, `css/`, `js/`, `js/tinymce/`).
   ⚠️ **The front-end notes live in `.claude/rules/spa-frontend.md`**, which loads automatically
   whenever you work under `assets/private/`. Everything about the TinyMCE 8 wiring (including the
@@ -639,8 +597,8 @@ the page read any file.
   npm-vendored and **gitignored** front-end libraries, CodeMirror source editing, the
   slash-command menu, spell checking, editor colour-scheme resolution, the Styles drop-down, the
   media browser and the collapsible layout is in there. Read it before changing anything in the
-  SPA. It is deliberately **not** at `assets/private/CLAUDE.md`, because `boson.json` bundles
-  `assets/private` wholesale into every shipped binary.
+  SPA. It is deliberately **not** at `assets/private/CLAUDE.md`, because the worker PHAR carries
+  `assets/private` wholesale (`shell-package.json`'s `phar.include`) into every package.
 - `language/<tag>/<tag>.ini` — translations, one file per language (e.g. `language/de-DE/de-DE.ini`).
   (There is **no** Joomla `.sys.ini` or `language/grafida.xml` manifest, and the files are **not**
   named `<tag>.com_grafida.ini` — Grafida is a desktop app, not a Joomla component. `LanguageService`
@@ -651,15 +609,15 @@ the page read any file.
   (en-GB) sorts first, the rest by endonym. So every `.ini` MUST carry `GRAFIDA_LANGUAGE_ENDONYM`,
   and adding a translation needs no code change (the list is sent to the SPA as `bootstrap`'s
   `availableLanguages` tag => endonym map).
-- `bin/worker.php` — the stdio worker entry point (gh-84): the container + shell-php's
-  `Worker::run()`. Not shipped yet (Boson's `index.php` is), and deliberately free of what belongs to
-  the process owning the window: no `StartupCheck`, `MacSpellCheck` or console hiding, and no native
-  dialog (the shell opens its own and forwards `X-Shell-File-Path`; without it `POST /api/dialog/*`
-  answers 503, as before). stdout carries the
-  frame stream; never print to it. `tests/Pipe/` drives it over real pipes against a throwaway data
+- `bin/worker.php` — the entry point (gh-84, gh-92): the container + shell-php's `Worker::run()`,
+  run by the packaged SFX stub out of its PHAR, or by the system PHP in dev mode. Deliberately free
+  of what belongs to the process owning the window (webview checks, spelling defaults, consoles,
+  dialogs: the shell opens its own and forwards `X-Shell-File-Path`; without it `POST /api/dialog/*`
+  answers 503). A failure while it builds the app is reported as `src/Startup/` describes. stdout
+  carries the frame stream; never print to it. `tests/Pipe/` drives it over real pipes against a throwaway data
   directory (`HOME`/`XDG_*`/`APPDATA` pointed at a temp dir), never the user's.
-- `docs/` — the user documentation, in Markdown. Shipped inside every binary (it is in
-  `boson.json`'s `build.directories`) **and** published on Grafida.app; see `src/Help/` above.
+- `docs/` — the user documentation, in Markdown. Shipped inside every package's worker PHAR (it is in
+  `shell-package.json`'s `phar.include`) **and** published on Grafida.app; see `src/Help/` above.
 - `storage/migrations/*.sql` — schema. `.plans/` — implementation step notes (gitignored).
 - `build/glossaries/` — per-language translation glossaries.
 - `assets/logo/` — application icon and branding artwork. `grafida.svg` is the **single master**
@@ -667,31 +625,36 @@ the page read any file.
   (macOS), `Grafida.ico` (Windows), a `png/` set + `grafida.png` (Linux), all committed. It also
   holds the DMG background artwork (`dmg-background.svg` master + its rendered `.png`/`@2x.png`/
   `.tiff`, via `scripts/make-dmg-background.sh`) and the Linux desktop entry (`grafida.desktop`).
-  Wiring: `make-macos-app.sh` copies the `.icns` into the bundle + `Info.plist`
-  (`CFBundleIconFile`); the Windows installer bundles the `.ico` beside `grafida.exe`; Linux ships
-  `grafida.desktop` + a hicolor PNG. It lives under `assets/` (not `build/`, which is gitignored
+  Wiring, all through `shell-package.json`: shell-packager puts the `.icns` into the bundle +
+  `Info.plist` (`CFBundleIconFile`), writes the `.ico` into the Windows executables and ships it
+  beside `Grafida.exe`, and ships `grafida.desktop` (renamed `app.grafida.desktop`) + the hicolor
+  PNG set in the Linux tarball; the DMG background is `macos.dmg.background`. It lives under `assets/` (not `build/`, which is gitignored
   apart from a small whitelist) because these are versioned source assets, not build output.
   Re-run make-icons after editing the SVG.
 - `build/glossaries/` — per-language translation glossaries. `build/` is otherwise gitignored — the
   whitelisted exceptions are `build/glossaries/`, `build/composer/` (the npm-vendoring install
-  script), and the two packaging sources `build/linux-install.sh` + `build/windows-installer.nsi`
-  (see `build/.gitignore`).
+  script), `build/tasks/`, `build/readme/`, `build/macos/shell-worker.entitlements` and the Windows
+  installer script `build/shell-windows-installer.nsi` (see `build/.gitignore`).
 
 ## Build & packaging (one step)
 
-`composer build` → `scripts/build-all.sh` is the one-shot compile-and-package pipeline (every
-target in `boson.json`, then per-platform packaging into `build/dist/`). `phing` /
-`composer build:git` compiles the binaries only; `phing release` does the full GitHub + CDN
-release. The **CHANGELOG is the single source of truth for the version** — `build/tasks/set-version.php`
-stamps its topmost heading into `App::VERSION` before every compile. `node`+`npm` are build
-prerequisites (the front-end libraries are vendored by `composer run-script vendor:assets`).
+`composer build` → `scripts/build-all.sh` packages every platform into `build/dist/` (the two macOS
+DMGs on a Mac, the two Linux tarballs, the Windows installer, each with a `.sha256`), through the same
+`scripts/make-*.sh` helpers the Phing `package-*` targets call; `phing package` (the default target,
+and `all`) does the same with signing from `build/build.properties`; `phing release` adds the GitHub
+release, `grafida.json` and the CDN upload. Everything is built and signed **on the Mac** by
+grafida/shell-packager over `shell-package.json`. The **CHANGELOG is the single source of truth for
+the version** — `build/tasks/set-version.php` stamps its topmost heading into `App::VERSION` before
+every package. `node`+`npm` are build prerequisites (the front-end libraries are vendored by
+`composer run-script vendor:assets`).
 
 ⚠️ **The full build, code-signing and release detail lives in `.claude/rules/build-and-packaging.md`**,
-which loads automatically when you touch `build/`, `scripts/`, `build.xml`, `boson.json`,
+which loads automatically when you touch `build/`, `scripts/`, `build.xml`, `shell-package.json`,
 `composer.json`, the CHANGELOG or the release notes. The one rule to carry around without it:
-signing on **both** macOS and Windows depends on the patched `sibling-phar` SFX and on
-**splitting** the compiled binary into a clean stub + a sibling PHAR — signing a *combined*
-binary appends the certificate past the PHAR, corrupts its signature, and the app dies at startup.
+signing on **both** macOS and Windows depends on the phpmicro `sibling-phar` SFX stub and its PHAR
+being **two files** — signing a *combined* binary appends the certificate past the PHAR, corrupts
+its signature, and the app dies at startup. And every fetched binary is pinned by a SHA-256 computed
+from the downloaded bytes and proven with `shell-packager fetch`, never typed.
 
 ## Key Joomla API facts (verified against Joomla 5.4 source)
 
@@ -811,7 +774,7 @@ safety-critical prohibition resident, so those never depend on a rules file bein
 | `.claude/rules/joomla-api-and-references.md` | `src/Reference/**`, `src/Joomla/**`, `src/Publish/**`, `src/Field/**`, `src/Site/**` |
 | `.claude/rules/internal-api.md` | `src/Http/**`, `src/Application/**`, `src/Debug/**` |
 | `.claude/rules/documentation.md` | `docs/**`, `src/Help/**`, `scripts/upload-docs.sh` |
-| `.claude/rules/build-and-packaging.md` | `build/**`, `scripts/**`, `build.xml`, `boson.json`, `composer.json`, CHANGELOG, RELEASENOTES.md |
+| `.claude/rules/build-and-packaging.md` | `build/**`, `scripts/**`, `build.xml`, `shell-package.json`, `composer.json`, CHANGELOG, RELEASENOTES.md |
 
 ⚠️ A new rules file's `paths:` must actually cover the code it describes, or it will silently
 never load. Deep build/signing recipes live in `build/readme/01`–`04`, and publishing the

@@ -3,11 +3,6 @@ includes:
   - vendor/phpstan/phpstan-strict-rules/rules.neon
 parameters:
   level: max
-  scanFiles:
-    - vendor/boson-php/cpu-info/resources/stubs/constants.stub
-    - vendor/boson-php/http/resources/stubs/constants.stub
-    - vendor/boson-php/os-info/resources/stubs/constants.stub
-    - vendor/boson-php/uri/resources/stubs/constants.stub
   strictRules:
     allRules: true
   fileExtensions:

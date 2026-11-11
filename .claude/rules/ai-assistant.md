@@ -89,9 +89,10 @@ The PHP-side service inventory stays in `CLAUDE.md`'s `src/Ai/` Layout bullet.
   **preflight**. If the local server doesn't answer it (LM Studio defaults to CORS **off** — turn on
   *Enable CORS* in its Developer/server settings, or run the server with the CORS flag), the direct
   fetch fails, `sendChat()` falls back to `POST /api/ai/proxy`, and that **synchronous** PHP call
-  **occupies the single-threaded `boson://` kernel for the whole reply** — so the rest of the UI's
-  API calls stall ("the interface freezes") and nothing streams (the answer arrives all at once).
-  Enabling CORS restores live streaming and keeps the kernel free. This is the first thing to check
+  **occupies the worker, which answers one request at a time, for the whole reply** — so every other
+  API call queues behind it (under Boson, whose kernel ran on the UI thread, "the interface freezes";
+  under the shell the window still moves, but nothing it asks for arrives) and nothing streams (the
+  answer arrives all at once). Enabling CORS restores live streaming and keeps the worker free. This is the first thing to check
   when a user reports the AI panel hanging with a local model.
 - **Under the native shell the proxy path no longer freezes the window, but it still occupies the
   worker for the whole reply** (gh-85): the worker serves one request at a time, so every other API
@@ -105,7 +106,7 @@ The PHP-side service inventory stays in `CLAUDE.md`'s `src/Ai/` Layout bullet.
   ones, which the editor's AI-tools menu and the panel run). Refreshing only the first after a tool
   edit is how a changed service, prompt, title or icon took effect only after a restart.
 - **On macOS, plain-HTTP provider endpoints also need an ATS exception, or every reply falls back to
-  the proxy regardless of CORS.** `WKWebView` (the webview macOS Boson uses) enforces App Transport
+  the proxy regardless of CORS.** `WKWebView` (the shell's webview on macOS) enforces App Transport
   Security on JS-initiated `fetch()`/XHR from web content; a plain-`http://` endpoint — e.g. LM Studio
   on a LAN box (`http://192.168.x.x:1234`) — is blocked before the request leaves the process, thrown
   as a network `TypeError` just like a CORS failure, so `sendChat()` silently takes the same synchronous
@@ -244,8 +245,8 @@ The PHP-side service inventory stays in `CLAUDE.md`'s `src/Ai/` Layout bullet.
   `delta.reasoning` (OpenRouter). A provider emitting none simply never fires the callback and no block
   appears. The scratchpad is Markdown as often as the reply is, so it gets its **own**
   `_createStreamRenderer()` and is formatted through the same `/api/ai/render` (CommonMark + sanitiser)
-  pipeline — but **only while unfolded**: each render is a round-trip through the single-threaded
-  `boson://` kernel, so formatting text nobody is looking at would compete with the reply's own renders.
+  pipeline — but **only while unfolded**: each render is a round-trip through the worker, which answers
+  one request at a time, so formatting text nobody is looking at would compete with the reply's own renders.
   The accumulated text is kept as a `textContent` placeholder meanwhile, so unfolding is instant and the
   formatting lands a moment later. That renderer is created with `scrollConversation: false` (its
   `onApply` scrolls the block's own capped-height box instead) — the block can be unfolded long after

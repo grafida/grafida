@@ -18,8 +18,9 @@ use Grafida\Http\Transport;
 /**
  * CORS / non-streaming proxy for AI provider calls.
  *
- * The SPA cannot reach external AI APIs directly (cross-origin) from Boson's
- * webview, so it hands the request to this proxy which forwards it over PHP's
+ * When the SPA cannot reach an AI API directly (a provider that refuses the
+ * `boson://app` origin's CORS preflight, a refused redirect), it hands the
+ * request to this proxy which forwards it over PHP's
  * HTTP stack and returns the raw response body.
  *
  * Security model

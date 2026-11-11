@@ -17,8 +17,9 @@ namespace Grafida\Clipboard;
  *
  * Windows ships no `pbpaste` equivalent, so the alternative is
  * `powershell.exe Get-Clipboard`, and PowerShell cold-starts in roughly a
- * second. Because the `boson://` kernel is single-threaded that would freeze the
- * whole UI — under a *keystroke*, on every paste. It is the same stall that
+ * second. Because the worker answers one request at a time, every request behind
+ * it would wait that second (under Boson the whole window froze) — under a
+ * *keystroke*, on every paste. It is the same cost that
  * pushed the DPAPI secret store onto FFI ({@see \Grafida\Secret\WindowsDpapi})
  * and the theme probe onto FFI ({@see \Grafida\Display\WindowsThemeReader}); this
  * is the third instance of that pattern, and PowerShell survives as the fallback

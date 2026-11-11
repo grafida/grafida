@@ -1,5 +1,5 @@
 ---
-description: Grafida's internal boson:// API — the shell-php HTTP types and the two entry points (index.php via BosonBridge, bin/worker.php), the Router, the per-area controllers, exception-to-status mapping, the two-kinds-of-transport-failure rule (gh-29) and the no-store caching rule (gh-35). Lifted verbatim from CLAUDE.md's Layout section.
+description: Grafida's internal boson:// API — the shell-php HTTP types and the entry point (bin/worker.php), the Router, the per-area controllers, exception-to-status mapping, the two-kinds-of-transport-failure rule (gh-29) and the no-store caching rule (gh-35). Lifted verbatim from CLAUDE.md's Layout section.
 paths:
   - "src/Http/**"
   - "src/Application/**"
@@ -113,17 +113,19 @@ two-space continuation indent are the original bullet formatting.
   could render, so only the error block was left. Offline, the drafts tab must work and only the
   Remote Articles tab may show an error.
   ⚠️ **Nothing the internal API answers may be cached by the webview** (gh-35). `boson://app/api/…`
-  is an ordinary URL as far as WKWebView/WebView2 are concerned, so a GET whose response says
+  is an ordinary URL as far as WKWebView/WebKitGTK/WebView2 are concerned, so a GET whose response says
   nothing about freshness is cached heuristically — in a **disk-backed, app-scoped** cache that
   outlives an app restart *and* a local-storage reset (after a reset the next site is id 1 again,
   so the very same URL can be answered from a pre-reset response with our PHP never running).
   This was found while investigating gh-35 and is **not** what caused it — that was a
   `reference_cache` snapshot from the site the record was originally connected to — but it is a
-  real hazard with the same symptom, so it is closed off. Two independent opt-outs:
+  real hazard with the same symptom, so it is closed off. Three independent opt-outs:
   the SPA's single `apiFetch()` chokepoint sends **`cache: 'no-store'`** — the load-bearing one,
   since suppressing the *lookup* is what makes an already-poisoned entry self-heal — and
   `Http\Json::response()` sets `Cache-Control: no-store` on every response so they are
-  self-describing for any caller that does not go through `apiFetch()`. Note this is unrelated to
+  self-describing for any caller that does not go through `apiFetch()`; and the shell adds `no-store`
+  to any `/api/` answer that carries no cache header of its own (`shell.json`'s `noStorePaths`), a
+  third, independent opt-out. Note this is unrelated to
   the **`reference_cache`** SQLite cache (see `src/Reference/`), which is deliberately permanent
   and authoritative for rendering — the manual Refresh button remains — but which the SPA also
   quietly freshens in the background since gh-42 (see `src/Reference/` and the `assets/private/`
@@ -134,9 +136,8 @@ two-space continuation indent are the original bullet formatting.
   /api/settings/request-log` (the on/off toggle), `GET /api/request-log` (the stored entries),
   `POST /api/request-log/clear`, and `POST /api/request-log/export` — which, like
   `DraftExportService`'s `.grafida` export, asks for a destination **folder** rather than a
-  file (`POST /api/dialog/select-directory`): Boson's `DialogApiInterface` has no Save-As
-  dialog, so the filename (`grafida-request-log-<timestamp>.json`) is derived and the file
-  written server-side instead.
+  file (the shell's `select-folder` dialog, its token forwarded as `X-Shell-File-Path`), so the
+  filename (`grafida-request-log-<timestamp>.json`) is derived and the file written server-side.
   `SettingsController` is also where the invisible-character clean-up is *applied*, not just
   configured (`POST /api/settings/content-normalisation`): `convertMarkdown()` normalises the
   imported source **before** CommonMark sees it, and `clipboardText()` normalises what it hands
@@ -144,59 +145,53 @@ two-space continuation indent are the original bullet formatting.
   `HttpClient`/`RecordingTransport` — so the policy lives in the controller and the OS-specific
   code stays testable without one.
 
-# HTTP types and the two entry points (gh-84)
+# HTTP types and the entry point (gh-84, gh-92)
 
-Everything behind `index.php` speaks **grafida/shell-php**'s types: `Grafida\Shell\Request`,
-`Response`, `Headers` and `StaticFiles`. No Boson HTTP type appears in `src/` except in
-`Grafida\Application\BosonBridge`. `Kernel`, `Router`, `RouteContext`, `Json`, `ApiController`,
-`FrontController` and every controller take and return the shell-php types.
+Everything speaks **grafida/shell-php**'s types: `Grafida\Shell\Request`, `Response`, `Headers` and
+`StaticFiles`. `Kernel`, `Router`, `RouteContext`, `Json`, `ApiController`, `FrontController` and every
+controller take and return them. (Up to 0.3 Boson's HTTP types were adapted at `index.php` by
+`BosonBridge`; both are gone, gh-92.)
 
-- **Constructors are Boson's, on purpose.** `new Request($method, $url, $headers, $body)` and
-  `new Response($body, $status, $headers)` have Boson's positional signatures, and `Headers`
+- **Constructors are positional, on purpose.** `new Request($method, $url, $headers, $body)` and
+  `new Response($body, $status, $headers)` kept Boson's positional signatures, and `Headers`
   iterates **one `name => value` pair per value** (as Boson's `HeadersMap` did). That is what let
   the Feature suite, which is the API contract, switch type with only its `use` lines and two helper
   type hints changed and no assertion edits. Keep it that way.
 - **Reading a request:** `$request->path()` (raw, still percent-encoded; `/` when absent),
-  `$request->query('name')` (decoded like `parse_str()`, first element of an array, as Boson's
-  `Query::get()` did), `$request->header('name')`, `$request->body`. `status` is a plain `int`.
-- **Headers keep every value of a repeated header end to end** (lower-case name → list). Names
-  must be tokens and values must not contain CR/LF/NUL, and `Headers` refuses both **at
-  construction**. So a controller that builds a header from user data (`Content-Disposition`'s
-  filename in `MediaController`) fails as a 500 from `ApiController`'s `\Throwable` catch rather
-  than smuggling a header. That is not new: Boson's `Header::validateHeaderValueOrFail()` (an
-  RFC 7230 pattern, stricter than ours) refused the same values.
-- **`BosonBridge` passes Boson's re-serialised URL** (`(string) $request->url`), not the raw
-  one Boson keeps private. That parsed form (empty path segments dropped, query re-encoded) is
-  what the kernel always saw, so routing and static lookups are unchanged. It **drops**, rather
-  than fails on, a request header shell-php refuses. Under Boson a repeated *response* header still
-  reaches the webview once: saucer's `std::map` collapses it (ADR 0001), and the shell fixes that.
-- **`StaticFiles`** replaces Boson's `FilesystemStaticProvider`. It serves GET/HEAD only, decodes
-  the path, and refuses `..`, backslashes and NUL lexically, because `realpath()` cannot see inside
-  a PHAR. An unknown extension is `application/octet-stream` (Boson defaulted to `text/html`), and
-  JavaScript is `text/javascript`. `find()` answers null on a miss, which is what lets `Kernel`
-  fall through to the SPA shell.
+  `$request->query('name')` (decoded like `parse_str()`, first element of an array),
+  `$request->header('name')`, `$request->body`. `status` is a plain `int`.
+- **Headers keep every value of a repeated header end to end** (lower-case name → list), and the
+  shell passes them through to the webview one line per value. Names must be tokens and values must
+  not contain CR/LF/NUL, and `Headers` refuses both **at construction**. So a controller that builds
+  a header from user data (`Content-Disposition`'s filename in `MediaController`) fails as a 500 from
+  `ApiController`'s `\Throwable` catch rather than smuggling a header.
+- **`StaticFiles`** serves GET/HEAD only, decodes the path, and refuses `..`, backslashes and NUL
+  lexically, because `realpath()` cannot see inside a PHAR. An unknown extension is
+  `application/octet-stream`, and JavaScript is `text/javascript`. `find()` answers null on a miss,
+  which is what lets `Kernel` fall through to the SPA shell.
 - **`ContainerFactory` wraps invokable parameters.** joomla/di treats any callable value handed to
   `share()`/`set()` as a factory, so `StaticFiles` (a `Handler`, therefore invokable) would be
-  *called with the container*. `BosonBridgeTest::testAnInvokableContainerParameterIsReturnedNotCalled`
-  pins it. The same applies to any future invokable service you register as a value.
-- **`bin/worker.php`** is the second entry point: the same container, served by shell-php's
-  `Worker::run()` over stdin/stdout in `GSF1` frames (grafida/shell `protocol/v1.md`). Exit status:
-  0 on EOF/`shutdown`, 65 on a protocol error, 74 when stdout is gone. A handler that throws is a
-  `500` response, never an exit. Anything printed during a request goes to stderr as
+  *called with the container*. `tests/Unit/Application/ContainerFactoryTest` pins it. The same
+  applies to any future invokable service you register as a value.
+- **`bin/worker.php`** is the only entry point: the container, served by shell-php's `Worker::run()`
+  over stdin/stdout in `GSF1` frames (grafida/shell `protocol/v1.md`). Exit status: 0 on
+  EOF/`shutdown`, 65 on a protocol error, 74 when stdout is gone, 69 when it could not build the app
+  (FailureReporter's sentence on stderr, see `CLAUDE.md`'s `src/Startup/`). A handler that throws is
+  a `500` response, never an exit. Anything printed during a request goes to stderr as
   `[stray-output]` and never into the stream. `ApiController` already turns exceptions into JSON
   errors, so the worker's own 500 is a last resort.
 - **Files picked in the shell's dialogs arrive as `X-Shell-File-Path` (gh-85), read through
   `Grafida\Http\ShellFile`.** `ShellFile::path($request)` is the picked file;
   `ShellFile::directory($request, $body)` is an export's destination, the header winning over the
-  body's `directory` (which is all Boson can send). The route closures pass it in, so the handler
-  methods (`openFile()`, `exportDraft()`, `exportRequestLog()`, `saveLocalMediaToDisk()`) keep their
-  Boson-era behaviour for a request without the header, 503-without-a-dialog included. The header is
-  trustworthy only because the shell strips whatever the page sent; ⚠️ **under Boson nothing would, so
-  `BosonBridge::headers()` drops `x-shell-file-path`, `x-shell-file` and `x-shell-clipboard`** (pinned by
-  `BosonBridgeTest::testThePageCannotNameAFileUnderBoson`). `tests/Feature/ShellFileTest.php` covers the
-  header path; the pipe differential has a scenario for it (a step's optional fourth element is its
-  request headers). The clipboard works the same way (`Grafida\Http\ShellClipboard`): the shell
-  reads it and sends the text as the body of `GET /api/clipboard/text` with `X-Shell-Clipboard: text`.
+  body's `directory`. The route closures pass it in, so the handler methods (`openFile()`,
+  `exportDraft()`, `exportRequestLog()`, `saveLocalMediaToDisk()`) answer a request without the
+  header as they always did: a dialog with none is 503 (gh-92 kept it; the Feature suite pins it). ⚠️
+  **The header is trustworthy only because the shell strips whatever the page sent**; nothing else
+  may ever forward a request to the worker without doing the same, or any script in the page could
+  name any file on the disk. `tests/Feature/ShellFileTest.php` covers the header path; the pipe
+  differential has a scenario for it (a step's optional fourth element is its request headers). The
+  clipboard works the same way (`Grafida\Http\ShellClipboard`): the shell reads it and sends the text
+  as the body of `GET /api/clipboard/text` with `X-Shell-Clipboard: text`.
 - **`tests/Pipe/` (`composer test:pipe`)** is the proof. It plays every grafida/shell conformance
   fixture (shipped inside shell-php, `Grafida\Shell\Testing\Fixtures`) into a real
   `bin/worker.php`. It also runs a **differential**: Feature-suite request sequences answered by the
@@ -204,39 +199,3 @@ Everything behind `index.php` speaks **grafida/shell-php**'s types: `Grafida\She
   and every body byte must match (JSON timestamps masked). The comparison sees what no single
   assertion looks at; a mutation check showed one injected response header failing it. When a
   new route matters to the worker, add its requests to a scenario there, not a Feature-test edit.
-
-# The native event loop (`src/Application/BosonApplication`, `EventLoopThrottle`)
-
-⚠️ **Boson's event loop is a busy-wait, and it costs about half a CPU core with the app idle.**
-`Boson\Application::run()` is `do { $poller->next(); } while ($this->isRunning)`, and the stock
-`SaucerPoller::next()` separates two iterations by `usleep(1)` — *one microsecond*. It rotates
-between three task types, and every third iteration crosses FFI into
-`saucer_application_run_once()`, which pumps the entire native event loop (on macOS, a full
-`-[NSApplication nextEventMatchingMask:untilDate:inMode:dequeue:]` round trip through the
-CFRunLoop). At tens of thousands of iterations a second that is a permanent, load-independent CPU
-burn. Measured with Grafida sitting idle on the Articles screen on an M5: **~49% of a core** in the
-PHP process — while the WebKit content process that was actually rendering the window sat at 0.0%.
-
-`EventLoopThrottle` fixes it by adding a **2 ms sleep after an idle iteration**, which takes the
-same measurement to **~1% of a core**. The loop still pumps native events several hundred times a
-second, i.e. an event is picked up well inside one frame at 120 Hz.
-
-Three things about its shape are deliberate:
-
-- **It is a decorator over the poller `Application::createApplicationPoller()` builds, not a
-  replacement for it.** That poller carries a deferred task which flips `Application::$isRunning`
-  and dispatches `ApplicationStarted`; the closure captures state a subclass cannot write
-  (`$isRunning` is `public private(set)`, `$listener` is private), so a from-scratch poller would
-  have to reimplement Boson's `@internal` microtask bookkeeping and could never start the app.
-  `BosonApplication::createApplicationPoller()` therefore calls `parent::` and wraps the result.
-- **The throttle must be woken, or it trades idle CPU for per-request latency.** A sleeping loop
-  notices a `boson://` request up to three sleeps late. Once, that is invisible; charged to *every*
-  request in a burst it is not. So `index.php` calls `$app->wake()` after the front controller
-  answers, which runs the loop unthrottled for 100 ms — a page's worth of API calls goes at the
-  upstream loop's full speed, and only a genuinely quiet app is throttled. Anything else that
-  learns the app is busy should call `wake()` too.
-- **It is not a Grafida-specific problem and the fix is not macOS-specific.** The same busy loop
-  runs on WebKitGTK and WebView2; the throttle sits above the platform layer and helps everywhere.
-
-`tests/Unit/EventLoopThrottleTest.php` pins the two behaviours that matter — an idle iteration
-sleeps, an iteration inside the wake window does not.

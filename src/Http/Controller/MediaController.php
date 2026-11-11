@@ -626,10 +626,9 @@ final class MediaController extends Controller
 
     /**
      * Writes a local media blob's bytes to a file in the given directory —
-     * the Local Media tab's "Save to disk" action. Boson has no Save-As
-     * dialog (`DialogApiInterface` only offers open-file/open-directory
-     * pickers), so the SPA asks for a destination **folder**
-     * (`POST /api/dialog/select-directory`, same as `.grafida` export and
+     * the Local Media tab's "Save to disk" action. The SPA asks for a
+     * destination **folder** rather than a file name (the shell's folder
+     * dialog, its token forwarded as `X-Shell-File-Path`; same as `.grafida` export and
      * the Request Log export) and the file is written server-side under the
      * blob's own stored filename.
      *

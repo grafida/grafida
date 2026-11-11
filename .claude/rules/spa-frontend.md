@@ -10,8 +10,8 @@ These are the front-end notes from `CLAUDE.md`'s `## Layout` section, moved here
 only when you are working under `assets/private/`. They are **verbatim** — the leading `- ` and
 two-space continuation indent are the original bullet formatting.
 
-⚠️ Do **not** move this file to `assets/private/CLAUDE.md`: `boson.json`'s `build.directories`
-bundles `assets/private` wholesale into every shipped binary, so a memory file placed there would
+⚠️ Do **not** move this file to `assets/private/CLAUDE.md`: the worker PHAR carries `assets/private`
+wholesale (`shell-package.json`'s `phar.include`) into every package, so a memory file placed there would
 ship inside the app.
 
 - `assets/private/` — SPA (`view/index.html`, `css/`, `js/`, `js/tinymce/`).
@@ -25,8 +25,8 @@ ship inside the app.
   CodeMirror's npm package ships only unminified source, so the install step minifies it (terser +
   clean-css) into the `*.min.js`/`*.min.css` the HTML references. To update a library, bump its
   version in `package.json` and re-run `vendor:assets`. (`node`+`npm` are now build prerequisites;
-  `scripts/build-all.sh` runs `vendor:assets` before `boson compile` because `boson.json` bundles
-  `assets/private` at compile time.)
+  `scripts/build-all.sh` and Phing's `prepare-assets` run `vendor:assets` before packaging because the
+  worker PHAR carries `assets/private`.)
   ⚠️ **TinyMCE 8 requires a license key or it starts read-only** (v7 only warned when the key was
   absent). Grafida is a GPL build, so `tinymce.init()` passes `license_key: 'gpl'` (in `app.js`,
   beside `promotion`/`branding`); dropping it silently disables editing.
@@ -213,7 +213,7 @@ ship inside the app.
     language packs already carry.
   ⚠️ **No link in that dialog can be opened, so neither built-in tab made of links is shipped as it
   comes** (gh-21). A TinyMCE dialog renders a link as a `target="_blank"` anchor and nothing in this
-  app answers that: Boson's webview opens no new window, and the SPA routes every external URL
+  app answers that: the app's webview opens no new window, and the SPA routes every external URL
   through `api.openUrl()` explicitly. So **`plugins` is dropped outright** — it is a list of links
   and nothing else, headed by TinyMCE's advertisement for the premium plugins we neither ship nor
   can load — and **`versions` is replaced by `versionHelpTab()`**, which repeats the built-in tab
@@ -253,8 +253,8 @@ ship inside the app.
   So `GET /api/clipboard/text` → `Grafida\Clipboard\ClipboardService` reads it server-side, and the
   SPA end is `api.getClipboardText()`. **Do not "simplify" this back into the page.**
   ⚠️ The `preventDefault()` is **unconditional and not cosmetic**. On macOS Cmd+Shift+V is an AppKit
-  *menu* key equivalent (Edit ▸ Paste and Match Style); a Boson window has no menu bar, so the key
-  otherwise reaches no responder and **the system beeps**. Cancelling marks it handled and silences
+  *menu* key equivalent (Edit ▸ Paste and Match Style), which the shell's Edit menu deliberately leaves
+  unbound (`shell.json` reserves the chord for the page), so the key otherwise reaches no responder and **the system beeps**. Cancelling marks it handled and silences
   that — and, on Chromium, also suppresses the native paste-as-plain-text command that would
   otherwise fire *as well*, which is what keeps one keystroke to one paste on every platform.
   Cancelling is also why this is a raw `keydown` handler and not `addShortcut()`.
@@ -290,31 +290,24 @@ ship inside the app.
   OS/webview dictionary (WKWebView/`NSSpellChecker` on macOS, WebKitGTK on Linux, WebView2 on Windows);
   suggestions appear in the *native* context menu via **Ctrl/Cmd + right-click** (TinyMCE's own context
   menu intercepts a plain right-click). ⚠️ **That native menu must be explicitly enabled or the
-  suggestions are unreachable** (gh-26): Boson leaves the webview context menu **off** in non-debug
-  builds (`WebViewCreateInfo::$contextMenu` defaults to `$app->isDebug`), so a release build had no
-  native menu to fall back to — on Windows/WebView2 (`AreDefaultContextMenusEnabled = false`)
-  Ctrl+right-click did nothing at all; macOS/WKWebView happened to still surface its spelling menu,
-  which is why it looked platform-specific. `index.php` therefore passes
-  `WebViewCreateInfo(contextMenu: true)`. This is safe: TinyMCE `preventDefault`s its own
+  suggestions are unreachable** (gh-26): Boson left the webview context menu **off** in release
+  builds, which on Windows made Ctrl+right-click do nothing at all. `shell.json` therefore sets
+  `"webview": {"contextMenu": true}`; on Windows the shell's menu is an allowlist of editing, spelling,
+  emoji and copy items (grafida/shell's CLAUDE.md). This is safe: TinyMCE `preventDefault`s its own
   plain-right-click menu (the silver theme's desktop-show path), so no double menu appears inside the
   editor, and it steps aside (no `preventDefault`) on Ctrl+right-click so the native menu shows. The
   deliberate side effect is that right-clicking the SPA chrome *outside* the editor now shows the
   webview's native menu too (native text-editing entries in inputs, harmless elsewhere); `devTools`
-  stays debug-gated, so "Inspect element" does not appear in production. ⚠️ **On macOS the checker is dead until continuous spell
-  checking is enabled, and Boson gives no way to enable it — so Grafida must** (gh-24). WKWebView gates
-  *all* native spell checking (even a freshly typed misspelling) on the `WebContinuousSpellCheckingEnabled`
-  NSUserDefaults flag, which its text checker reads once, lazily, on the first check (WebKit's
-  `TextCheckerMac.mm`). A normal Mac app flips this from its **Edit ▸ Spelling ▸ "Check Spelling While
-  Typing"** menu item (`-toggleContinuousSpellChecking:`); Boson wires up no menu bar, so on any machine
-  where no other WebKit app has already turned it on the flag stays off and nothing is ever underlined —
-  which is why it appeared to "work for one person and not another" on identical code. `index.php` fixes
-  this by calling `Grafida\Editor\MacSpellCheck::enable()` **before the app boots** (so it precedes the
-  first spell-check): it sets the flag to `true` in Grafida's **own** preferences domain (never the
-  global one — that would change every WebKit app) via CoreFoundation's **CFPreferences** C API through
-  FFI. CFPreferences is plain C, dodging the arm64 `objc_msgSend` variadic-calling-convention hazard, and
-  unlike a `defaults write` subprocess it spawns nothing. Best-effort — a failure just leaves spell
-  checking off, as before. Linux/Windows webviews have no such gate. **The spell-check language is an OS setting Grafida cannot
-  override** — there is no JS/HTML API to pin a dictionary and no native hook into Boson's webview. On
+  stays gated on `GRAFIDA_DEBUG` (`shell.json`'s `devtools`), so "Inspect element" does not appear in
+  production. ⚠️ **On macOS the checker is dead until continuous spell checking is enabled** (gh-24).
+  WKWebView gates *all* native spell checking (even a freshly typed misspelling) on the
+  `WebContinuousSpellCheckingEnabled` user default, which its text checker reads once, lazily, on the
+  first check (WebKit's `TextCheckerMac.mm`). A normal Mac app flips this from its **Edit ▸ Spelling ▸
+  "Check Spelling While Typing"** menu item; Boson had no menu bar, so PHP used to set it through FFI
+  before boot (`MacSpellCheck`, deleted in gh-92). **The shell now sets it in process before it creates
+  the webview**, in its own preferences domain, and its Edit menu carries the Spelling submenu.
+  Linux/Windows webviews have no such gate. **The spell-check language is an OS setting Grafida cannot
+  override** — there is no JS/HTML API to pin a dictionary. On
   macOS in particular, results depend on System Settings → Keyboard → Text Input → Spelling: set to a
   fixed language (e.g. "U.S. English"), text in any other language is flagged wholesale; set to
   "Automatic by Language", per-sentence detection works but **only among the languages enabled in that
@@ -326,8 +319,8 @@ ship inside the app.
   the editor can stay unmarked until the next edit, which then checks it all, earlier words included:
   WebView2's start-up, not ours. This is a documented limitation, not a bug.
   **The editor content follows the app's resolved colour scheme, not the webview's lie** (gh-38).
-  The content iframe loads the site's `editor.css` (`State.editorCss`), and Boson's webview
-  misreports `prefers-color-scheme` to that document exactly as it does everywhere else — always
+  The content iframe loads the site's `editor.css` (`State.editorCss`), and a webview's
+  `prefers-color-scheme` is not to be trusted there any more than anywhere else — Boson's was always
   dark on macOS, the same lie `Display\DisplayModeService::systemPrefersDark()` exists to work
   around for the app chrome. A stylesheet with automatic dark mode (e.g. Bootstrap 5.3 built with
   `$color-mode-type: media-query`) therefore rendered the editor content permanently dark, whatever
@@ -371,26 +364,26 @@ ship inside the app.
   a `TINYMCE_LANGS` entry in `app.js` (none for languages TinyMCE has no pack for — they get the
   English editor UI). This is the editor UI *chrome*; it is unrelated
   to the spell-check dictionary (an OS setting, above) and the article content language.
-  **Two hosts pick files differently, and `underShell()` decides which** (gh-85). Boson's PHP opens
-  the OS dialog itself; the native shell opens its own (`/_native/dialog/*`) and answers with an opaque
-  **token**, which the SPA hands back to PHP as `X-Shell-File` (`GrafidaShell.fileHeaders()`), so script
-  in the page can only ever name what the user picked. `js/shell.js` comes from grafida/shell-php,
-  copied (gitignored) by `vendor:assets` like the npm libraries, because `boson.json` bundles only
-  `vendor/**/*.php`; it loads before `app.js`, and `underShell()` guards its absence with `typeof`.
-  `GrafidaShell.available()` asks `/_native/info` **once per page**; under Boson that path reaches the
-  kernel, which answers the SPA page (HTML, not the shell's JSON), so it resolves false. A refusal from
-  the shell is a `GrafidaShell.ShellError` (its `code`, e.g. `dialog_busy`), never a reason to fall back
-  to the Boson flow. Consequences in `app.js`: `api.selectDirectory()` answers `{path}` under Boson but
-  `{token, name}` under the shell, so the export calls (`exportDraft`, `exportRequestLog`,
-  `saveLocalMediaToDisk`) take the **whole `dir` object** and turn it into body + headers
-  (`folderHeaders()`); `SHELL_FILE_FILTERS` mirrors the patterns `SettingsController::openFile()` gives
-  Boson's dialog, and its labels are the patterns themselves, so they need no translation.
+  **Files are picked in the native shell's dialogs, and `underShell()` says whether there is one**
+  (gh-85, gh-92). The shell opens its own (`/_native/dialog/*`) and answers with an opaque **token**,
+  which the SPA hands back to PHP as `X-Shell-File` (`GrafidaShell.fileHeaders()`), so script in the
+  page can only ever name what the user picked. `js/shell.js` comes from grafida/shell-php, copied
+  (gitignored) by `vendor:assets` like the npm libraries; it loads before `app.js`, and `underShell()`
+  guards its absence with `typeof`. `GrafidaShell.available()` asks `/_native/info` **once per page**;
+  in a plain browser (the `/verify` harness, the only host without a shell) that path reaches the
+  kernel, which answers the SPA page (HTML, not the shell's JSON), so it resolves false and PHP's
+  `/api/dialog/*` answer 503. A refusal from the shell is a `GrafidaShell.ShellError` (its `code`,
+  e.g. `dialog_busy`). Consequences in `app.js`: `api.selectDirectory()` answers `{token, name}`, so
+  the export calls (`exportDraft`, `exportRequestLog`, `saveLocalMediaToDisk`) take the **whole `dir`
+  object** and turn it into body + headers (`folderHeaders()`); `SHELL_FILE_FILTERS`' labels are the
+  patterns themselves, so they need no translation.
   Two more calls change host under the shell: **`api.openUrl()`** goes through the shell's
   `_native/open-url` rather than PHP's `UrlOpener` (one opener for links the SPA routes and links the
   shell's navigation policy catches; the shell's automation channel can record it instead of opening
   a browser), and **`applyTheme()`** tells the shell the *resolved* scheme
   (`syncShellWindowTheme()` → `_native/window/theme`) so the title bar follows the app, not the
-  webview's guess. Both are fire-and-forget no-ops under Boson. **`api.getClipboardText()`** (the
+  webview's guess. Both are fire-and-forget, and without the shell `openUrl` goes to PHP's
+  `UrlOpener` while the theme call does nothing. **`api.getClipboardText()`** (the
   Cmd/Ctrl+Shift+V chord) asks the shell to read the clipboard (`GrafidaShell.clipboardHeaders()`),
   so it works without `wl-paste`/`xclip`; PHP still normalises the text. **Dropped image files** are
   the shell's too: the sandboxed webview cannot read the user's files (WebKit would hand TinyMCE only
@@ -410,9 +403,9 @@ ship inside the app.
   `POST /api/settings/last-site` (`Site\LastSiteService`, the generic `settings` key/value store —
   key `last_site`, so no migration) and it rides back in the `bootstrap` payload as `lastSiteId`
   (seeded into `State.lastSiteId`, which `recallLastSite()` reads). ⚠️ It is **not** kept only in
-  `localStorage` — Boson's webview does **not** persist `localStorage` across an app restart, which
-  is the one moment the preference must survive, so a `localStorage` copy is written too but only as
-  a same-session cache; the server value is authoritative. `rememberLastSite()` writes fire-and-forget
+  `localStorage` — Boson's webview did **not** persist `localStorage` across an app restart, and a
+  webview's storage can be cleared without the app's data going with it, so a `localStorage` copy is
+  written too but only as a same-session cache; the server value is authoritative. `rememberLastSite()` writes fire-and-forget
   and only when the id actually changed (dedupes the per-render call in `renderSiteSelector()`), and
   a since-deleted remembered site self-heals — `renderSiteSelector()` validates the id against the
   live site list and falls back to the first site, persisting that as the new last site. On startup
@@ -480,8 +473,8 @@ ship inside the app.
   sidebar is rendered and TinyMCE is created from whatever is already cached — including nothing at
   all — and `loadEditorSiteData()` then fills the reference data and the site stylesheet in
   afterwards, fire-and-forget. It used to `await` both fetches first, which is how a newly added or
-  slow site could leave the editor screen empty for as long as its server took to answer: Boson
-  serves one `boson://` request at a time (so the two queue), a cold reference cache costs one HTTP
+  slow site could leave the editor screen empty for as long as its server took to answer: the worker
+  answers one request at a time (so the two queue), a cold reference cache costs one HTTP
   request **per custom field**, and `EditorCssService::load()` used to re-run template discovery plus
   a walk over every candidate URL on every open (it is cache-first now — see
   `.claude/rules/joomla-api-and-references.md`). The worst a site may cost the editor is empty
@@ -677,7 +670,7 @@ ship inside the app.
   and a 38px `.site-favicon`; nav, footer, update notice, site `<select>` and Visit site button
   hidden) must not leak onto them. Those rules are scoped to `#sidebar.collapsed`, so an expanded
   sidebar shows everything as usual. The mode **never** touches the window's full screen, by design:
-  on a large monitor full screen is unwanted, and Boson exposes no full-screen API anyway (the green
+  on a large monitor full screen is unwanted, and the shell exposes no full-screen API anyway (the green
   button's native full screen also keeps a notched Mac's camera-housing strip black — macOS confines
   native full-screen content to the safe area, and only a hand-built borderless window could avoid it).
   **The in-article media browser (`openMediaBrowser()`) grew a second tab** (gh-43), mirroring the
