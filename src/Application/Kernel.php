@@ -20,7 +20,7 @@ use Grafida\Http\ApiController;
  * Request dispatcher: routes incoming `boson://` requests to the JSON API
  * controller, a static asset, or the single-page-app shell. A pure
  * `Request → Response` function over shell-php's types, so it is the same
- * under Boson and under the stdio worker, and testable with neither. Every
+ * in the stdio worker and in the tests, which need no process at all. Every
  * dependency is wired by the DI container's service providers (see
  * `Grafida\Application\Provider\*`).
  */

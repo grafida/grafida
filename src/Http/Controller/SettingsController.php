@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace Grafida\Http\Controller;
 
-use Boson\Api\Dialog\DialogApiInterface;
 use Grafida\Shell\Response;
 use Grafida\Clipboard\ClipboardService;
 use Grafida\Debug\RequestLog;
@@ -64,7 +63,6 @@ final class SettingsController extends Controller
         private readonly RequestLogService $requestLogService,
         private readonly MetadataCacheService $metadataCache,
         private readonly ClipboardService $clipboard,
-        private readonly ?DialogApiInterface $dialog = null,
     ) {}
 
     public function registerRoutes(Router $router): void
@@ -129,39 +127,23 @@ final class SettingsController extends Controller
     }
 
     /**
-     * Return the bytes of a file the user picked in a native dialog.
+     * Return the bytes of a file the user picked in a native dialog (`{name, mime, dataBase64}`).
      *
-     * Two hosts, one answer (`{name, mime, dataBase64}`). Under the native shell the SPA has already
-     * run the shell's own dialog and hands us its token; the shell resolves it and forwards the path
-     * as `X-Shell-File-Path` ({@see ShellFile}), which arrives here as `$shellPath`. Under Boson,
-     * whose webview does not wire up `<input type="file">` (WKWebView on macOS, WebKitGTK on Linux),
-     * we drive the OS picker through Boson's Dialog API ourselves. Either way the SPA feeds the file
-     * into the normal media-upload / Markdown-import flow.
+     * The SPA has already run the shell's own dialog and hands us its token; the shell resolves it
+     * and forwards the path as `X-Shell-File-Path` ({@see ShellFile}), which arrives here as
+     * `$shellPath`, and the SPA feeds the file into the normal media-upload / Markdown-import flow.
+     * Without the header (a plain browser, a test) there is no dialog, and the answer is 503.
      *
      * @param array<string, mixed> $body
      */
     public function openFile(array $body, ?string $shellPath = null): Response
     {
-        if ($shellPath !== null) {
-            $path = $shellPath;
-        } elseif ($this->dialog === null) {
+        if ($shellPath === null) {
             return Json::error('Native file dialog is unavailable', 503);
-        } else {
-            $filter = match ($this->str($body, 'filter', 'any')) {
-                'image'    => ['*.png', '*.jpg', '*.jpeg', '*.gif', '*.webp', '*.svg', '*.bmp', '*.avif'],
-                'markdown' => ['*.md', '*.markdown', '*.txt'],
-                'grafida'  => ['*.grafida'],
-                default    => [],
-            };
-
-            $path = $this->dialog->selectFile(filter: $filter);
-
-            if ($path === null || $path === '') {
-                return Json::ok(['cancelled' => true]);
-            }
         }
 
-        $raw = @file_get_contents($path);
+        $path = $shellPath;
+        $raw  = @file_get_contents($path);
 
         if ($raw === false) {
             return Json::error('Could not read the selected file', 400);
@@ -175,25 +157,15 @@ final class SettingsController extends Controller
     }
 
     /**
-     * Open a native OS directory-picker (Boson has no "Save As" file dialog,
-     * so exporting a draft asks for a destination folder instead and the
-     * filename is derived from the draft).
+     * The PHP side of a folder picker, which no longer exists: the SPA asks the shell for a folder
+     * (`_native/dialog/select-folder`) and sends its token with the export itself. The route stays,
+     * answering 503 as it always did without a dialog, so the API contract is unchanged (gh-92).
      *
      * @param array<string, mixed> $body
      */
     public function selectDirectory(array $body): Response
     {
-        if ($this->dialog === null) {
-            return Json::error('Native file dialog is unavailable', 503);
-        }
-
-        $path = $this->dialog->selectDirectory();
-
-        if ($path === null || $path === '') {
-            return Json::ok(['cancelled' => true]);
-        }
-
-        return Json::ok(['path' => $path]);
+        return Json::error('Native file dialog is unavailable', 503);
     }
 
     /** Best-effort MIME type from a file extension (fileinfo is not bundled). */

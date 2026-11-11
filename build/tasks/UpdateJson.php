@@ -158,6 +158,19 @@ class UpdateJson extends Task
     private const ASSET_EXTENSIONS = ['.zip', '.exe', '.dmg', '.tar.gz'];
 
     /**
+     * What each platform's build of this release needs (gh-92), written as grafida.json's
+     * `requires`; UpdateService (0.4 and later) calls a release that excludes this machine "no
+     * update", which is how a platform that loses support stops being notified. Edit it when a
+     * release drops or adds a platform: Intel Macs go when macOS 29 lands. The minimums are the
+     * shell's floors: macOS 12, and Windows 10 22H2 (build 19045). Linux has no OS version to require.
+     */
+    private const REQUIRES = [
+        'macos'   => ['arch' => ['arm64', 'x86_64'], 'min' => '12.0'],
+        'windows' => ['arch' => ['x86_64'], 'min' => '10.0.19045'],
+        'linux'   => ['arch' => ['x86_64', 'arm64']],
+    ];
+
+    /**
      * Return the first release that is not a draft, not a pre-release, and has a downloadable asset.
      *
      * GitHub returns releases in reverse-chronological order, so the first match is the latest stable.
@@ -246,6 +259,7 @@ class UpdateJson extends Task
             'infoURL'      => $release['html_url'],
             'download'     => $downloadUrl,
             'releaseNotes' => $release['body'] ?? '',
+            'requires'     => self::REQUIRES,
         ];
     }
 }

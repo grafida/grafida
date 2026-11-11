@@ -19,9 +19,8 @@ use Grafida\Shell\Request;
  * The shell owns the window, so it reads the OS clipboard itself (GTK on Linux), with no helper
  * tool and no prompt, which PHP cannot: on Linux `ClipboardService` needs `wl-paste`, `xclip` or
  * `xsel`, and a desktop may have none of them. The SPA asks with `X-Shell-Clipboard: read`; the shell
- * puts the text in the request **body** and forwards `X-Shell-Clipboard: text`. Under Boson the
- * header never arrives ({@see \Grafida\Application\BosonBridge} drops it), so PHP reads the
- * clipboard as before.
+ * puts the text in the request **body** and forwards `X-Shell-Clipboard: text`. Without the header
+ * (a plain browser) PHP reads the clipboard itself, as `ClipboardService` always could.
  */
 final class ShellClipboard
 {

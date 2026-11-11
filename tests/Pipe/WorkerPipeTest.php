@@ -128,6 +128,42 @@ final class WorkerPipeTest extends TestCase
     }
 
     /**
+     * A worker that cannot build the app (gh-92): here its data directory sits under a regular file,
+     * so no database can be created. It must never send `ready`, must exit 69, and must open its
+     * stderr with FailureReporter's plain sentence and keep it inside the last 40 lines, which is
+     * what the shell's alert shows.
+     */
+    public function testAWorkerThatCannotStartSaysWhyInTheShellsAlertWindow(): void
+    {
+        $blocker = sys_get_temp_dir() . '/grafida-pipe-blocker-' . bin2hex(random_bytes(6));
+        file_put_contents($blocker, 'not a directory');
+        $env = getenv();
+
+        foreach (['HOME', 'XDG_DATA_HOME', 'XDG_CONFIG_HOME', 'APPDATA', 'LOCALAPPDATA', 'USERPROFILE'] as $name) {
+            $env[$name] = $blocker . '/data';
+        }
+
+        $packaged = getenv('GRAFIDA_PIPE_WORKER');
+        $command  = \is_string($packaged) && $packaged !== '' ? [$packaged] : [\PHP_BINARY, \dirname(__DIR__, 2) . '/bin/worker.php'];
+        $process  = proc_open($command, [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes, \dirname($command[\count($command) - 1]), $env);
+        self::assertIsResource($process);
+        fclose($pipes[0]);
+        $stdout = (string) stream_get_contents($pipes[1]);
+        $stderr = (string) stream_get_contents($pipes[2]);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+        $code = proc_close($process);
+        unlink($blocker);
+
+        self::assertSame(69, $code, $stderr);
+        self::assertSame('', $stdout, 'no ready frame, nothing at all on the frame stream');
+        self::assertStringStartsWith('Grafida could not start.', $stderr);
+        self::assertStringContainsString('could not open its database', $stderr);
+        $lines = explode("\n", rtrim($stderr));
+        self::assertLessThanOrEqual(40, \count($lines), 'the sentence stays inside the alert\'s 40-line tail');
+    }
+
+    /**
      * Every conformance fixture against the real worker: it answers each request with its id, exits
      * 0 at EOF or `shutdown`, and stops with 65 on any malformed stream, without waiting for more
      * input except where EOF is the signal.

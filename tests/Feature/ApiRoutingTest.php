@@ -13,7 +13,6 @@ namespace Grafida\Tests\Feature;
 
 use Grafida\Shell\Request;
 use Grafida\Application\Kernel;
-use Grafida\Tests\Support\StubDialog;
 use Grafida\Tests\Support\TestContainer;
 use Grafida\Tests\Support\TestDatabase;
 use Joomla\Database\DatabaseInterface;
@@ -649,49 +648,12 @@ final class ApiRoutingTest extends TestCase
         self::assertFalse($json['ok']);
     }
 
-    public function testOpenFileReturnsSelectedFileContents(): void
-    {
-        $tmp = tempnam(sys_get_temp_dir(), 'grafida') . '.png';
-        file_put_contents($tmp, 'PNGDATA');
-
-        $kernel = TestContainer::create(dialog: new StubDialog(filePath: $tmp))->get(Kernel::class);
-        [$status, $json] = $this->call($kernel, 'POST', '/api/dialog/open-file', json_encode(['filter' => 'image']));
-
-        unlink($tmp);
-
-        self::assertSame(200, $status);
-        self::assertTrue($json['ok']);
-        self::assertSame('image/png', $json['data']['mime']);
-        self::assertSame('PNGDATA', base64_decode($json['data']['dataBase64']));
-        self::assertStringEndsWith('.png', $json['data']['name']);
-    }
-
-    public function testOpenFileReturnsCancelledWhenDismissed(): void
-    {
-        $kernel = TestContainer::create(dialog: new StubDialog())->get(Kernel::class);
-        [$status, $json] = $this->call($kernel, 'POST', '/api/dialog/open-file', json_encode(['filter' => 'image']));
-
-        self::assertSame(200, $status);
-        self::assertTrue($json['ok']);
-        self::assertTrue($json['data']['cancelled']);
-    }
-
     public function testSelectDirectoryIsUnavailableWithoutDialog(): void
     {
         [$status, $json] = $this->call($this->kernel(), 'POST', '/api/dialog/select-directory');
 
         self::assertSame(503, $status);
         self::assertFalse($json['ok']);
-    }
-
-    public function testSelectDirectoryReturnsChosenPath(): void
-    {
-        $kernel = TestContainer::create(dialog: new StubDialog(directoryPath: '/tmp/somewhere'))->get(Kernel::class);
-        [$status, $json] = $this->call($kernel, 'POST', '/api/dialog/select-directory');
-
-        self::assertSame(200, $status);
-        self::assertTrue($json['ok']);
-        self::assertSame('/tmp/somewhere', $json['data']['path']);
     }
 
     public function testExportImportAsNewAndReplaceRoundTrip(): void

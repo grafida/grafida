@@ -21,9 +21,9 @@ use Grafida\Shell\Request;
  * token, and forwards the real path in `X-Shell-File-Path`. So a request carrying that header names
  * exactly what the user picked this session, and nothing script in the page made up.
  *
- * ⚠️ That guarantee is the shell's. Under Boson there is no shell to strip the header, so
- * {@see \Grafida\Application\BosonBridge} drops it at the Boson boundary instead; without that, any
- * script in the page could name any file on the disk.
+ * ⚠️ That guarantee is the shell's: it strips any `X-Shell-File-Path` the page sends. Nothing else
+ * may ever forward a request to the worker without doing the same, or any script in the page could
+ * name any file on the disk.
  */
 final class ShellFile
 {
@@ -45,7 +45,7 @@ final class ShellFile
 
     /**
      * Where an export goes: the folder the user picked in the shell's dialog, else the `directory`
-     * the SPA sent in the body (Boson, which has only a directory picker that returns a path).
+     * the SPA sent in the body (a caller with no shell: the tests, a plain browser).
      *
      * @param array<string, mixed> $body
      */

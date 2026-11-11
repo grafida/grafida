@@ -41,7 +41,6 @@ final class PipeApp
             'db.path'         => ':memory:',
             'base.path'       => $root,
             'static.provider' => new StaticFiles([$root . '/assets/private', $root . '/assets/public']),
-            'dialog'          => null,
             'secret.store'    => new ArraySecretStore(),
         ]);
 

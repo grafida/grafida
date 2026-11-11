@@ -14,7 +14,6 @@ namespace Grafida\Tests\Feature;
 use Grafida\Application\Kernel;
 use Grafida\Media\MediaRepository;
 use Grafida\Shell\Request;
-use Grafida\Tests\Support\StubDialog;
 use Grafida\Tests\Support\TestContainer;
 use Grafida\Tests\Support\TestDatabase;
 use Joomla\Database\DatabaseInterface;
@@ -25,8 +24,9 @@ use PHPUnit\Framework\TestCase;
  * (grafida/grafida#85).
  *
  * Under the shell the SPA never sees a path: it hands back the dialog's token, and the shell
- * forwards the resolved path as `X-Shell-File-Path`. These are the endpoints that read it. The
- * Boson flow they keep alongside is covered, unchanged, by ApiRoutingTest and LocalMediaTest.
+ * forwards the resolved path as `X-Shell-File-Path`. These are the endpoints that read it. Their
+ * answers without the header (503 for a dialog, the body's `directory` for an export) are covered,
+ * unchanged, by ApiRoutingTest and LocalMediaTest.
  */
 final class ShellFileTest extends TestCase
 {
@@ -82,17 +82,6 @@ final class ShellFileTest extends TestCase
         self::assertSame('picked.png', $json['data']['name']);
         self::assertSame('image/png', $json['data']['mime']);
         self::assertSame('PNGDATA', base64_decode($json['data']['dataBase64']));
-    }
-
-    public function testTheShellsFileWinsOverABosonDialog(): void
-    {
-        file_put_contents($this->dir . '/shell.md', '# Shell');
-        file_put_contents($this->dir . '/dialog.md', '# Dialog');
-        $kernel = TestContainer::create(dialog: new StubDialog(filePath: $this->dir . '/dialog.md'))->get(Kernel::class);
-
-        [, $json] = $this->call($kernel, 'POST', '/api/dialog/open-file', ['X-Shell-File-Path' => $this->dir . '/shell.md'], '{"filter":"markdown"}');
-
-        self::assertSame('# Shell', base64_decode($json['data']['dataBase64']));
     }
 
     public function testAPickedFileThatHasGoneIsA400(): void

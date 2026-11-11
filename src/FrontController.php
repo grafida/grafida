@@ -20,9 +20,8 @@ use Grafida\Application\Kernel;
  * Entry point invoked for every `boson://` request. Delegates to the kernel,
  * which serves the API, static assets, or the SPA shell.
  *
- * It is a shell-php {@see Handler}, so the same object serves both entry
- * points: `index.php` (Boson, through `Grafida\Application\BosonBridge`) and
- * `bin/worker.php` (the stdio worker the native shell spawns).
+ * It is a shell-php {@see Handler}, served by `bin/worker.php` (the stdio
+ * worker the native shell spawns) and driven directly by the tests.
  */
 final class FrontController implements Handler
 {

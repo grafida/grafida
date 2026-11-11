@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace Grafida\Application\Provider;
 
-use Boson\Api\Dialog\DialogApiInterface;
 use Grafida\Ai\AiChatRepository;
 use Grafida\Ai\AiProxy;
 use Grafida\Ai\AiRenderer;
@@ -159,9 +158,6 @@ final class ControllerProvider implements ServiceProviderInterface
         });
 
         $container->share(SettingsController::class, static function (Container $c): SettingsController {
-            /** @var ?DialogApiInterface $dialog */
-            $dialog = $c->get('dialog');
-
             return new SettingsController(
                 markdown: $c->get(MarkdownService::class),
                 language: $c->get(LanguageService::class),
@@ -179,7 +175,6 @@ final class ControllerProvider implements ServiceProviderInterface
                 requestLogService: $c->get(RequestLogService::class),
                 metadataCache: $c->get(MetadataCacheService::class),
                 clipboard: $c->get(ClipboardService::class),
-                dialog: $dialog,
             );
         });
 

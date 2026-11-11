@@ -20,8 +20,9 @@ use Grafida\Storage\SettingsRepository;
  * `spellcheck` attribute (driven by TinyMCE's `browser_spellcheck`): WebKit will
  * not check an element with `spellcheck="false"` even when its global continuous-
  * checking flag is on, so this preference alone turns the underlining off on every
- * platform, live, without touching {@see MacSpellCheck} (which stays enabled so the
- * attribute can take effect — see index.php and gh-24).
+ * platform, live. The macOS master flag (`WebContinuousSpellCheckingEnabled`) is set
+ * on by the shell, in process, before it creates the webview, so the attribute can
+ * take effect (gh-24).
  */
 final class SpellCheckService
 {

@@ -12,52 +12,41 @@ declare(strict_types=1);
 namespace Grafida\Tests\Unit\Startup;
 
 use Grafida\Startup\FailureReporter;
-use Grafida\Support\App;
 use Grafida\Tests\Unit\TestCase;
+use Joomla\Database\Exception\ConnectionFailureException;
 
 final class FailureReporterTest extends TestCase
 {
-    private const FFI_MESSAGE = "Failed loading 'libboson-darwin-universal.dylib' "
-        . '(built for macOS 15.0 which is newer than running OS)';
-
-    public function testTheMacOsAdviceNamesTheMinimumVersion(): void
+    public function testADatabaseThatCannotBeOpenedSaysSoAndWhere(): void
     {
-        $text = FailureReporter::describe(new \RuntimeException(self::FFI_MESSAGE), 'Darwin');
+        $e    = new ConnectionFailureException('Could not connect to PDO: unable to open database file', 0, new \PDOException('unable to open database file'));
+        $text = FailureReporter::describe($e, '/home/u/.local/share/grafida/grafida.sqlite');
 
-        $this->assertStringContainsString(App::MIN_MACOS_NAME, $text);
+        $this->assertStringStartsWith("Grafida could not start.\n\n", $text);
+        $this->assertStringContainsString('could not open its database (/home/u/.local/share/grafida/grafida.sqlite)', $text);
+        $this->assertStringContainsString('write to it', $text);
     }
 
-    public function testTheLinuxAdviceNamesThePackagesToInstall(): void
+    public function testADatabaseFailureFurtherDownTheChainIsFound(): void
     {
-        $text = FailureReporter::describe(new \RuntimeException(self::FFI_MESSAGE), 'Linux');
+        $text = FailureReporter::describe(new \RuntimeException('migration failed', 0, new \PDOException('disk I/O error')));
 
-        $this->assertStringContainsString('libgtk-4-1', $text);
-        $this->assertStringContainsString('libwebkitgtk-6.0-4', $text);
+        $this->assertStringContainsString('could not open its database.', $text);
     }
 
-    public function testTheWindowsAdviceNamesTheWebView2Runtime(): void
+    public function testAnyOtherFailureStillGetsAnExplanation(): void
     {
-        $text = FailureReporter::describe(new \RuntimeException(self::FFI_MESSAGE), 'Windows');
+        $text = FailureReporter::describe(new \LogicException('boom'));
 
-        $this->assertStringContainsString('WebView2', $text);
-    }
-
-    public function testAnUnknownPlatformStillGetsAnExplanation(): void
-    {
-        $text = FailureReporter::describe(new \RuntimeException(self::FFI_MESSAGE), 'Haiku');
-
-        $this->assertStringContainsString('webview library', $text);
+        $this->assertStringStartsWith("Grafida could not start.\n\n", $text);
+        $this->assertStringContainsString('report it', $text);
+        $this->assertStringNotContainsString('database', $text);
     }
 
     public function testTheOriginalErrorIsAlwaysKept(): void
     {
-        // The FFI message names the library and the missing symbol; that is the whole content of
-        // a useful bug report, so no branch may drop it.
-        foreach (['Darwin', 'Linux', 'Windows', 'Haiku'] as $family) {
-            $text = FailureReporter::describe(new \RuntimeException(self::FFI_MESSAGE), $family);
+        $text = FailureReporter::describe(new \RuntimeException('the precise reason'));
 
-            $this->assertStringContainsString(self::FFI_MESSAGE, $text, $family);
-            $this->assertStringContainsString(\RuntimeException::class, $text, $family);
-        }
+        $this->assertStringEndsWith('Technical detail: RuntimeException: the precise reason', $text);
     }
 }

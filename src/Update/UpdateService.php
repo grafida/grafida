@@ -27,6 +27,16 @@ use Grafida\Http\Transport;
  * timestamp is simply the file's modification time). A failed fetch with no prior
  * cache still writes an empty {@code {}} document, so a broken network does not
  * trigger a fetch on every startup.
+ *
+ * A release may carry an optional {@code requires} member (gh-92), per OS:
+ * {@code {"macos": {"arch": ["arm64", "x86_64"], "min": "12.0"}, "windows": {…}, "linux": {…}}}.
+ * When it is there, a release whose {@code requires} has no entry for this OS, lists
+ * architectures that do not include this build's, or names a {@code min} above this
+ * OS version is "no update": it is how a platform that stops being supported (Intel
+ * Macs, from macOS 29) stops being told about releases it cannot run. Every client up
+ * to 0.3 reads only {@code version}, {@code infoURL} and {@code download}, so it
+ * ignores the member. Something about this machine we cannot detect never refuses an
+ * update (see {@see HostPlatform}), and neither does a malformed member.
  */
 final class UpdateService
 {
@@ -41,6 +51,7 @@ final class UpdateService
         private readonly string $currentVersion,
         private readonly string $cacheFile,
         private readonly string $updateUrl = self::UPDATE_URL,
+        private readonly ?HostPlatform $host = null,
     ) {}
 
     /**
@@ -150,7 +161,9 @@ final class UpdateService
         $infoURL  = isset($info['infoURL']) && is_string($info['infoURL']) ? $info['infoURL'] : '';
         $download = isset($info['download']) && is_string($info['download']) ? $info['download'] : '';
 
-        $available = $version !== '' && version_compare($version, $this->currentVersion, '>');
+        $available = $version !== ''
+            && version_compare($version, $this->currentVersion, '>')
+            && $this->runsHere($info['requires'] ?? null);
 
         return [
             'available' => $available,
@@ -158,5 +171,47 @@ final class UpdateService
             'infoURL'   => $available && $infoURL !== '' ? $infoURL : null,
             'download'  => $available && $download !== '' ? $download : null,
         ];
+    }
+
+    /** Whether a release with this {@code requires} member can run on this machine. */
+    private function runsHere(mixed $requires): bool
+    {
+        if (!\is_array($requires) || $requires === [] || array_is_list($requires)) {
+            return true; // absent or malformed: no restriction
+        }
+
+        $host = $this->host ?? HostPlatform::detect();
+
+        if ($host->os === null) {
+            return true;
+        }
+
+        $entry = $requires[$host->os] ?? null;
+
+        if (!\is_array($entry)) {
+            return false; // the release names its platforms, and this is not one of them
+        }
+
+        $arches = $entry['arch'] ?? null;
+
+        if (\is_array($arches) && $host->arch !== null) {
+            $listed = [];
+
+            foreach ($arches as $a) {
+                $listed[] = \is_string($a) ? HostPlatform::normaliseArch($a) : null;
+            }
+
+            if (!\in_array($host->arch, $listed, true)) {
+                return false;
+            }
+        }
+
+        $min = $entry['min'] ?? null;
+
+        if (\is_string($min) && preg_match('/^[0-9]+(\.[0-9]+)*$/', $min) === 1 && $host->version !== null) {
+            return version_compare($host->version, $min, '>=');
+        }
+
+        return true;
     }
 }

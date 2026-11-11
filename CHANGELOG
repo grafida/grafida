@@ -7,6 +7,7 @@ Grafida 1.0
 + Experimental macOS (Apple Silicon) disk image for the native shell (`composer build:shell-macos`), notarised (gh-88)
 + Native shell on macOS: the app menu's About opens Grafida's About, and Edit ▸ Undo follows the editor's history
 + Experimental Windows (x64) installer for the native shell (`composer build:shell-windows`), beside Boson's install (gh-91)
++ The update check no longer offers a release that does not support this computer's OS, processor or OS version (gh-92)
 ~ Native shell on Windows: the worker no longer polls its stdin while idle (grafida/shell-php 0.2.1, gh-91)
 ~ Phing brings the Composer dependencies in line with composer.lock before every build, not only when vendor/ is missing
 ~ The native-shell installers build their worker in about a second instead of half a minute (grafida/shell-packager 0.3.1, gh-91)
@@ -23,6 +24,7 @@ Grafida 1.0
 ~ The documentation is published to Grafida.app over SFTP, replacing the copy into a sibling site repository
 ~ The patched PHP runtime is fetched from grafida/phpmicro (moved from nikosdion/phpmicro)
 ~ The back-end runs on grafida/shell-php's request/response types; Boson is adapted at index.php only (gh-84)
+~ When Grafida cannot start, its error says why first, e.g. that its database could not be opened (gh-92)
 # [HIGH] Linux: the app crashed on the first click that saved anything, e.g. saving a site or switching the theme (gh-79)
 # [HIGH] Clicking a sidebar menu item while editing an article discarded unsaved changes without asking (gh-80)
 # [HIGH] Publishing an article with a tag that did not exist on the site yet failed with "Invalid field: Parent"
