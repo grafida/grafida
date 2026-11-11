@@ -277,7 +277,9 @@ properties from `build/build.properties` (it fails early with a clear message if
 custom Phing tasks under `build/tasks/` (namespace `tasks\`, taskdef'd with `classpath="…/build"`)
 back it, all curl-based (no extra binaries, matching `UpdateJson.php`): **`GitHubRelease`** (creates a
 draft release, uploads each nested-`<fileset>` asset, then publishes — so a partial release is never
-visible), **`UpdateJson`** (fetches the latest release's metadata into `grafida.json`), and
+visible), **`UpdateJson`** (fetches the latest release's metadata into `grafida.json`; its `version` is
+the bare tag via `versionOf()`, never the release name "Grafida 0.4", which every Grafida's
+`version_compare()` ranks below any number: that is why 0.3 was offered to nobody, gh-92), and
 **`FtpsUpload`** (uploads over explicit FTPS — `CURLUSESSL_ALL`). The version comes from the CHANGELOG
 via `set-version.php --print`. `UpdateJson` treats a release as downloadable when it has any asset
 ending in `.zip`/`.exe`/`.dmg`/`.tar.gz` (`UpdateJson::ASSET_EXTENSIONS` / `isDownloadableAsset()`); its

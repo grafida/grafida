@@ -21,6 +21,7 @@ Grafida 0.4
 ~ The documentation is published to Grafida.app over SFTP, replacing the copy into a sibling site repository
 ~ The patched PHP runtime is fetched from grafida/phpmicro (moved from nikosdion/phpmicro)
 ~ When Grafida cannot start, its error says why first, e.g. that it cannot write to its data folder (gh-92)
+# [HIGH] The update check never offered a newer version: the update information gave it as "Grafida 0.3" (gh-92)
 # [HIGH] Linux: the app crashed on the first click that saved anything, e.g. saving a site or switching theme (gh-79)
 # [HIGH] Clicking a sidebar menu item while editing an article discarded unsaved changes without asking (gh-80)
 # [HIGH] Publishing an article with a tag that did not exist on the site yet failed with "Invalid field: Parent"

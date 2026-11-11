@@ -147,6 +147,23 @@ final class UpdateServiceTest extends TestCase
         $this->assertCount(1, $http->requests);
     }
 
+    /**
+     * The update document published up to 0.3 named the version after the GitHub release, "Grafida
+     * 0.3", and version_compare() ranks that below every plain number (gh-92).
+     */
+    public function testAVersionNamedAfterTheReleaseIsStillCompared(): void
+    {
+        $http   = (new FakeTransport())->on(self::URL, $this->payload('Grafida 0.2'));
+        $status = $this->service($http)->status();
+
+        $this->assertTrue($status['available']);
+        $this->assertSame('0.2', $status['version']);
+
+        $http = (new FakeTransport())->on(self::URL, $this->payload('Grafida 0.1'));
+        @unlink($this->cacheFile);
+        $this->assertFalse($this->service($http)->status()['available']);
+    }
+
     public function testSameVersionIsNotAnUpdate(): void
     {
         $http   = (new FakeTransport())->on(self::URL, $this->payload('0.1'));

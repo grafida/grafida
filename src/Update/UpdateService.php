@@ -149,6 +149,18 @@ final class UpdateService
     }
 
     /**
+     * The version number in the document's `version`: its first run of dot-separated digits.
+     *
+     * Up to 0.3 the published document took the GitHub release's name, "Grafida 0.3", and
+     * version_compare() ranks a leading word below every number, so no update was ever offered
+     * (gh-92). UpdateJson now writes the tag; this reads either, and an older document too.
+     */
+    private static function versionNumber(string $version): string
+    {
+        return preg_match('/\d+(?:\.\d+)*/', $version, $m) === 1 ? $m[0] : '';
+    }
+
+    /**
      * Turns the cached update document into the status returned to the SPA.
      *
      * @param array<array-key, mixed> $info
@@ -157,7 +169,7 @@ final class UpdateService
      */
     private function evaluate(array $info): array
     {
-        $version  = isset($info['version']) && is_string($info['version']) ? trim($info['version']) : '';
+        $version  = isset($info['version']) && is_string($info['version']) ? self::versionNumber($info['version']) : '';
         $infoURL  = isset($info['infoURL']) && is_string($info['infoURL']) ? $info['infoURL'] : '';
         $download = isset($info['download']) && is_string($info['download']) ? $info['download'] : '';
 

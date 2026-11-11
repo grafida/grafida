@@ -226,6 +226,30 @@ class UpdateJson extends Task
     }
 
     /**
+     * The bare version number of a GitHub release: its tag ("0.4"), or failing that the first run of
+     * dot-separated digits in its name.
+     *
+     * Never the name itself: it is "Grafida 0.4", and every Grafida compares versions with
+     * version_compare(), which ranks a leading word below every number. Up to 0.3 the document
+     * carried the name, so no installed copy was ever offered an update (gh-92). 0.3 clients compare
+     * the field as it is, so this is the fix that reaches them.
+     *
+     * @param   array<string, mixed>  $release  A single GitHub release object decoded from JSON.
+     */
+    public static function versionOf(array $release): string
+    {
+        foreach ([$release['tag_name'] ?? null, $release['name'] ?? null] as $candidate)
+        {
+            if (\is_string($candidate) && preg_match('/\d+(?:\.\d+)*/', $candidate, $m) === 1)
+            {
+                return $m[0];
+            }
+        }
+
+        throw new BuildException('The release has no version number in its tag or its name.');
+    }
+
+    /**
      * Build the associative array that will be serialised to JSON.
      *
      * @param   array<string, mixed>  $release  A single GitHub release object decoded from JSON.
@@ -234,12 +258,7 @@ class UpdateJson extends Task
      */
     private function buildData(array $release): array
     {
-        $version = $release['name'] ?? $release['tag_name'];
-
-        if (str_starts_with($version, 'v.'))
-        {
-            $version = substr($version, 2);
-        }
+        $version = self::versionOf($release);
 
         $date        = (new DateTime($release['published_at']))->format('Y-m-d');
         $downloadUrl = null;

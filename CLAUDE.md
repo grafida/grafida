@@ -352,7 +352,10 @@ the shell, PHP's `UrlOpener` and `ClipboardService` answer instead.
   `GET /api/update` (`api.checkUpdate()`) **fire-and-forget after the initial render**, so a slow
   fetch never blocks start-up. `UpdateService::status()` refreshes a per-user cache of the
   CDN-published update JSON (`https://grafida.app/updates/grafida.json`, built by the
-  `UpdateJson` release task: `{version,date,infoURL,download,releaseNotes}`) **at most once every 12
+  `UpdateJson` release task: `{version,date,infoURL,download,releaseNotes,requires}`; ⚠️ **`version` is the
+  bare tag, `0.4`, never the release name**: up to 0.3 it was "Grafida 0.3", which `version_compare()`
+  ranks below every number, so no copy was ever offered an update; `UpdateService` now reads the first
+  number in it either way, gh-92) **at most once every 12
   hours** — the "last fetched" time is the cache file's mtime. The cache lives in the per-user
   **config** dir (`Paths::updatesFile()`/`configDir()` — Linux `$XDG_CONFIG_HOME/grafida/updates.json`
   (falls back `~/.config`), macOS `~/Library/Application Support/Grafida/updates.json`, Windows
