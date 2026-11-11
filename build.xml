@@ -486,22 +486,32 @@
 	`all` or `release`, and it needs no Boson compile. Signed with Azure Trusted Signing through the
 	same windows.sign.* properties as Boson's Windows build when windows.sign.op-item is set,
 	unsigned otherwise. It installs side by side with Boson's build.
-	Each property goes in behind a "=" that the script strips: Phing drops an empty <arg>, so a blank
-	windows.sign.op-item shifted every later argument one place and the item was looked up as "appId".
+	windows.sign.op-item is the one switch: empty, no signing step at all (the script is called with
+	no signing settings); set, a signed build with the rest of the windows.sign.* properties.
 	-->
 	<target name="package-shell-windows-x86" depends="prepare" description="EXPERIMENTAL: the native-shell Windows (x64) installer">
-		<exec executable="bash" dir="${dirs.root}" passthru="true" checkreturn="true">
-			<arg value="-c" />
-			<arg value="export WINDOWS_SIGN_OP_ITEM=&quot;${1#=}&quot;; export WINDOWS_SIGN_OP_FIELD_APPID=&quot;${2#=}&quot;; export WINDOWS_SIGN_OP_FIELD_PASSWORD=&quot;${3#=}&quot;; export WINDOWS_SIGN_OP_FIELD_TENANT=&quot;${4#=}&quot;; export WINDOWS_SIGN_KEYSTORE=&quot;${5#=}&quot;; export WINDOWS_SIGN_ALIAS=&quot;${6#=}&quot;; export WINDOWS_SIGN_TSAURL=&quot;${7#=}&quot;; exec bash scripts/make-shell-windows-installer.sh" />
-			<arg value="phing" />
-			<arg value="=${windows.sign.op-item}" />
-			<arg value="=${windows.sign.op-field-appid}" />
-			<arg value="=${windows.sign.op-field-password}" />
-			<arg value="=${windows.sign.op-field-tenant}" />
-			<arg value="=${windows.sign.keystore}" />
-			<arg value="=${windows.sign.alias}" />
-			<arg value="=${windows.sign.tsaurl}" />
-		</exec>
+		<if>
+			<equals arg1="${windows.sign.op-item}" arg2="" />
+			<then>
+				<exec executable="bash" dir="${dirs.root}" passthru="true" checkreturn="true">
+					<arg value="scripts/make-shell-windows-installer.sh" />
+				</exec>
+			</then>
+			<else>
+				<exec executable="bash" dir="${dirs.root}" passthru="true" checkreturn="true">
+					<arg value="-c" />
+					<arg value="export WINDOWS_SIGN_OP_ITEM=&quot;$1&quot;; export WINDOWS_SIGN_OP_FIELD_APPID=&quot;$2&quot;; export WINDOWS_SIGN_OP_FIELD_PASSWORD=&quot;$3&quot;; export WINDOWS_SIGN_OP_FIELD_TENANT=&quot;$4&quot;; export WINDOWS_SIGN_KEYSTORE=&quot;$5&quot;; export WINDOWS_SIGN_ALIAS=&quot;$6&quot;; export WINDOWS_SIGN_TSAURL=&quot;$7&quot;; exec bash scripts/make-shell-windows-installer.sh" />
+					<arg value="phing" />
+					<arg value="${windows.sign.op-item}" />
+					<arg value="${windows.sign.op-field-appid}" />
+					<arg value="${windows.sign.op-field-password}" />
+					<arg value="${windows.sign.op-field-tenant}" />
+					<arg value="${windows.sign.keystore}" />
+					<arg value="${windows.sign.alias}" />
+					<arg value="${windows.sign.tsaurl}" />
+				</exec>
+			</else>
+		</if>
 	</target>
 
 	<target name="package-phar" depends="git-phar" description="Package the cross-platform PHAR">

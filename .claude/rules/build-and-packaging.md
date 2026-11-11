@@ -312,10 +312,12 @@ post-install-cmd out of it. The other two are guarded: they re-rasterise the ico
 front-end libraries only when their output is missing (force a re-vendor with `-Drefresh.assets=1`),
 which is also how a fresh `git clone … && phing` gets its front-end libraries. Phing runs `prepare` once
 per invocation.
-⚠️ **Phing drops an empty `<arg>`**, so a target that hands properties to a script positionally
-shifts every later one when a property is blank. `package-shell-windows-x86` passes each one as
-`=${prop}` and the script strips the `=` (`${1#=}`); a blank `windows.sign.op-item` used to make the
-item `appId`. Phing's `<env>` is no way out: it pastes `export K=V;` into a shell line unquoted. `prepare` also runs **`set-version`** (`build/tasks/set-version.php`): the **`CHANGELOG`
+**`windows.sign.op-item` is the one signing switch** for `package-shell-windows-x86`: the target
+branches on it (`<if>`). Empty: the script runs with no signing settings and nothing is signed. Set:
+a signed build, with the other `windows.sign.*` properties passed as they are; getting them right is
+the maintainer's job, not the build's. (Passed positionally, a blank `op-item` used to vanish, since
+Phing drops an empty `<arg>`, and the next property, `appId`, was taken for the item. Phing's
+`<env>` is no way out: it pastes `export K=V;` into a shell line unquoted.) `prepare` also runs **`set-version`** (`build/tasks/set-version.php`): the **`CHANGELOG`
 is the single source of truth for the version** — its topmost entry's heading ends with the version
 number (the project convention, e.g. `Grafida 0.1`), and the step
 stamps it into `App::VERSION` in `src/Support/App.php` before every compile (idempotent; no-ops when
