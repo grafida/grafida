@@ -240,12 +240,18 @@ PHAR inside is reproducible. ⚠️ Never a dependency of `package`/`all`/`relea
   the Basic tier's 5,000 a month. Without the item, nothing is signed (the script clears any
   `WINDOWS_SIGN_*` it inherits, so nothing signs by accident).
 - **The installer script is Grafida's**; shell-packager passes the tree and its documented defines,
-  plus `DISPLAYNAME`/`APPURL` from `windows.installer.defines`. Per user; **side by side with Boson's
+  plus `DISPLAYNAME`/`APPURL`/`COPYRIGHT` from `windows.installer.defines` (`PUBLISHER` is
+  `windows.version.companyName`, Akeeba Ltd as the signer; the copyright is the author's). Per user; **side by side with Boson's
   build**: `%LOCALAPPDATA%\Programs\app.grafida` and the uninstall key `app.grafida`, against
   Boson's `Programs\Grafida` and `Grafida`, its own Start menu entry ("Grafida (shell preview)");
   the uninstaller removes exactly what it installed, never `%APPDATA%\Grafida` (the shared user
-  data) or the WebView2 profile. No WebView2 bootstrapper: a missing runtime gets a warning with
-  the download page, and the shell alerts at launch.
+  data) or the WebView2 profile (`%LOCALAPPDATA%\grafida`). No WebView2 bootstrapper: a missing
+  runtime gets a warning with the download page, and the shell alerts at launch.
+  ⚠️ **A running Grafida holds both executables open**: the installer could not write them (NSIS's
+  Abort/Retry/Ignore) and the uninstaller skipped them silently while reporting success, its key
+  already gone. `ENSURE_NOT_RUNNING` opens them for writing before any file is touched and asks the
+  user to close the app (Retry/Cancel); silent mode exits 2. Probe this install's files only: a
+  `taskkill /IM Grafida.exe` would also match Boson's `grafida.exe`.
 - **The worker is phpmicro's GUI SFX** (`windows-x86_64.standard.sfx` from the immutable
   `sfx-20261110.27`, never `sfx-latest`): it opens no console, and the fork keeps
   `CREATE_NO_WINDOW` for its own children (static-php-cli's patch had counted the micro SAPI as CLI
