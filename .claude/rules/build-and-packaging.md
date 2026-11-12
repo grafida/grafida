@@ -201,6 +201,14 @@ agent's or CI shell can have none), so the script defaults it to `en_US.UTF-8`.
   `GRAFIDA_PIPE_WORKER="$env:LOCALAPPDATA\Programs\Grafida\grafida-worker.exe" composer test:pipe`,
   and `GRAFIDA_PACKAGED='…\Programs\Grafida' parity-windows.sh` for the in-page checks on a copy
   with only the shell swapped for the debug automation build.
+- **A release candidate's hand-off folder** (`build/rc-<version>/`, gitignored, gh-92) holds the
+  artefacts, `SHA256SUMS` and the prompt for each test-machine round. It is copied to the shared
+  drive the test machine reads. The test machine keeps each round's evidence **inside it**, in one
+  subfolder per round (e.g. `idle/`). So an update **merges**: `rsync -a` without `--delete`,
+  removing only a file of ours by name. Never replace the folder: a replace (`rm -rf` + copy,
+  here or on the test machine) deletes the evidence, which is how RC4's screenshots were lost
+  (decided: their #92 comment is the record). Every prompt says the same for `~/rc-<version>/`:
+  add the new artefacts to it, never delete it.
 
 ## Phing
 
