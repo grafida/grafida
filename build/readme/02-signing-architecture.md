@@ -189,7 +189,7 @@ Key properties:
 | Platform | Status |
 | --- | --- |
 | macOS arm64 | **Signed + notarised, verified end-to-end** (gh-88): the SFX stub in `Contents/MacOS`, `grafida-worker.phar` in `Contents/Resources`, from the immutable `sfx-20261109.15`, signed by shell-packager; `spctl`: "Notarized Developer ID" for the image and the app in it |
-| macOS x86_64 | Built from the immutable `sfx-20261111.28` (a promotion of `sfx-latest`'s bytes, checked natively on `macos-15-intel`) and shell 0.4.0. Grafida's Intel bundle is tested only under Rosetta 2; there is no Intel hardware or guest |
+| macOS x86_64 | Built from the immutable `sfx-20261111.28` (a promotion of `sfx-latest`'s bytes, checked natively on `macos-15-intel`) and shell 0.4.1. Grafida's Intel bundle is tested only under Rosetta 2; there is no Intel hardware or guest |
 | Windows x64 | **Authenticode via Jsign/Azure Trusted Signing**, four signatures a build (shell, worker stub, uninstaller, installer), each refused if the PE carries an overlay. `grafida-worker.exe` is the **GUI** SFX from the immutable `sfx-20261110.27`, beside `grafida-worker.phar`. Verified (gh-91) signed with a test certificate, installed, run and uninstalled in the Windows 11 guest |
 | Linux | No OS-enforced signature gate. The tarball (gh-86) ships the same split layout anyway: `grafida-worker` (the glibc SFX from the immutable `sfx-20261109.16`) + sibling `grafida-worker.phar` (extra-INI block + PHAR). Sibling mode and the ini block are smoke-tested on Linux by the fork's CI (`check-linux-sfx.sh`) |
 
