@@ -116,6 +116,7 @@ VIAddVersionKey "ProductVersion"  "${APPVERSION}"
   IfSilent 0 +3
     SetErrorLevel 2
     Abort
+  ; English on every Windows, buttons in the OS language: deliberate (gh-92), see build-and-packaging.md.
   MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "${APPNAME} is running. Close it, then click Retry." IDRETRY retry_${id}
   Abort
   free_${id}:

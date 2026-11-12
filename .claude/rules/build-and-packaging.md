@@ -183,6 +183,11 @@ agent's or CI shell can have none), so the script defaults it to `en_US.UTF-8`.
   already gone. `ENSURE_NOT_RUNNING_IN` opens them for writing before any file is touched and asks
   the user to close the app (Retry/Cancel); silent mode exits 2. It probes files, never process
   names: a `taskkill /IM Grafida.exe` would match any Grafida anywhere.
+  **Leave its wording alone on a non-English Windows** (gh-92, decided): the installer is English
+  only, Windows draws a MessageBox's buttons in the OS language, so a Greek system shows "Close it,
+  then click Retry." above "Επανάληψη". That is the disparity users of a localised Windows expect
+  from every English app; a message naming a button in another language would read as wrong. No
+  rewording, and no NSIS languages for this alone.
 - **The worker is phpmicro's GUI SFX** (`windows-x86_64.standard.sfx` from the immutable
   `sfx-20261110.27`, never `sfx-latest`): it opens no console, and the fork keeps
   `CREATE_NO_WINDOW` for its own children (static-php-cli's patch had counted the micro SAPI as CLI

@@ -75,8 +75,10 @@ distribution may not have them installed yet, even if 0.3 ran on it. Before you 
 lists for your distribution. Among them is `secret-tool`, which Ubuntu and Debian do not install by
 default, and which Grafida needs to keep your tokens in your desktop's secret store.
 
-Then extract the tarball and run its `./install.sh`. It replaces the previous version's desktop
-entry and icon.
+Then delete the folder you extracted 0.3 into, or extract 0.4 into a new one: 0.3's runtime files
+are not used any more, and your data is not kept there. Extract the tarball and run its
+`./install.sh`. It replaces the previous version's desktop entry and icon. A favourite or
+task-manager pin you made for 0.3 stops working, so pin Grafida again after the upgrade.
 
 ### CHANGELOG
 
