@@ -100,6 +100,7 @@ task-manager pin you made for 0.3 stops working, so pin Grafida again after the 
 * ✏️ The Windows build no longer enables opcache, matching every other platform
 * ✏️ Documentation: how Authors can use Grafida on Joomla 5.4.8/6.1.3+ without back-end access
 * ✏️ Documentation: Linux needs a Hunspell dictionary per language for spell checking
+* ✏️ Documentation: Linux needs `secret-tool` (`libsecret-tools` on Debian and Ubuntu) to keep tokens in the secret store
 * ✏️ The documentation is published to Grafida.app over SFTP, replacing the copy into a sibling site repository
 * ✏️ The patched PHP runtime is fetched from grafida/phpmicro (moved from nikosdion/phpmicro)
 * ✏️ When Grafida cannot start, its error says why first, e.g. that it cannot write to its data folder (gh-92)
@@ -115,6 +116,7 @@ task-manager pin you made for 0.3 stops working, so pin Grafida again after the 
 * 🐞 [MEDIUM] Leaving the article did not stop an AI reply in progress
 * 🐞 [MEDIUM] The Articles screen kept a hidden loading spinner animating, using CPU while idle (gh-86)
 * 🐞 [LOW] An upgrade could keep an outdated translation or migration, and a removed language stayed selectable (gh-86)
+* 🐞 [LOW] The window's title bar stayed light when Grafida started in dark mode (gh-92)
 
 Legend:
 * 🚨 Security update
