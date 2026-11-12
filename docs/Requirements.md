@@ -22,7 +22,21 @@ You also need the Microsoft Edge WebView2 Runtime. It ships with Windows 11 and 
 
 ### Linux
 
-You need an x86_64 or arm64 computer with WebKitGTK 4.1, version 2.40 or later, GTK 3 and glibc 2.35 or later. Ubuntu 22.04, Debian 12, and current releases of Fedora and Arch Linux are new enough; Grafida is tested on Ubuntu 22.04, Fedora and Arch Linux. On Debian and Ubuntu install the `libwebkit2gtk-4.1-0` and `libgtk-3-0` packages, on Fedora `webkit2gtk4.1`, and on Arch `webkit2gtk-4.1`.
+You need an x86_64 or arm64 computer with WebKitGTK 4.1, version 2.40 or later, GTK 3 and glibc 2.35 or later. Ubuntu 22.04, Debian 12, and current releases of Fedora and Arch Linux are new enough; Grafida is tested on Ubuntu 22.04, Fedora and Arch Linux.
+
+Install these packages before you start Grafida for the first time:
+
+| Distribution | Command |
+|---|---|
+| Debian, Ubuntu and their derivatives | `sudo apt install libwebkit2gtk-4.1-0 libgtk-3-0 libsecret-tools` |
+| Fedora | `sudo dnf install webkit2gtk4.1 gtk3 libsecret` |
+| Arch Linux | `sudo pacman -S webkit2gtk-4.1 gtk3 libsecret` |
+
+**WebKitGTK 4.1 and GTK 3** draw Grafida's window and everything in it. Without them Grafida cannot start: it shows a message listing the libraries it could not find.
+
+**`secret-tool`** is how Grafida reaches your desktop's secret store, where it keeps your sites' API tokens and your AI services' API keys: GNOME Keyring on GNOME, KWallet on KDE Plasma. It is in the `libsecret-tools` package on Debian and Ubuntu, and in `libsecret` on Fedora and Arch Linux. A new Ubuntu or Debian installation does not include it, even though GNOME Keyring is installed and running. Without `secret-tool`, Grafida cannot find a secret store, so it asks whether to save each token as plain text in its database instead; see [Secrets & Security](Secrets-Security#when-no-secret-store-is-available). Fedora and Arch Linux desktops usually have it already.
+
+The first time Grafida saves a token, your desktop may ask you to set up its secret store. On GNOME, if you log in automatically, it asks you to choose a password for a new keyring. On KDE Plasma, it asks you to create a wallet: choose **Classic, blowfish encrypted file**, because the GPG option only works if you already have a GPG key.
 
 For spell checking you also need a Hunspell dictionary for each language you write in; see [Editing Articles](Editing-Articles#spell-checking).
 

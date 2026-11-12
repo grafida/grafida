@@ -6,9 +6,10 @@
   desktop runtime. It now runs in a native shell of its own, with the PHP back end as a separate
   worker process. Idle CPU use drops to near 0%, and the window stays responsive while Grafida
   works ([gh-82](https://github.com/grafida/grafida/issues/82)).
-* **New system requirements.** macOS 12 Monterey or later (was macOS 15), on Intel Macs as well as
-  Apple Silicon; Windows 10 22H2 or later; Linux with WebKitGTK 4.1, version 2.40 or later
-  ([gh-92](https://github.com/grafida/grafida/issues/92)).
+* **New system requirements, lower than before.** macOS 12 Monterey or later (was macOS 15), on
+  Intel Macs as well as Apple Silicon; Windows 10 22H2 or later; Linux with GTK 3 and WebKitGTK 4.1,
+  version 2.40 or later (was GTK 4.10 and WebKitGTK 6.0), so Grafida now runs on Ubuntu 22.04 and
+  Debian 12 ([gh-92](https://github.com/grafida/grafida/issues/92)).
 * **macOS: a real menu bar**, with Edit and Spelling menus. About opens Grafida's own dialog, and
   Edit ▸ Undo follows the editor ([gh-88](https://github.com/grafida/grafida/issues/88)).
 * **Native file dialogs.** Files and folders are picked in the operating system's own dialogs
@@ -66,8 +67,16 @@ more for Local Network access. Pick the download for your Mac: Apple Silicon or 
 Grafida for Intel Macs becomes deprecated. When macOS 29 lands it is discontinued: there are no more
 Intel builds, and the update check stops offering new releases to Intel Macs.
 
-**Linux.** Extract the tarball and run its `./install.sh`. It replaces the previous version's
-desktop entry and icon.
+**Linux.** Grafida 0.4 needs different system libraries from 0.3. Up to 0.3 it needed GTK 4.10 or
+later and WebKitGTK 6.0, which ruled out long-term-support distributions such as Ubuntu 22.04. It
+now needs GTK 3 and WebKitGTK 4.1 (2.40 or later), which are older and more widely available. Your
+distribution may not have them installed yet, even if 0.3 ran on it. Before you start 0.4, read the
+[Requirements](https://grafida.app/docs/desktop/Requirements.html) page and install the packages it
+lists for your distribution. Among them is `secret-tool`, which Ubuntu and Debian do not install by
+default, and which Grafida needs to keep your tokens in your desktop's secret store.
+
+Then extract the tarball and run its `./install.sh`. It replaces the previous version's desktop
+entry and icon.
 
 ### CHANGELOG
 

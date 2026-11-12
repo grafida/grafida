@@ -26,7 +26,7 @@ contains no part of it, and it is worthless without the store it points into.
 | Platform | Where the secret actually goes |
 |---|---|
 | macOS | The **login Keychain**, as a generic password under the service name `Grafida` |
-| Linux | The **Secret Service** (GNOME Keyring, KWallet, …) through `libsecret` |
+| Linux | The **Secret Service** (GNOME Keyring, KWallet, …) through libsecret's `secret-tool` command |
 | Windows | Encrypted with **DPAPI** under your user account, the ciphertext written to a file under Grafida's application data folder |
 
 On Windows there is no system-wide credential vault of the right shape, so Grafida encrypts the
@@ -89,8 +89,9 @@ encryption, a locked screen, and not sharing an account — not inside Grafida.
 
 ## When no secret store is available
 
-On some systems there is no store to use: a Linux box with no Secret Service running, typically a
-minimal or headless desktop.
+On some systems there is no store to use: a Linux box without the `secret-tool` command (a new
+Ubuntu or Debian installation, until you install `libsecret-tools`; see [Requirements](Requirements)),
+or with no Secret Service running, typically a minimal or headless desktop.
 
 Grafida does **not** silently fall back. It refuses to save, and asks you to confirm explicitly
 that you want to store the secret **as plain text in the SQLite database**. Only if you say yes
@@ -99,9 +100,8 @@ does it write the token to `sites.insecure_token`, or the AI key to `ai_services
 > [!CAUTION]
 > A token stored this way is in the database in the clear. Everything in the "stolen database"
 > section above no longer applies to it: whoever has the file has your site. Say yes only on a
-> machine whose disk you trust, and prefer installing a Secret Service provider — on GNOME
-> `gnome-keyring`, on KDE `kwalletmanager` with its libsecret bridge — so the question stops being
-> asked.
+> machine whose disk you trust, and prefer installing `secret-tool` and a Secret Service provider —
+> on GNOME `gnome-keyring`, on KDE Plasma KWallet — so the question stops being asked.
 
 ## Housekeeping
 
