@@ -382,7 +382,9 @@ ship inside the app.
   shell's navigation policy catches; the shell's automation channel can record it instead of opening
   a browser), and **`applyTheme()`** tells the shell the *resolved* scheme
   (`syncShellWindowTheme()` → `_native/window/theme`) so the title bar follows the app, not the
-  webview's guess. Both are fire-and-forget, and without the shell `openUrl` goes to PHP's
+  webview's guess. ⚠️ It sends whenever the theme differs from what the shell was **last told**
+  (`State.shellWindowTheme`, null at start), never only on a theme *change*: `State.resolvedTheme`
+  starts as `'dark'`, so a dark start was no change and the title bar stayed light (gh-92). Both are fire-and-forget, and without the shell `openUrl` goes to PHP's
   `UrlOpener` while the theme call does nothing. **`api.getClipboardText()`** (the
   Cmd/Ctrl+Shift+V chord) asks the shell to read the clipboard (`GrafidaShell.clipboardHeaders()`),
   so it works without `wl-paste`/`xclip`; PHP still normalises the text. **Dropped image files** are

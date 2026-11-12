@@ -34,6 +34,8 @@ const State = {
     // The concrete theme currently applied ('light' | 'dark') after resolving
     // 'auto' against the OS preference. Drives the TinyMCE skin/content CSS.
     resolvedTheme: 'dark',
+    // The theme the shell's title bar was last told ('light' | 'dark'), null until applyTheme() runs.
+    shellWindowTheme: null,
     // Whether typing "/" in the editor opens the slash-command menu (gh-9).
     slashTools: true,
     // Whether the editor's native spell checking is on (gh-24). Drives the editing
@@ -9395,7 +9397,9 @@ function applyTheme(reinitEditor = false) {
     const changed = resolved !== State.resolvedTheme;
     State.resolvedTheme = resolved;
     document.documentElement.setAttribute('data-theme', resolved);
-    if (changed) syncShellWindowTheme(resolved);
+    // Compared with what the shell was last told, not with the previous theme: State.resolvedTheme
+    // starts as 'dark', so a start that resolves to dark is no change, and the title bar stayed light.
+    if (resolved !== State.shellWindowTheme) syncShellWindowTheme(resolved);
 
     if (reinitEditor && changed && State.tinyMCEEditor && State.currentDraft) {
         const html = State.tinyMCEEditor.getContent();
@@ -9409,6 +9413,7 @@ function applyTheme(reinitEditor = false) {
  * is more reliable than what the webview reports. Fire-and-forget; without the shell it does nothing.
  */
 function syncShellWindowTheme(resolved) {
+    State.shellWindowTheme = resolved;
     underShell()
         .then((shell) => shell && GrafidaShell.setWindowTheme(resolved === 'dark' ? 'dark' : 'light'))
         .catch(() => {});
