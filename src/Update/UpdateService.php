@@ -40,8 +40,11 @@ use Grafida\Http\Transport;
  */
 final class UpdateService
 {
-    /** Canonical URL the release pipeline publishes the update information to. */
-    public const UPDATE_URL = 'https://grafida.app/updates/grafida.json';
+    /**
+     * Canonical URL the release pipeline publishes the update information to. Every copy ever released
+     * reads it, 0.3 and earlier included: move it and those copies are never told of a new release.
+     */
+    public const UPDATE_URL = 'https://cdn.akeeba.com/updates/grafida.json';
 
     /** Refresh the cached information at most once every 12 hours. */
     private const MAX_AGE = 12 * 60 * 60;

@@ -20,9 +20,9 @@ final class UpdateServiceTest extends TestCase
 {
     private const URL = 'https://cdn.example.com/grafida.json';
 
-    public function testCanonicalUpdateUrlUsesGrafidaApp(): void
+    public function testCanonicalUpdateUrlIsTheOneEarlierReleasesRead(): void
     {
-        $this->assertSame('https://grafida.app/updates/grafida.json', UpdateService::UPDATE_URL);
+        $this->assertSame('https://cdn.akeeba.com/updates/grafida.json', UpdateService::UPDATE_URL);
     }
 
     private string $cacheFile;

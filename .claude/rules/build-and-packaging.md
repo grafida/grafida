@@ -317,7 +317,7 @@ The version comes from the CHANGELOG's top entry; `-Dversion=X.Y.Z` overrides it
 7. **Publish:** `phing release -Dversion=X.Y.Z` — repackages all platforms, creates and publishes a
    GitHub release with the five artefacts and their five `.sha256` files, generates `grafida.json`
    (with `requires`) and uploads it over FTPS to the BunnyCDN `updates/` directory.
-8. **Verify:** `curl https://grafida.app/updates/grafida.json` reports the new version and its
+8. **Verify:** `curl https://cdn.akeeba.com/updates/grafida.json` reports the new version and its
    `requires`, and `gh release view X.Y.Z --repo grafida/grafida` shows `draft=false` with all ten
    assets.
 9. **Post-release Windows checks** (gh-92), on the published assets, in the Windows guests: the

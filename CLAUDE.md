@@ -351,7 +351,7 @@ the shell, PHP's `UrlOpener` and `ClipboardService` answer instead.
 - `src/Update/UpdateService.php` — the **update checker**. On startup the SPA calls
   `GET /api/update` (`api.checkUpdate()`) **fire-and-forget after the initial render**, so a slow
   fetch never blocks start-up. `UpdateService::status()` refreshes a per-user cache of the
-  CDN-published update JSON (`https://grafida.app/updates/grafida.json`, built by the
+  CDN-published update JSON (`https://cdn.akeeba.com/updates/grafida.json`, built by the
   `UpdateJson` release task: `{version,date,infoURL,download,releaseNotes,requires}`; ⚠️ **`version` is the
   bare tag, `0.4`, never the release name**: up to 0.3 it was "Grafida 0.3", which `version_compare()`
   ranks below every number, so no copy was ever offered an update; `UpdateService` now reads the first
