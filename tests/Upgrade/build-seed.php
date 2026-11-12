@@ -15,9 +15,10 @@ declare(strict_types=1);
  *   php -d phar.readonly=0 tests/Upgrade/build-seed.php TREE OUT.phar
  *
  * TREE is a checkout of the `0.3` tag with `composer install --no-dev --no-scripts` run in it. The
- * PHAR runs on 0.3's own PHP: its sibling-phar SFX stub, copied and renamed so that it finds this
- * PHAR where it finds grafida.phar (macOS: MacOS/seed + Resources/seed.phar; Linux and Windows: the
- * stub and the PHAR side by side).
+ * PHAR runs on 0.3's own PHP. On macOS and Windows that is the sibling-phar SFX stub, copied and
+ * renamed so that it finds this PHAR where it finds grafida.phar (macOS: MacOS/seed +
+ * Resources/seed.phar; Windows: the stub and the PHAR side by side). 0.3's Linux binary is the stock
+ * combined runtime instead, so linux-seed.py appends this PHAR to its ELF and INI block.
  */
 
 if ($argc !== 3 || !is_dir($argv[1] . '/src') || !is_file($argv[1] . '/vendor/autoload.php')) {
