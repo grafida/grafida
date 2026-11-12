@@ -71,9 +71,10 @@ worker check (below) only runs on a Linux host of the same architecture.
   To bump one, download the release asset, compute its SHA-256 from the bytes, update the URL and
   the hashes, then prove every pin with `vendor/bin/shell-packager fetch --config=shell-package.json
   --arch=<x86_64|aarch64> [--platform=macos|windows]` (one hand-typed digit was caught that way in
-  shell-packager's own fixture). The Linux pins are still shell 0.1.0 and `sfx-20261109.16`, the
-  build #86's clean-VM runs verified; macOS arm64 pins shell 0.2.0 and `sfx-20261109.15`, macOS
-  x86_64 shell 0.4.0 and `sfx-20261111.28` (gh-92); Windows pins shell 0.3.1 and `sfx-20261110.27`.
+  shell-packager's own fixture). The Linux pins are shell 0.4.1 (gh-92: KWin's title bar follows the
+  app's theme on KDE Plasma) and `sfx-20261109.16`, the SFX build #86's clean-VM runs verified;
+  macOS arm64 pins shell 0.2.0 and `sfx-20261109.15`, macOS x86_64 shell 0.4.0 and
+  `sfx-20261111.28` (gh-92); Windows pins shell 0.3.1 and `sfx-20261110.27`.
   Phase 7 (gh-82) brings them all to one release. Downloads are cached in
   `~/.cache/grafida-shell-packager`.
 - **The Linux SFX links glibc dynamically** (2.35 floor, = the shell's), everything else static: musl

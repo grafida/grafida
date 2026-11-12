@@ -117,6 +117,7 @@ task-manager pin you made for 0.3 stops working, so pin Grafida again after the 
 * 🐞 [MEDIUM] The Articles screen kept a hidden loading spinner animating, using CPU while idle (gh-86)
 * 🐞 [LOW] An upgrade could keep an outdated translation or migration, and a removed language stayed selectable (gh-86)
 * 🐞 [LOW] The window's title bar stayed light when Grafida started in dark mode (gh-92)
+* 🐞 [LOW] Linux, KDE Plasma: the window's title bar stayed light in dark mode (gh-92)
 
 Legend:
 * 🚨 Security update
