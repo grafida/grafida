@@ -6,9 +6,9 @@ description: Drive the real Grafida SPA against the real PHP backend in a browse
 # Verifying a Grafida change by running it
 
 Grafida is a desktop app on its own native shell: a native webview whose SPA talks to
-the PHP worker over the `boson://` scheme. You can drive the real window through the
+the PHP worker over the `shell://` scheme. You can drive the real window through the
 shell's automation channel (see `CLAUDE.md`), but for most changes you don't need
-to. **The `boson://` scheme handler is the only piece that has to be replaced.** Everything behind `Kernel::handle()` and everything in
+to. **The `shell://` scheme handler is the only piece that has to be replaced.** Everything behind `Kernel::handle()` and everything in
 `assets/private` is the shipping code, so an HTTP bridge + Chromium gives you a
 genuine end-to-end run.
 
@@ -25,7 +25,7 @@ $container = ContainerFactory::create([
     'static.provider' => new StaticFiles([]),          // Grafida\Shell\StaticFiles; no roots = finds nothing
     'secret.store'    => false,                        // plaintext fallback: no keychain prompts
 ]);
-$response = $container->get(Kernel::class)->handle(new Request('GET', 'boson://app/api/...'));
+$response = $container->get(Kernel::class)->handle(new Request('GET', 'shell://app/api/...'));
 ```
 
 `Request`/`Response` are `Grafida\Shell\*` (grafida/shell-php): `new Request($method,
@@ -44,7 +44,7 @@ deprecation that otherwise corrupts JSON output.
 1. **Bridge**: a `php -S 127.0.0.1:8793 bridge.php` router that sends **every** request —
    static assets included — through `FrontController`, with `static.provider` set to
    `new StaticFiles([$root . '/assets/private', $root . '/assets/public'])`:
-   `new Request($_SERVER['REQUEST_METHOD'], 'boson://app' . $_SERVER['REQUEST_URI'], getallheaders(), file_get_contents('php://input'))`,
+   `new Request($_SERVER['REQUEST_METHOD'], 'shell://app' . $_SERVER['REQUEST_URI'], getallheaders(), file_get_contents('php://input'))`,
    then `http_response_code($r->status)`, `header("$name: $value", false)` for each pair, echo the
    body. Do not `return false` for assets: that lets the built-in server serve them and skips
    `StaticFiles` and the SPA-shell fallback, which are app code.
@@ -54,7 +54,7 @@ deprecation that otherwise corrupts JSON output.
 ```js
 await page.addInitScript(() => {
     const f = window.fetch;
-    window.fetch = (u, o) => f(typeof u === 'string' && u.startsWith('boson://app') ? u.replace('boson://app', '') : u, o);
+    window.fetch = (u, o) => f(typeof u === 'string' && u.startsWith('shell://app') ? u.replace('shell://app', '') : u, o);
 });
 ```
 

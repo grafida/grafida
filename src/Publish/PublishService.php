@@ -36,7 +36,7 @@ use Grafida\Text\ContentNormaliser;
  * Pipeline:
  *   1. Block if the site requires unsupported custom field types — unless the
  *      draft carries the values it imported for them and the user forced it.
- *   2. Upload offline images and swap their local (boson://) or data: URI src for public URLs.
+ *   2. Upload offline images and swap their local (shell://) or data: URI src for public URLs.
  *   3. Create any tags that do not yet exist and resolve all tags to IDs.
  *   4. Split the HTML into introtext / fulltext on the read-more marker.
  *   5. Map supported custom-field values into `com_fields`, uploading the offline
@@ -327,16 +327,16 @@ final class PublishService
      * returns the details needed to rebuild it as a Joomla media-field <img>.
      *
      * Three cases, per `InlineMedia::rewriteOfflineImages()`'s contract:
-     *   - A `boson://` local-media reference (`$mediaId` set, `$dataUri` null):
+     *   - A `shell://` local-media reference (`$mediaId` set, `$dataUri` null):
      *     resolves to its stored offline blob — the common gh-36 path.
      *   - A tagged/untagged `data:` image (`$dataUri` set): the legacy inline
      *     path — a not-yet-migrated draft, or an image that somehow escaped
      *     the upload handler — decoded and stored on the fly so it is
      *     uploaded too, rather than leaking a raw data: URI into the
      *     published article.
-     *   - A `boson://` reference whose blob has been deleted from the Local
+     *   - A `shell://` reference whose blob has been deleted from the Local
      *     Media tab, with no data: fallback to fall back on: publishing must
-     *     refuse rather than silently emit a broken `boson://` src that
+     *     refuse rather than silently emit a broken `shell://` src that
      *     resolves to nothing on the live site.
      * A failure to upload aborts the publish with a clear error instead of
      * silently leaving a broken image.

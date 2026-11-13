@@ -203,7 +203,7 @@ final class DraftExportServiceTest extends TestCase
     }
 
     /**
-     * gh-36: a body image is a `boson://app/api/media/{id}/raw` reference, not
+     * gh-36: a body image is a `shell://app/api/media/{id}/raw` reference, not
      * self-carrying `data:` bytes, so it must ride under `offlineMedia` too —
      * and importing must materialise a fresh blob (never point back at the
      * exporting install's row), sharing a ref with the intro image if the same
@@ -243,7 +243,7 @@ final class DraftExportServiceTest extends TestCase
         // must collapse onto one offlineMedia entry, alongside the intro
         // image's own entry — never three.
         self::assertCount(2, $payload['offlineMedia']);
-        self::assertStringNotContainsString('boson://', $payload['draft']['html']);
+        self::assertStringNotContainsString('shell://', $payload['draft']['html']);
         self::assertStringNotContainsString(InlineMedia::ATTRIBUTE, $payload['draft']['html']);
         preg_match_all('/grafida-media:\/\/export:(m\d+)/', $payload['draft']['html'], $matches);
         self::assertCount(2, $matches[1]);
@@ -252,7 +252,7 @@ final class DraftExportServiceTest extends TestCase
         $imported = $this->export->importAsNewDraft(2, $payload);
 
         self::assertStringNotContainsString('grafida-media://export:', $imported->html);
-        preg_match_all('/boson:\/\/app\/api\/media\/(\d+)\/raw/', $imported->html, $urlMatches);
+        preg_match_all('/shell:\/\/app\/api\/media\/(\d+)\/raw/', $imported->html, $urlMatches);
         self::assertCount(2, $urlMatches[1]);
         self::assertSame($urlMatches[1][0], $urlMatches[1][1], 'both rewritten <img> tags must point at the same freshly-stored blob');
 
@@ -268,7 +268,7 @@ final class DraftExportServiceTest extends TestCase
      * never touched by the on-open legacy migration) carries the image
      * self-embedded as a `data:` URI in `html`, not under `offlineMedia`.
      * Importing it must still end up with a `media_blobs` row and a rewritten
-     * `boson://` reference — {@see DraftExportService::importAsNewDraft()}
+     * `shell://` reference — {@see DraftExportService::importAsNewDraft()}
      * runs {@see InlineImageExtractor} over the imported HTML for exactly
      * this reason.
      */
@@ -301,7 +301,7 @@ final class DraftExportServiceTest extends TestCase
         self::assertStringNotContainsString('data:image', $imported->html);
         self::assertStringContainsString(InlineMedia::LOCAL_URL_PREFIX, $imported->html);
 
-        preg_match('#boson://app/api/media/(\d+)/raw#', $imported->html, $m);
+        preg_match('#shell://app/api/media/(\d+)/raw#', $imported->html, $m);
         self::assertNotEmpty($m);
         $blob = $this->media->find((int) $m[1]);
         self::assertNotNull($blob);

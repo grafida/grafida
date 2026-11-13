@@ -36,11 +36,11 @@ use Joomla\Database\DatabaseInterface;
 
 /**
  * gh-36: a draft whose body references an offline blob by its local URL
- * (`boson://app/api/media/{id}/raw`) must publish exactly like the legacy
+ * (`shell://app/api/media/{id}/raw`) must publish exactly like the legacy
  * `data:`-tagged form — uploaded to the site's Media Manager and rewritten
  * into the same `<img src="images/…" data-path="…">` Joomla's own media
  * field emits — and a reference to a since-deleted blob must abort the
- * publish with the dedicated error rather than leak a `boson://` src into
+ * publish with the dedicated error rather than leak a `shell://` src into
  * the article.
  */
 final class PublishServiceLocalMediaTest extends TestCase
@@ -165,7 +165,7 @@ final class PublishServiceLocalMediaTest extends TestCase
         self::assertStringContainsString('src="images/grafida/photo.png"', $stored->html);
         self::assertStringContainsString('data-path="grafida/photo.png"', $stored->html);
         self::assertStringContainsString('width="640"', $stored->html);
-        self::assertStringNotContainsString('boson://', $stored->html);
+        self::assertStringNotContainsString('shell://', $stored->html);
     }
 
     /**
@@ -232,7 +232,7 @@ final class PublishServiceLocalMediaTest extends TestCase
     {
         // A local URL naming a blob id that was never stored (i.e. deleted from
         // the Local Media tab) — nothing for uploadInlineImage() to fall back on.
-        $draft = $this->draftWithHtml('<p><img src="boson://app/api/media/999999/raw?rev=deadbeef"></p>');
+        $draft = $this->draftWithHtml('<p><img src="shell://app/api/media/999999/raw?rev=deadbeef"></p>');
 
         $this->expectException(ApiException::class);
         $this->expectExceptionMessage('no longer exists');

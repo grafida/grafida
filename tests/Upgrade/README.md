@@ -81,5 +81,5 @@ runs on the real data while its automation file stays where `winvm.sh tunnel` lo
 `windows-token.ps1` unprotects `%APPDATA%\Grafida\secrets\<sha1(reference)>.bin` in the desktop session.
 
 It checks that the 0.4 worker answers; that the site, the preferences, the AI service and its key,
-the site token in the OS store, and both drafts survive byte for byte; that the `boson://` pictures
-are served unchanged; and that the editor renders them.
+the site token in the OS store, and both drafts survive byte for byte (but for the `boson://` → `shell://`
+rewrite of their picture URLs); that the pictures are served unchanged; and that the editor renders them.

@@ -17,7 +17,7 @@ use Grafida\Media\ImageDimensions;
  * Handles images that were inserted while editing offline.
  *
  * An image picked through Grafida's own media flow is inserted as
- * `<img src="boson://app/api/media/{id}/raw?rev=…">` (gh-36: a local blob
+ * `<img src="shell://app/api/media/{id}/raw?rev=…">` (gh-36: a local blob
  * served by the worker, so its bytes never sit in the editor DOM or the
  * `drafts.html` column as base64). An image **pasted or dragged straight into
  * the editor** (e.g. dropped from a web page or another app) still lands as a
@@ -26,7 +26,7 @@ use Grafida\Media\ImageDimensions;
  * tagged `data:` images too (see the legacy-draft migration). Before
  * publishing, *every* such image — local-URL or data: — must be uploaded and
  * swapped for the real public URL returned by the Media Manager, or a
- * `boson://` / `data:` src would leak into the published article and resolve
+ * `shell://` / `data:` src would leak into the published article and resolve
  * to nothing on the live site.
  */
 final class InlineMedia
@@ -34,10 +34,22 @@ final class InlineMedia
     public const ATTRIBUTE = 'data-grafida-media-id';
 
     /** Prefix of the URL the worker serves a not-yet-published image from (gh-36). */
-    public const LOCAL_URL_PREFIX = 'boson://app/api/media/';
+    public const LOCAL_URL_PREFIX = 'shell://app/api/media/';
 
     /**
-     * Rewrites every inline offline image (a `boson://` local-media URL or a
+     * The prefix Grafida 0.3 and earlier (Boson) wrote. Migration 11 rewrites it in stored drafts; it is still
+     * recognised on the way in, e.g. a `.grafida` export whose blob was deleted before it was made.
+     */
+    public const LEGACY_LOCAL_URL_PREFIX = 'boson://app/api/media/';
+
+    /** True when `$src` is a local-media reference, in the current or the legacy scheme. */
+    public static function isLocalUrl(string $src): bool
+    {
+        return str_starts_with($src, self::LOCAL_URL_PREFIX) || str_starts_with($src, self::LEGACY_LOCAL_URL_PREFIX);
+    }
+
+    /**
+     * Rewrites every inline offline image (a `shell://` local-media URL or a
      * `data:` URI) into the Media-Manager `<img>` that Joomla's own editor
      * produces once the image is uploaded.
      *
@@ -74,8 +86,8 @@ final class InlineMedia
             $mediaId = null;
             $dataUri = null;
 
-            if (str_starts_with($src, self::LOCAL_URL_PREFIX)) {
-                // "boson://app/api/media/{id}/raw?rev=…" — the id in the URL is
+            if (self::isLocalUrl($src)) {
+                // "shell://app/api/media/{id}/raw?rev=…" — the id in the URL is
                 // what actually rendered, so it wins over a (stale/absent)
                 // data-grafida-media-id attribute when both are present.
                 $mediaId = $this->idFromLocalUrl($src);
@@ -100,7 +112,7 @@ final class InlineMedia
 
     /**
      * Rewrites every **legacy inline `data:` image** — and only those — into a
-     * `boson://app/api/media/{id}/raw` local-media reference (gh-36's
+     * `shell://app/api/media/{id}/raw` local-media reference (gh-36's
      * legacy-draft migration: {@see \Grafida\Media\InlineImageExtractor}).
      *
      * Unlike {@see rewriteOfflineImages()} this does **not** touch an `<img>`
@@ -255,7 +267,7 @@ final class InlineMedia
     }
 
     /**
-     * Parses the blob id out of a `boson://app/api/media/{id}/raw?rev=…` src,
+     * Parses the blob id out of a `shell://app/api/media/{id}/raw?rev=…` src,
      * tolerating the `?rev=…` query string (and any other query the kernel is
      * ever given, since it ignores unknown parameters).
      *
@@ -269,7 +281,8 @@ final class InlineMedia
      */
     public function idFromLocalUrl(string $src): ?int
     {
-        $rest = substr($src, strlen(self::LOCAL_URL_PREFIX));
+        $prefix = str_starts_with($src, self::LEGACY_LOCAL_URL_PREFIX) ? self::LEGACY_LOCAL_URL_PREFIX : self::LOCAL_URL_PREFIX;
+        $rest   = substr($src, strlen($prefix));
 
         // "{id}/raw?rev=…" -> id.
         if (preg_match('#^(\d+)/raw(?:\?.*)?$#', $rest, $m) !== 1) {

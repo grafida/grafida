@@ -35,7 +35,7 @@ final class HelpRoutingTest extends TestCase
     /** @return array{0: int, 1: mixed} */
     private function call(Kernel $kernel, string $method, string $path): array
     {
-        $response = $kernel->handle(new Request($method, 'boson://app' . $path, [], ''));
+        $response = $kernel->handle(new Request($method, 'shell://app' . $path, [], ''));
 
         return [(int) (string) $response->status, json_decode((string) $response->body, true)];
     }

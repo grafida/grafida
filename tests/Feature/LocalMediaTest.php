@@ -64,7 +64,7 @@ final class LocalMediaTest extends TestCase
 
     private function raw(string $method, string $path, ?string $body = null): Response
     {
-        return $this->kernel->handle(new Request($method, 'boson://app' . $path, [], $body ?? ''));
+        return $this->kernel->handle(new Request($method, 'shell://app' . $path, [], $body ?? ''));
     }
 
     /** @return array{0: int, 1: mixed} */
@@ -161,7 +161,7 @@ final class LocalMediaTest extends TestCase
         $entry = $json['data']['entries'][0];
         self::assertArrayHasKey('url', $entry);
         self::assertArrayNotHasKey('data', $entry);
-        self::assertStringContainsString('boson://app/api/media/', $entry['url']);
+        self::assertStringContainsString('shell://app/api/media/', $entry['url']);
     }
 
     public function testLocalMediaListingWorksWithoutAConnectedSite(): void
@@ -328,7 +328,7 @@ final class LocalMediaTest extends TestCase
         // intrinsic width (640), so it must be kept — never adopted wholesale.
         $draftId = $this->seedDraft(
             $siteId,
-            '<p><img src="boson://app/api/media/' . $id . '/raw?rev=stale" width="300" height="225"></p>',
+            '<p><img src="shell://app/api/media/' . $id . '/raw?rev=stale" width="300" height="225"></p>',
         );
 
         $newBytes = $this->png(1280, 640);
@@ -356,7 +356,7 @@ final class LocalMediaTest extends TestCase
         $editedId    = $media->store($siteId, null, 'a.png', 'image/png', 'orig-bytes', 640, 480);
         $untouchedId = $media->store($siteId, null, 'b.png', 'image/png', 'other-bytes', 200, 100);
 
-        $untouchedHtml = '<p><img src="boson://app/api/media/' . $untouchedId . '/raw?rev=xyz" width="200" height="100"></p>';
+        $untouchedHtml = '<p><img src="shell://app/api/media/' . $untouchedId . '/raw?rev=xyz" width="200" height="100"></p>';
         $draftId       = $this->seedDraft($siteId, $untouchedHtml);
 
         [$status] = $this->call(
@@ -411,6 +411,6 @@ final class LocalMediaTest extends TestCase
         self::assertArrayNotHasKey('dataUri', $json['data']);
         self::assertSame(1, $json['data']['width']);
         self::assertSame(1, $json['data']['height']);
-        self::assertStringContainsString('boson://app/api/media/', $json['data']['url']);
+        self::assertStringContainsString('shell://app/api/media/', $json['data']['url']);
     }
 }

@@ -49,7 +49,7 @@ def ev(js, timeout=60):
 
 
 def api(path):
-    return ev('const r = await fetch(%s); return {status: r.status, json: await r.json()};' % json.dumps('boson://app' + path))
+    return ev('const r = await fetch(%s); return {status: r.status, json: await r.json()};' % json.dumps('shell://app' + path))
 
 
 site = manifest['site']
@@ -93,8 +93,10 @@ record(titles == sorted(d['title'] for d in manifest['drafts']), 'The drafts are
 for d in manifest['drafts']:
     got = api('/api/drafts/%s' % d['id'])
     html = (got['json'].get('data') or {}).get('html')
-    record(got['status'] == 200 and html == d['html'], 'Draft %s is unchanged' % d['id'],
-           '%d characters%s' % (len(html or ''), '' if html == d['html'] else ', DIFFERS'))
+    # 0.3 wrote boson:// media references; migration 11 rewrites exactly that prefix and nothing else.
+    expected = (d['html'] or '').replace('boson://app/api/media/', 'shell://app/api/media/')
+    record(got['status'] == 200 and html == expected, 'Draft %s is unchanged (boson:// -> shell://)' % d['id'],
+           '%d characters%s' % (len(html or ''), '' if html == expected else ', DIFFERS'))
 
 # The SHA-256 of seed-0.3.php's two PNGs (a manifest from a seed that predates its `images` key).
 want = sorted((manifest.get('images') or {
@@ -110,9 +112,9 @@ for (const url of %s) {
     out.push({status: r.status, type: r.headers.get('content-type'),
               sha: [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2, '0')).join('')});
 }
-return out;''' % json.dumps(manifest['drafts'][0]['mediaUrls']))
+return out;''' % json.dumps([u.replace('boson://', 'shell://') for u in manifest['drafts'][0]['mediaUrls']]))
 record(sorted(h['sha'] for h in hashes) == want and all(h['status'] == 200 for h in hashes),
-       'The boson:// pictures are served, byte for byte', '; '.join('%s %s %s…' % (h['status'], h['type'], h['sha'][:12]) for h in hashes))
+       'The shell:// pictures are served, byte for byte', '; '.join('%s %s %s…' % (h['status'], h['type'], h['sha'][:12]) for h in hashes))
 
 # 4. The editor shows them.
 shown = ev('''
@@ -128,7 +130,7 @@ for (let i = 0; i < 100; i++) {
 }
 const doc = window.tinymce && tinymce.activeEditor && tinymce.activeEditor.getDoc();
 return {timeout: true, imgs: doc ? [...doc.querySelectorAll('img')].map(i => [i.getAttribute('src'), i.complete, i.naturalWidth]) : null};
-''' % json.dumps('boson://app/api/drafts/%s' % manifest['drafts'][0]['id']), timeout=90)
+''' % json.dumps('shell://app/api/drafts/%s' % manifest['drafts'][0]['id']), timeout=90)
 ok = isinstance(shown, list) and sorted(i['size'] for i in shown) == ['32x48', '48x32']
 record(ok, 'The editor renders both pictures', json.dumps(shown))
 

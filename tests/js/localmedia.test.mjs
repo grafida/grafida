@@ -5,7 +5,7 @@
  * @license   GNU General Public License version 3, or later
  *
  * Unit tests for assets/private/js/editor/localmedia.js — the module that
- * builds/parses the boson://app/api/media/{id}/raw?rev=… local-media URL
+ * builds/parses the shell://app/api/media/{id}/raw?rev=… local-media URL
  * (gh-36).
  *
  * Run with `composer test:js` (or `node --test tests/js/`). Like the
@@ -47,11 +47,11 @@ test('token() changes when either the id or the revision changes', () => {
     assert.notEqual(M.token(5, '2026-07-21 10:00:01'), base);
 });
 
-test('url() builds the boson://app/api/media/{id}/raw?rev=<token> shape', () => {
+test('url() builds the shell://app/api/media/{id}/raw?rev=<token> shape', () => {
     const M = load();
     assert.equal(
         M.url(5, '2026-07-21 10:00:00'),
-        'boson://app/api/media/5/raw?rev=206081bb',
+        'shell://app/api/media/5/raw?rev=206081bb',
     );
 });
 
@@ -63,20 +63,20 @@ test('idFromUrl() recovers the id from a URL minted by url()', () => {
 
 test('idFromUrl() tolerates a missing/extra query string', () => {
     const M = load();
-    assert.equal(M.idFromUrl('boson://app/api/media/7/raw'), 7);
-    assert.equal(M.idFromUrl('boson://app/api/media/7/raw?rev=deadbeef'), 7);
-    assert.equal(M.idFromUrl('boson://app/api/media/7/raw?rev=deadbeef&foo=1'), 7);
+    assert.equal(M.idFromUrl('shell://app/api/media/7/raw'), 7);
+    assert.equal(M.idFromUrl('shell://app/api/media/7/raw?rev=deadbeef'), 7);
+    assert.equal(M.idFromUrl('shell://app/api/media/7/raw?rev=deadbeef&foo=1'), 7);
 });
 
 test('idFromUrl() returns null for anything not the local /raw form', () => {
     const M = load();
     assert.equal(M.idFromUrl('data:image/png;base64,abcd'), null);
     // A real site URL that merely happens to contain "/api/media/" must not
-    // be mistaken for a local reference — anchored on the boson:// prefix.
+    // be mistaken for a local reference — anchored on the shell:// prefix.
     assert.equal(M.idFromUrl('https://example.com/api/media/1/raw'), null);
-    assert.equal(M.idFromUrl('boson://app/api/media/7'), null);
-    assert.equal(M.idFromUrl('boson://app/api/media/7/other'), null);
-    assert.equal(M.idFromUrl('boson://app/api/media/abc/raw'), null);
+    assert.equal(M.idFromUrl('shell://app/api/media/7'), null);
+    assert.equal(M.idFromUrl('shell://app/api/media/7/other'), null);
+    assert.equal(M.idFromUrl('shell://app/api/media/abc/raw'), null);
     assert.equal(M.idFromUrl(''), null);
     assert.equal(M.idFromUrl(null), null);
     assert.equal(M.idFromUrl(undefined), null);

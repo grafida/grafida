@@ -26,7 +26,7 @@ two-space continuation indent are the original bullet formatting.
   `updated_at`/`width`/`height`/`size`, added by `storage/migrations/07_media_blobs_local.sql` —
   not re-runnable, following the `04_ai_chat_response_chain.sql` pattern), but the editor
   references it by a **local URL the worker itself serves**:
-  `boson://app/api/media/{id}/raw?rev=<token>` (`MediaController::mediaBlobRaw()`, ~60 bytes
+  `shell://app/api/media/{id}/raw?rev=<token>` (`MediaController::mediaBlobRaw()`, ~60 bytes
   regardless of image size, vs. a 2.3 MiB screenshot's ~3.1 MiB of base64 previously sitting in
   the editor DOM, `State` *and* the `drafts.html` column — which is what made the CodeMirror
   source editor freeze for seconds on a couple of pasted screenshots). `rev` is this endpoint's
@@ -207,7 +207,7 @@ two-space continuation indent are the original bullet formatting.
     is part of the path) and a successful publish (every prediction has just become a real path).
     A crop/resize does not change it.
   ⚠️ **`browseImageMedia()` must honour `picked.mediaId`.** The media browser's Local Media tab resolves
-  with an offline blob, whose `url` is the local `boson://…/media/{id}/raw` one; adopting that as the
+  with an offline blob, whose `url` is the local `shell://…/media/{id}/raw` one; adopting that as the
   image value publishes it verbatim and the picture is broken on the site. It has to become the same
   `grafida-media://N` sentinel the "Choose file…" button produces — which the `media` custom field's own
   browse button always did and this one did not.
@@ -289,7 +289,7 @@ two-space continuation indent are the original bullet formatting.
   because without one we would be naming an adapter we guessed at; the value is perfectly valid
   without it, the site just renders no dimensions. The record shape itself — and why a partial one is
   no save at all — is `Field\MediaFieldValue`'s; see `CLAUDE.md`'s `src/Field/` bullet.
-  a local pick is inserted as `<img src="boson://app/api/media/{id}/raw?rev=…"
+  a local pick is inserted as `<img src="shell://app/api/media/{id}/raw?rev=…"
   data-grafida-media-id="N">` (`GRAFIDA_MEDIA_ATTR`, mirroring `InlineMedia::ATTRIBUTE`) — **not**
   a `data:` URI (gh-36, see `src/Media/` above) — so `PublishService` uploads the referenced blob
   on publish; a site-media pick is inserted as its public URL. The tagging attribute is
@@ -310,7 +310,7 @@ two-space continuation indent are the original bullet formatting.
   it aborts the publish with a dedicated `ApiException` — a plain-English literal like every other
   message in this class (none of them run through `LanguageService::translateIn()`, which is
   reserved for site-facing strings like `version_note`) — rather than publishing a broken
-  `boson://` src that resolves to nothing on the live site. Any other media upload that fails (or
+  `shell://` src that resolves to nothing on the live site. Any other media upload that fails (or
   returns no usable result) aborts the publish with a clear error too.
   Each uploaded image is rebuilt as the **same `<img>` Joomla's own media field emits** —
   `<img src="images/…" width=… height=… loading="lazy" data-path="local-images:/…">` (`mediaInfo()`): a
@@ -400,7 +400,7 @@ Seven rules, none of them guessable from the files:
   `en-GB`, everything else empty, `remoteId` null. A case is about the *body*; anything it does not
   mention must not vary between cases. Setting `remoteId` is what turns the write into a PATCH.
 - ⚠️ **No case may need the network.** The publish runs against a `FakeTransport` answering exactly
-  one URL — the article write — so a case must not contain an offline image (`boson://` or `data:`),
+  one URL — the article write — so a case must not contain an offline image (`shell://` or `data:`),
   and must not name a tag that `site-tags.json` does not already carry, or the publish will try to
   upload/create it and the case will fail with a 404 rather than a useful diff. That is a deliberate
   fence: media upload and tag creation are network behaviour and belong in their own tests.

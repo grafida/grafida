@@ -3,7 +3,7 @@
  * Copyright (c) 2026 Nicholas K. Dionysopoulos
  * GNU General Public License version 3, or later
  *
- * Builds and parses the `boson://app/api/media/{id}/raw?rev=…` URL a local
+ * Builds and parses the `shell://app/api/media/{id}/raw?rev=…` URL a local
  * (not-yet-published) media blob is referenced by in the article HTML
  * (gh-36). Exposes window.GrafidaLocalMedia = { url, idFromUrl, token,
  * fitDimensions, PREFIX }.
@@ -45,7 +45,7 @@
     // exact prefix (rather than e.g. "/api/media/") is what stops a published
     // site URL that merely happens to contain "/api/media/" from being
     // mistaken for a local reference.
-    const PREFIX = 'boson://app/api/media/';
+    const PREFIX = 'shell://app/api/media/';
 
     /**
      * A minimal, dependency-free SHA-1 (RFC 3174) over a UTF-8 string,
@@ -148,17 +148,17 @@
     /**
      * @param {number} id
      * @param {string} revisedAt see token()
-     * @return {string} the boson://app/api/media/{id}/raw?rev=… URL
+     * @return {string} the shell://app/api/media/{id}/raw?rev=… URL
      */
     function url(id, revisedAt) {
         return PREFIX + id + '/raw?rev=' + token(id, revisedAt);
     }
 
     /**
-     * Parses the blob id out of a "boson://app/api/media/{id}/raw[?...]" URL,
+     * Parses the blob id out of a "shell://app/api/media/{id}/raw[?...]" URL,
      * tolerating (and ignoring) the `?rev=…` query string. Returns null for
      * anything else — including a `data:` URI, a real site URL, or a
-     * boson://app/api/media/ URL that is not the /raw form — mirroring
+     * shell://app/api/media/ URL that is not the /raw form — mirroring
      * `InlineMedia::idFromLocalUrl()`.
      *
      * @param {string} src

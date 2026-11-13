@@ -29,7 +29,7 @@ use Grafida\Site\SecureStoreUnavailableException;
 
 /**
  * Routes and handles the application's internal JSON API (the front-end calls
- * these via fetch('boson://app/api/...')).
+ * these via fetch('shell://app/api/...')).
  *
  * This class is a thin dispatcher: every actual handler lives on one of the
  * per-domain controllers under {@see \Grafida\Http\Controller}, each a

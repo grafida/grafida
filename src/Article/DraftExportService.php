@@ -30,7 +30,7 @@ use Grafida\Support\App;
  * the local `media_blobs` / `ai_services` row ids (also local-install only).
  *
  * Since gh-36 an inline body image is no longer self-carrying — it is a
- * `boson://app/api/media/{id}/raw` reference to a row that means nothing on
+ * `shell://app/api/media/{id}/raw` reference to a row that means nothing on
  * another install — so `exportHtml()`/`importMedia()` give the body the same
  * `offlineMedia` embed-and-rematerialise treatment `exportImages()` already
  * gave the intro/full-text `grafida-media://N` sentinels, sharing the very
@@ -237,7 +237,7 @@ final class DraftExportService
 
     /**
      * Embeds every body `<img>` that references a local media blob
-     * (`boson://app/api/media/{id}/raw…`, see {@see \Grafida\Html\InlineMedia})
+     * (`shell://app/api/media/{id}/raw…`, see {@see \Grafida\Html\InlineMedia})
      * into `$offlineMedia` the same way {@see exportImages()} embeds the
      * intro/full-text images, and rewrites its `src` to the matching
      * `grafida-media://export:mN` sentinel. A **legacy** inline `data:` image
@@ -253,7 +253,7 @@ final class DraftExportService
      */
     private function exportHtml(string $html, array &$offlineMedia): string
     {
-        if (trim($html) === '' || !str_contains($html, InlineMedia::LOCAL_URL_PREFIX)) {
+        if (trim($html) === '' || !str_contains($html, '://app/api/media/')) {
             return $html;
         }
 
@@ -270,7 +270,7 @@ final class DraftExportService
         foreach ($dom->getElementsByTagName('img') as $img) {
             $src = $img->getAttribute('src') ?? '';
 
-            if (!str_starts_with($src, InlineMedia::LOCAL_URL_PREFIX)) {
+            if (!InlineMedia::isLocalUrl($src)) {
                 continue;
             }
 

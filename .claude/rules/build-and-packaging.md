@@ -94,7 +94,7 @@ worker check (below) only runs on a Linux host of the same architecture.
   limit). The shell-packager build itself runs the worker before writing (ini probe + `ready`) on a
   Linux host of the same arch.
 - **The sweep (gh-92):** `grep -rni boson` over the tree (vendored code excluded) and over every
-  artefact's PHAR listing must find only the `boson` scheme, or history.
+  artefact's PHAR listing must find only history (the legacy `boson://` prefix in `InlineMedia`, migration 11 and the 0.3 upgrade test).
 
 ## The macOS disk images (gh-88, gh-92)
 
@@ -255,7 +255,7 @@ without that flag PHPUnit fails the whole run on an empty suite before the featu
   **cannot** reach: `assets/private/js/ai/providers.js` (the AI transport — the provider call runs in
   the SPA, see the AI facts), `assets/private/js/editor/slashtools.js` (the slash-command menu),
   `assets/private/js/editor/csstheme.js` (the editor colour-scheme rewriter, gh-38), and
-  `assets/private/js/editor/localmedia.js` (the `boson://app/api/media/{id}/raw?rev=…` URL
+  `assets/private/js/editor/localmedia.js` (the `shell://app/api/media/{id}/raw?rev=…` URL
   builder/parser, gh-36 — its own synchronous SHA-1 is what the rev token is verified against —
   **plus**, since gh-43, `fitDimensions()`, the JS half of the image-resync sizing rule whose PHP
   twin is `Grafida\Media\ImageDimensions::fit()`, see `.claude/rules/media-and-publish.md`).

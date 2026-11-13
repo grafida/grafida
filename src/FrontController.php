@@ -17,7 +17,7 @@ use Grafida\Shell\Response;
 use Grafida\Application\Kernel;
 
 /**
- * Entry point invoked for every `boson://` request. Delegates to the kernel,
+ * Entry point invoked for every `shell://` request. Delegates to the kernel,
  * which serves the API, static assets, or the SPA shell.
  *
  * It is a shell-php {@see Handler}, served by `bin/worker.php` (the stdio

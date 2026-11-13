@@ -9,7 +9,7 @@
 
 /*
  * The stdio worker: Grafida's back-end as the process the native shell (grafida/shell) spawns,
- * answering its `boson://` requests in framed messages on stdin/stdout (grafida/grafida#82). It is
+ * answering its `shell://` requests in framed messages on stdin/stdout (grafida/grafida#82). It is
  * Grafida's only entry point (gh-92): the packaged SFX stub runs it from its PHAR, and dev mode runs
  * it with the system PHP.
  *

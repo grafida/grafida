@@ -54,7 +54,7 @@ final class ShellFileTest extends TestCase
      */
     private function call(Kernel $kernel, string $method, string $path, array $headers = [], string $body = ''): array
     {
-        $response = $kernel->handle(new Request($method, 'boson://app' . $path, $headers, $body));
+        $response = $kernel->handle(new Request($method, 'shell://app' . $path, $headers, $body));
 
         return [$response->status, json_decode($response->body, true)];
     }

@@ -19,7 +19,7 @@ use Grafida\Http\Transport;
  * CORS / non-streaming proxy for AI provider calls.
  *
  * When the SPA cannot reach an AI API directly (a provider that refuses the
- * `boson://app` origin's CORS preflight, a refused redirect), it hands the
+ * `shell://app` origin's CORS preflight, a refused redirect), it hands the
  * request to this proxy which forwards it over PHP's
  * HTTP stack and returns the raw response body.
  *

@@ -89,7 +89,7 @@
      *   - a data: URI          — pasted in a build before gh-36, or otherwise
      *                            embedded; use as-is;
      *   - an offline blob      — a local, not-yet-published image, referenced by
-     *                            its boson://app/api/media/{id}/raw URL and
+     *                            its shell://app/api/media/{id}/raw URL and
      *                            normally also tagged data-grafida-media-id;
      *                            GET /api/media/{id} for the bytes as a data: URI;
      *   - a plain URL           — already published; the webview cannot fetch it
@@ -100,7 +100,7 @@
      * hook, so HTML set programmatically can reach here before that hook has run,
      * and the URL is the thing that actually rendered. This fallback also keeps a
      * local URL out of the published-image branch below — GET /api/sites/{id}/image
-     * would rightly refuse a boson:// URL (SiteImageFetcher only fetches from the
+     * would rightly refuse a shell:// URL (SiteImageFetcher only fetches from the
      * site's own host), but asking costs a round trip through the worker, which
      * answers one request at a time, per image, for a guaranteed refusal.
      *

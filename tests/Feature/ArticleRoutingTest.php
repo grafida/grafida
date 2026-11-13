@@ -83,7 +83,7 @@ final class ArticleRoutingTest extends TestCase
     /** @return array{0: int, 1: mixed} */
     private function call(Kernel $kernel, string $method, string $path): array
     {
-        $request  = new Request($method, 'boson://app' . $path, [], '');
+        $request  = new Request($method, 'shell://app' . $path, [], '');
         $response = $kernel->handle($request);
 
         return [(int) (string) $response->status, json_decode((string) $response->body, true)];

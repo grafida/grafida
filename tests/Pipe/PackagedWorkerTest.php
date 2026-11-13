@@ -66,14 +66,14 @@ final class PackagedWorkerTest extends TestCase
     public function testItRunsFromAPhar(): void
     {
         // The SPA shell and a static asset come out of the PHAR too (no assets/ beside it).
-        $index = $this->worker->request(new Request('GET', 'boson://app/'));
+        $index = $this->worker->request(new Request('GET', 'shell://app/'));
         self::assertSame(200, $index->status);
         self::assertStringContainsString('<html', $index->body);
     }
 
     public function testHelpIsReadFromThePharsDocs(): void
     {
-        $contents = $this->worker->request(new Request('GET', 'boson://app/api/help'));
+        $contents = $this->worker->request(new Request('GET', 'shell://app/api/help'));
         self::assertSame(200, $contents->status, $contents->body);
         $json = json_decode($contents->body, true);
         self::assertIsArray($json);
@@ -82,14 +82,14 @@ final class PackagedWorkerTest extends TestCase
         $slug = self::firstSlug($json);
         self::assertNotNull($slug, 'the table of contents names no page');
 
-        $page = $this->worker->request(new Request('GET', 'boson://app/api/help/page/' . rawurlencode($slug)));
+        $page = $this->worker->request(new Request('GET', 'shell://app/api/help/page/' . rawurlencode($slug)));
         self::assertSame(200, $page->status, $page->body);
         self::assertGreaterThan(100, \strlen($page->body));
     }
 
     public function testTheLanguageFilesAndMigrationsAreExtractedIntoTheDataDirectory(): void
     {
-        $bootstrap = $this->worker->request(new Request('GET', 'boson://app/api/bootstrap'));
+        $bootstrap = $this->worker->request(new Request('GET', 'shell://app/api/bootstrap'));
         self::assertSame(200, $bootstrap->status, $bootstrap->body);
 
         // The data dir (Grafida\Support\Paths): ~/Library/Application Support/Grafida on macOS,
@@ -113,14 +113,14 @@ final class PackagedWorkerTest extends TestCase
 
         // Site 1 does not exist, so this ends in an error after the decode, which is the point:
         // the worker must survive holding the body, its decoded JSON and the decoded bytes.
-        $response = $this->worker->request(new Request('POST', 'boson://app/api/sites/1/media', ['content-type' => 'application/json'], $body), 120.0);
+        $response = $this->worker->request(new Request('POST', 'shell://app/api/sites/1/media', ['content-type' => 'application/json'], $body), 120.0);
         unset($body);
         $peak = self::peakResidentMiB($this->worker->pid());
         fwrite(\STDERR, \sprintf("\n[packaged worker] %d MiB body → HTTP %d, peak RSS %s MiB\n", Protocol::DEFAULT_MAX_BODY_BYTES >> 20, $response->status, $peak ?? '?'));
 
         self::assertNotSame(502, $response->status);
         self::assertStringNotContainsString('Allowed memory size', $this->worker->stderr());
-        self::assertSame(200, $this->worker->request(new Request('GET', 'boson://app/api/bootstrap'))->status);
+        self::assertSame(200, $this->worker->request(new Request('GET', 'shell://app/api/bootstrap'))->status);
     }
 
     /** @param array<mixed> $node */

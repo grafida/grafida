@@ -100,23 +100,23 @@ final class WorkerPipeTest extends TestCase
         self::assertSame($worker->pid(), $worker->ready->pid);
         self::assertSame(['grafida', App::VERSION], [$worker->ready->app, $worker->ready->version]);
 
-        $bootstrap = $worker->request(new Request('GET', 'boson://app/api/bootstrap'));
+        $bootstrap = $worker->request(new Request('GET', 'shell://app/api/bootstrap'));
         self::assertSame(200, $bootstrap->status);
         self::assertStringContainsString('no-store', (string) $bootstrap->header('cache-control'));
         $json = json_decode($bootstrap->body, true);
         self::assertIsArray($json);
         self::assertTrue($json['ok']);
 
-        $css = $worker->request(new Request('GET', 'boson://app/css/app.css'));
+        $css = $worker->request(new Request('GET', 'shell://app/css/app.css'));
         self::assertSame(200, $css->status);
         self::assertSame('text/css; charset=utf-8', $css->header('content-type'));
         self::assertSame(file_get_contents(\dirname(__DIR__, 2) . '/assets/private/css/app.css'), $css->body);
 
-        $spa = $worker->request(new Request('GET', 'boson://app/articles/42'));
+        $spa = $worker->request(new Request('GET', 'shell://app/articles/42'));
         self::assertSame(200, $spa->status);
         self::assertSame(file_get_contents(\dirname(__DIR__, 2) . '/assets/private/view/index.html'), $spa->body);
 
-        self::assertSame(404, $worker->request(new Request('GET', 'boson://app/api/nope'))->status);
+        self::assertSame(404, $worker->request(new Request('GET', 'shell://app/api/nope'))->status);
 
         $worker->closeInput();
         self::assertSame(Worker::EXIT_OK, $worker->wait());
@@ -307,8 +307,8 @@ final class WorkerPipeTest extends TestCase
             $headers = $step[3] ?? [];
             $label   = sprintf('step %d: %s %s', $i, $method, $path);
 
-            $direct = $kernel->handle(new Request($method, 'boson://app' . $path, $headers, $body));
-            $piped  = $worker->request(new Request($method, 'boson://app' . $path, $headers, $body));
+            $direct = $kernel->handle(new Request($method, 'shell://app' . $path, $headers, $body));
+            $piped  = $worker->request(new Request($method, 'shell://app' . $path, $headers, $body));
 
             self::assertSame($direct->status, $piped->status, "$label: status");
             self::assertSame($direct->headers->toArray(), $piped->headers->toArray(), "$label: headers");

@@ -6,6 +6,9 @@
   desktop runtime. It now runs in a native shell of its own, with the PHP back end as a separate
   worker process. Idle CPU use drops to near 0%, and the window stays responsive while Grafida
   works ([gh-82](https://github.com/grafida/grafida/issues/82)).
+* **The app's internal address changed from `boson://app` to `shell://app`.** Your drafts are updated
+  automatically on first start, pictures included. If a local AI server only accepts requests from
+  listed origins (most simply allow all, and LM Studio's *Enable CORS* does), add `shell://app`.
 * **New system requirements, lower than before.** macOS 12 Monterey or later (was macOS 15), on
   Intel Macs as well as Apple Silicon; Windows 10 22H2 or later; Linux with GTK 3 and WebKitGTK 4.1,
   version 2.40 or later (was GTK 4.10 and WebKitGTK 6.0), so Grafida now runs on Ubuntu 22.04 and

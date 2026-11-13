@@ -135,14 +135,14 @@ final class DraftRepositoryTest extends TestCase
         $repo = $this->repo();
 
         $draft = $this->sample();
-        $draft->html = '<p><img src="boson://app/api/media/1/raw?rev=abc"></p>';
+        $draft->html = '<p><img src="shell://app/api/media/1/raw?rev=abc"></p>';
         $id = $repo->insert($draft);
 
         // A trailing "/raw" on a DIFFERENT id must not be matched by a "%1%"
         // substring search — this is the trap the needle's trailing "/raw"
         // exists to close.
         $other = $this->sample();
-        $other->html = '<p><img src="boson://app/api/media/11/raw?rev=xyz"></p>';
+        $other->html = '<p><img src="shell://app/api/media/11/raw?rev=xyz"></p>';
         $repo->insert($other);
 
         $unrelated = $this->sample();
@@ -152,7 +152,7 @@ final class DraftRepositoryTest extends TestCase
         // Same reference, but on a different site — must not match either.
         $elsewhere = $this->sample();
         $elsewhere->siteId = 2;
-        $elsewhere->html   = '<p><img src="boson://app/api/media/1/raw?rev=abc"></p>';
+        $elsewhere->html   = '<p><img src="shell://app/api/media/1/raw?rev=abc"></p>';
         $repo->insert($elsewhere);
 
         $found = $repo->listReferencingMedia(1, 1);

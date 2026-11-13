@@ -17,7 +17,7 @@ use Grafida\Shell\Request;
 use Grafida\Http\ApiController;
 
 /**
- * Request dispatcher: routes incoming `boson://` requests to the JSON API
+ * Request dispatcher: routes incoming `shell://` requests to the JSON API
  * controller, a static asset, or the single-page-app shell. A pure
  * `Request → Response` function over shell-php's types, so it is the same
  * in the stdio worker and in the tests, which need no process at all. Every

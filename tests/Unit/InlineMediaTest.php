@@ -66,7 +66,7 @@ final class InlineMediaTest extends TestCase
     {
         // The gh-36 common case: an <img> pointing at the worker-served local
         // blob, with no data: URI at all — only the id, parsed from the URL.
-        $html = '<p><img src="boson://app/api/media/42/raw?rev=abc12345"></p>';
+        $html = '<p><img src="shell://app/api/media/42/raw?rev=abc12345"></p>';
 
         $seen = [];
         $out  = (new InlineMedia())->rewriteOfflineImages($html, function (?int $id, ?string $uri) use (&$seen): array {
@@ -82,12 +82,12 @@ final class InlineMediaTest extends TestCase
 
         self::assertSame([[42, null]], $seen);
         self::assertStringContainsString('src="images/grafida/z.png"', $out);
-        self::assertStringNotContainsString('boson://app/api/media/42/raw', $out);
+        self::assertStringNotContainsString('shell://app/api/media/42/raw', $out);
     }
 
     public function testRewritesLocalMediaUrlImageWithoutRevQuery(): void
     {
-        $html = '<p><img src="boson://app/api/media/9/raw"></p>';
+        $html = '<p><img src="shell://app/api/media/9/raw"></p>';
 
         $ids = [];
         $out = (new InlineMedia())->rewriteOfflineImages($html, function (?int $id, ?string $uri) use (&$ids): array {
@@ -104,7 +104,7 @@ final class InlineMediaTest extends TestCase
     {
         // The id in the src is what actually rendered; a stale/mismatched
         // data-grafida-media-id attribute must never override it.
-        $html = '<p><img src="boson://app/api/media/5/raw?rev=zzz" data-grafida-media-id="999"></p>';
+        $html = '<p><img src="shell://app/api/media/5/raw?rev=zzz" data-grafida-media-id="999"></p>';
 
         $ids = [];
         $out = (new InlineMedia())->rewriteOfflineImages($html, function (?int $id, ?string $uri) use (&$ids): array {
@@ -119,7 +119,7 @@ final class InlineMediaTest extends TestCase
 
     public function testBothFormsInOneDocument(): void
     {
-        $html = '<p><img src="boson://app/api/media/1/raw?rev=aaa">'
+        $html = '<p><img src="shell://app/api/media/1/raw?rev=aaa">'
             . '<img src="data:image/png;base64,CCC" data-grafida-media-id="2">'
             . '<img src="https://example.com/done.png"></p>';
 
@@ -180,38 +180,38 @@ final class InlineMediaTest extends TestCase
 
     public function testResyncLocalImageUpdatesSrcAndAdoptsNewSizeWhenNeverHandResized(): void
     {
-        $html = '<p><img src="boson://app/api/media/5/raw?rev=old" width="640" height="480"></p>';
+        $html = '<p><img src="shell://app/api/media/5/raw?rev=old" width="640" height="480"></p>';
 
         $out = (new InlineMedia())->resyncLocalImage(
             $html,
             5,
-            'boson://app/api/media/5/raw?rev=new',
+            'shell://app/api/media/5/raw?rev=new',
             640,
             480,
             1280,
             960,
         );
 
-        self::assertStringContainsString('src="boson://app/api/media/5/raw?rev=new"', $out);
+        self::assertStringContainsString('src="shell://app/api/media/5/raw?rev=new"', $out);
         self::assertStringContainsString('width="1280"', $out);
         self::assertStringContainsString('height="960"', $out);
     }
 
     public function testResyncLocalImageKeepsHandResizedWidthAndReRatiosHeight(): void
     {
-        $html = '<p><img src="boson://app/api/media/5/raw?rev=old" width="300" height="225"></p>';
+        $html = '<p><img src="shell://app/api/media/5/raw?rev=old" width="300" height="225"></p>';
 
         $out = (new InlineMedia())->resyncLocalImage(
             $html,
             5,
-            'boson://app/api/media/5/raw?rev=new',
+            'shell://app/api/media/5/raw?rev=new',
             640,
             480,
             1280,
             640,
         );
 
-        self::assertStringContainsString('src="boson://app/api/media/5/raw?rev=new"', $out);
+        self::assertStringContainsString('src="shell://app/api/media/5/raw?rev=new"', $out);
         self::assertStringContainsString('width="300"', $out);
         self::assertStringContainsString('height="150"', $out);
     }
@@ -225,26 +225,26 @@ final class InlineMediaTest extends TestCase
         $out = (new InlineMedia())->resyncLocalImage(
             $html,
             5,
-            'boson://app/api/media/5/raw?rev=new',
+            'shell://app/api/media/5/raw?rev=new',
             640,
             480,
             1280,
             960,
         );
 
-        self::assertStringContainsString('src="boson://app/api/media/5/raw?rev=new"', $out);
+        self::assertStringContainsString('src="shell://app/api/media/5/raw?rev=new"', $out);
         self::assertStringContainsString('width="1280"', $out);
         self::assertStringContainsString('height="960"', $out);
     }
 
     public function testResyncLocalImageLeavesUntouchedWhenNoImageMatchesTheId(): void
     {
-        $html = '<p><img src="boson://app/api/media/11/raw?rev=old" width="640" height="480"></p>';
+        $html = '<p><img src="shell://app/api/media/11/raw?rev=old" width="640" height="480"></p>';
 
         $out = (new InlineMedia())->resyncLocalImage(
             $html,
             5,
-            'boson://app/api/media/5/raw?rev=new',
+            'shell://app/api/media/5/raw?rev=new',
             640,
             480,
             1280,
@@ -256,19 +256,19 @@ final class InlineMediaTest extends TestCase
 
     public function testResyncLocalImageUpdatesSrcWithoutTouchingSizeWhenNoSizeAttributes(): void
     {
-        $html = '<p><img src="boson://app/api/media/5/raw?rev=old"></p>';
+        $html = '<p><img src="shell://app/api/media/5/raw?rev=old"></p>';
 
         $out = (new InlineMedia())->resyncLocalImage(
             $html,
             5,
-            'boson://app/api/media/5/raw?rev=new',
+            'shell://app/api/media/5/raw?rev=new',
             640,
             480,
             1280,
             960,
         );
 
-        self::assertStringContainsString('src="boson://app/api/media/5/raw?rev=new"', $out);
+        self::assertStringContainsString('src="shell://app/api/media/5/raw?rev=new"', $out);
         self::assertStringNotContainsString('width=', $out);
         self::assertStringNotContainsString('height=', $out);
     }

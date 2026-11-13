@@ -1,5 +1,5 @@
 ---
-description: Grafida's internal boson:// API — the shell-php HTTP types and the entry point (bin/worker.php), the Router, the per-area controllers, exception-to-status mapping, the two-kinds-of-transport-failure rule (gh-29) and the no-store caching rule (gh-35). Lifted verbatim from CLAUDE.md's Layout section.
+description: Grafida's internal shell:// API — the shell-php HTTP types and the entry point (bin/worker.php), the Router, the per-area controllers, exception-to-status mapping, the two-kinds-of-transport-failure rule (gh-29) and the no-store caching rule (gh-35). Lifted verbatim from CLAUDE.md's Layout section.
 paths:
   - "src/Http/**"
   - "src/Application/**"
@@ -112,7 +112,7 @@ two-space continuation indent are the original bullet formatting.
   cache: the Local Articles tab needs no network at all, but the screen-level fetch threw before it
   could render, so only the error block was left. Offline, the drafts tab must work and only the
   Remote Articles tab may show an error.
-  ⚠️ **Nothing the internal API answers may be cached by the webview** (gh-35). `boson://app/api/…`
+  ⚠️ **Nothing the internal API answers may be cached by the webview** (gh-35). `shell://app/api/…`
   is an ordinary URL as far as WKWebView/WebKitGTK/WebView2 are concerned, so a GET whose response says
   nothing about freshness is cached heuristically — in a **disk-backed, app-scoped** cache that
   outlives an app restart *and* a local-storage reset (after a reset the next site is id 1 again,

@@ -50,7 +50,7 @@ final class ApiRoutingTest extends TestCase
 
     private function call(Kernel $kernel, string $method, string $path, ?string $body = null): array
     {
-        $request  = new Request($method, 'boson://app' . $path, [], $body ?? '');
+        $request  = new Request($method, 'shell://app' . $path, [], $body ?? '');
         $response = $kernel->handle($request);
 
         return [(int) (string) $response->status, json_decode((string) $response->body, true)];
@@ -84,7 +84,7 @@ final class ApiRoutingTest extends TestCase
         $kernel = $this->kernel();
 
         foreach (['/api/bootstrap', '/api/sites', '/api/sites/999'] as $path) {
-            $response = $kernel->handle(new Request('GET', 'boson://app' . $path, [], ''));
+            $response = $kernel->handle(new Request('GET', 'shell://app' . $path, [], ''));
             $headers  = [];
 
             foreach ($response->headers as $name => $value) {

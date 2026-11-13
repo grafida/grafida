@@ -170,7 +170,7 @@ and two-space continuation indent are the original bullet formatting.
   embedded base64 blob under `offlineMedia`, keyed by an export-local ref (`grafida-media://
   export:mN` — the `m` prefix stops PHP auto-casting a numeric-looking key to an int). **Inline
   body images went through the same treatment in gh-36**: an `<img>` referencing a local blob is
-  now a `boson://app/api/media/{id}/raw` reference, not a self-carrying `data:` URI, so
+  now a `shell://app/api/media/{id}/raw` reference, not a self-carrying `data:` URI, so
   `exportHtml()` walks the body for that prefix (via `InlineMedia::idFromLocalUrl()`, public for
   exactly this reuse) and embeds each referenced blob under `offlineMedia` too — deduped by blob
   id within one export, so two `<img>` tags pointing at the same picture embed it once. Import's

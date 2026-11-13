@@ -71,7 +71,7 @@ final class DraftController extends Controller
 
         // One-time legacy migration (gh-36): a draft saved before local media
         // references existed may still carry inline base64 <img src="data:…">.
-        // Convert it to fast boson://…/raw references and persist the result so
+        // Convert it to fast shell://…/raw references and persist the result so
         // this only ever runs once per draft. A brand-new draft opened straight
         // from the "New article" flow has no id yet — nothing to persist, and
         // nothing to convert either (it starts empty).

@@ -135,7 +135,7 @@ const State = {
     // Working copy of the open draft's article images (intro + full text), the
     // single source of truth for the editor's Images section. See collectImages().
     editorImages: {},
-    // Cache of preview URLs (boson://…/media/{id}/raw, not data: URIs — see
+    // Cache of preview URLs (shell://…/media/{id}/raw, not data: URIs — see
     // localMediaUrl(), gh-36) for offline image blobs, keyed by their
     // `grafida-media://N` reference, so a re-render doesn't re-derive them.
     mediaPreviews: {},
@@ -675,7 +675,7 @@ async function apiFetch(method, path, body = null, extraHeaders = null) {
     const opts = {
         method,
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', ...(extraHeaders || {}) },
-        // The webview applies its ordinary HTTP cache to `boson://app/api/…`
+        // The webview applies its ordinary HTTP cache to `shell://app/api/…`
         // GETs, and that cache is disk-backed and app-scoped: it outlives a
         // restart, and after a local-storage reset the new site is id 1 again,
         // so the very same URL could be answered from a pre-reset response
@@ -693,7 +693,7 @@ async function apiFetch(method, path, body = null, extraHeaders = null) {
     netActivityCount++;
     updateNetActivityIndicator();
     try {
-        const res = await fetch('boson://app' + path, opts);
+        const res = await fetch('shell://app' + path, opts);
         let json;
         try {
             json = await res.json();
@@ -4798,7 +4798,7 @@ async function initTinyMCE(draft) {
             // Tag offline images with their blob id so PublishService uploads
             // them and rewrites the src. Runs after the picker inserts, after
             // paste/drag, and after setContent. The id is derived from the
-            // src itself (a boson://…/media/{id}/raw local URL parses the id
+            // src itself (a shell://…/media/{id}/raw local URL parses the id
             // straight out of its path; a legacy data: URI still falls back
             // to the session-only inlineMediaByUri map) rather than trusted
             // from a previous run of this same tag, which is what makes it
@@ -4815,7 +4815,7 @@ async function initTinyMCE(draft) {
         },
         // Pasted / dragged images: store offline and insert the local URL the
         // worker serves the blob's bytes back from
-        // (boson://app/api/media/{id}/raw?rev=…, see MediaController::mediaBlobRaw)
+        // (shell://app/api/media/{id}/raw?rev=…, see MediaController::mediaBlobRaw)
         // rather than the data: URI this used to return. A 2.3 MiB screenshot
         // used to become ~3.1 MiB of base64 sitting in the editor DOM, State
         // and the drafts.html column; the local URL is ~60 bytes regardless of
@@ -4858,7 +4858,7 @@ async function initTinyMCE(draft) {
         file_picker_callback: (callback, _value, meta) => {
             if (meta.filetype !== 'image') return;
             // entry.url is either a site Media-Manager URL (browsed) or the
-            // boson://…/media/{id}/raw local URL (uploaded via "Choose
+            // shell://…/media/{id}/raw local URL (uploaded via "Choose
             // file…" -> uploadLocalImage(), which now gets it straight from
             // api.uploadMedia()'s response) — either way it is inserted as-is;
             // the local case is recognised by the tagging hook above from the
@@ -4907,7 +4907,7 @@ function localMediaIdFromUrl(src) {
 }
 
 /**
- * Build the local boson://…/media/{id}/raw URL for an offline blob.
+ * Build the local shell://…/media/{id}/raw URL for an offline blob.
  * `revisedAt` is the blob's `updated_at` (falling back to `created_at`) when
  * known; pass null when it isn't (e.g. a freshly-loaded draft whose blob
  * metadata was never fetched) — the `rev` token is a display-only cache
@@ -5436,7 +5436,7 @@ function mediaFieldPreviewUrl(value, siteId) {
 /**
  * Prompt for a local image file, store it as an offline blob, and call back
  * with `{url, name, mediaId}` — `url` is the local
- * boson://…/media/{id}/raw URL the blob is served back from, not a data:
+ * shell://…/media/{id}/raw URL the blob is served back from, not a data:
  * URI (gh-36). Shared by the intro/full-text picker and the in-editor image
  * picker.
  */
@@ -5529,7 +5529,7 @@ async function browseImageMedia(kind, siteId) {
 
     // A Local Media pick is an offline blob, so it must be held as the same
     // `grafida-media://N` sentinel the "Choose file…" button produces — its
-    // `url` is the local boson:// one, which is meaningless on the site and
+    // `url` is the local shell:// one, which is meaningless on the site and
     // would be published verbatim. The `media` custom field's own browse
     // button has always done this; this one used to miss it.
     if (picked.mediaId) {
@@ -5778,7 +5778,7 @@ function openSourceCodeEditor(editor) {
  *
  * With `opts.allowUpload`, a "Choose file…" button uploads a local image as an
  * offline blob and resolves with a synthetic entry `{url, name, mediaId}` —
- * `url` is the local boson://…/media/{id}/raw URL, not a data: URI (gh-36) —
+ * `url` is the local shell://…/media/{id}/raw URL, not a data: URI (gh-36) —
  * the caller tags it so it is uploaded to the site on publish.
  *
  * This is the modal behind TinyMCE's `file_picker_callback`, the intro/full-text

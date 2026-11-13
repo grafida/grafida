@@ -1,6 +1,7 @@
 Grafida 0.4
 ================================================================================
 ! Grafida runs on its own native shell instead of Boson: ~0% CPU when idle, and the window never freezes (gh-82)
+! The app's address is now `shell://app` (was `boson://app`); AI servers with an origin allowlist must allow it
 + Distraction-free mode in the article editor: hides the sidebars, toolbar and title so only the editor remains
 + The update check no longer offers a release that does not support this computer's OS, processor or OS version (gh-92)
 + Intel Macs: a macOS x86_64 build (macOS 12 or later), until Apple drops Intel (gh-92)

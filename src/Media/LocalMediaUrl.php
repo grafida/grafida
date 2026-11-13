@@ -12,7 +12,7 @@ declare(strict_types=1);
 namespace Grafida\Media;
 
 /**
- * Builds the `boson://app/api/media/{id}/raw?rev=…` URL a local media blob is
+ * Builds the `shell://app/api/media/{id}/raw?rev=…` URL a local media blob is
  * referenced by — from the article HTML (gh-36) and from the Local Media
  * tab's listing.
  *
@@ -38,7 +38,7 @@ final class LocalMediaUrl
      */
     public static function build(int $id, string $revisedAt): string
     {
-        return \sprintf('boson://app/api/media/%d/raw?rev=%s', $id, self::token($id, $revisedAt));
+        return \sprintf('shell://app/api/media/%d/raw?rev=%s', $id, self::token($id, $revisedAt));
     }
 
     /**

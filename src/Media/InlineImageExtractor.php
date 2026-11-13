@@ -15,7 +15,7 @@ use Grafida\Html\InlineMedia;
 
 /**
  * Converts a draft's legacy inline `<img src="data:...">` images into
- * `media_blobs` rows referenced by their `boson://app/api/media/{id}/raw`
+ * `media_blobs` rows referenced by their `shell://app/api/media/{id}/raw`
  * local URL (gh-36).
  *
  * A draft saved before gh-36 embedded a pasted/dropped image as a base64

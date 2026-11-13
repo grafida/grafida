@@ -22,15 +22,17 @@ plugins or builder shortcodes.
 
 Grafida runs on its **own native shell**, grafida/shell (Rust; umbrella gh-82, switch-over gh-92).
 Up to 0.3 it ran on Boson; Boson the runtime is gone from the tree, `composer.json` and every
-artefact, but **`boson` the scheme stays**: the page origin is byte-identical `boson://app` on every
-platform (`shell.json`'s `"scheme": "boson"`), because `Media\LocalMediaUrl` writes
-`boson://app/api/media/{id}/raw?rev=…` into stored drafts and `.grafida` exports,
+artefact, and so is its **scheme**: the page origin is byte-identical `shell://app` on every
+platform (`shell.json`'s `"scheme": "shell"`), because `Media\LocalMediaUrl` writes
+`shell://app/api/media/{id}/raw?rev=…` into stored drafts and `.grafida` exports,
 `Html\InlineMedia::LOCAL_URL_PREFIX` parses it back, `localStorage` is per-origin, and users'
-local AI servers allow that origin. Never rename it.
+local AI servers may allow-list that origin. Never rename it again. 0.3 stored `boson://app/…`:
+migration `11_local_media_scheme_shell.sql` rewrites it in `drafts`, and `InlineMedia::isLocalUrl()`
+/ `idFromLocalUrl()` still read the legacy prefix (an old `.grafida` export), never write it.
 
 **Two processes.** The shell owns the window and the webview (WKWebView, WebKitGTK 4.1, WebView2) and
-answers `boson://app/_native/*` itself (dialogs, open-url, window theme, quit, info); every other
-`boson://` request is a frame on the stdin of **one worker process**, Grafida's PHP back-end, and
+answers `shell://app/_native/*` itself (dialogs, open-url, window theme, quit, info); every other
+`shell://` request is a frame on the stdin of **one worker process**, Grafida's PHP back-end, and
 the answer comes back on its stdout. The worker is **`bin/worker.php`** (the container + shell-php's
 `Worker::run()`), the only entry point: packaged, the phpmicro sibling-phar SFX stub
 (`grafida-worker`) runs it out of its sibling `grafida-worker.phar`; in dev mode it is the system
@@ -306,7 +308,7 @@ the shell, PHP's `UrlOpener` and `ClipboardService` answer instead.
   ⚠️ **Both are detailed in `.claude/rules/media-and-publish.md`**, which loads when you touch
   `src/Media/`, `src/Publish/` or `src/Html/`. They are one pipeline and are documented together.
   Three rules worth carrying without it: a pasted image is referenced by a **local URL the kernel
-  serves** (`boson://app/api/media/{id}/raw?rev=…`), **not** an inlined `data:` URI (gh-36) — the
+  serves** (`shell://app/api/media/{id}/raw?rev=…`), **not** an inlined `data:` URI (gh-36) — the
   latter is what froze the source editor on a couple of screenshots; `rewriteOfflineImages()`
   uploads **every** offline image on publish, tagged or not, so none leaks into the published HTML;
   and the upload path **names its adapter and is relative to that adapter's root**
@@ -687,7 +689,7 @@ so callers must degrade rather than throw.
 under `src/Ai/`, `assets/private/js/ai/` or the AI controllers.
 
 Two things to carry around without it. **Transport is inverted vs. AITiny (JS-primary, not
-PHP-primary):** the `boson://` kernel cannot stream, so the provider call runs in the SPA's
+PHP-primary):** the `shell://` kernel cannot stream, so the provider call runs in the SPA's
 JavaScript, which streams the SSE response token-by-token; PHP stays the source of truth for
 services, prompts/tools and saved chats. **Do not "fix" the API key being handed to local JS by
 moving the call back to PHP — that kills streaming**; it is a deliberate desktop-only trade-off.

@@ -48,7 +48,7 @@ what we cache about a site, and the API contracts that govern reading it. Verbat
   ⚠️ **`EditorCssService::load()` is cache-first, and the *only* thing that ever looks again is a
   caller passing `$refresh`.** Discovery plus the candidate walk is up to ten sequential requests at
   5s apiece, and it used to run on **every editor open** — ahead of TinyMCE being created, on the
-  same single-threaded `boson://` queue as the references fetch. That is how a newly added site
+  same single-threaded `shell://` queue as the references fetch. That is how a newly added site
   could leave the editor screen blank until it finished; the SPA no longer waits for either fetch
   (see `.claude/rules/spa-frontend.md`), but the cost had to go somewhere useful, and it is now paid
   where the user already expects to talk to the site. Three consequences worth carrying:

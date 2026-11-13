@@ -21,7 +21,7 @@ use Grafida\Site\Site;
  *
  * An article that has been published once carries its images as ordinary URLs
  * (`images/foo.jpg`, or an absolute URL on the site). The SPA cannot fetch
- * those itself — a `fetch()` from the webview's `boson://app` origin hits the
+ * those itself — a `fetch()` from the webview's `shell://app` origin hits the
  * same CORS / macOS-ATS wall the AI transport does — so the bytes are pulled
  * here, over PHP's HTTP stack, and handed back as a data: URI.
  *

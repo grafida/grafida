@@ -2,7 +2,7 @@
     "$schema": "https://github.com/grafida/shell/raw/main/schema/shell.schema.json",
     "id": "app.grafida",
     "title": "Grafida",
-    "scheme": "boson",
+    "scheme": "shell",
     "dataDir": "grafida",
     "startPath": "/",
     "noStorePaths": ["/api/"],

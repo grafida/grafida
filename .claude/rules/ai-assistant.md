@@ -15,7 +15,7 @@ The PHP-side service inventory stays in `CLAUDE.md`'s `src/Ai/` Layout bullet.
 
 ## Key AI assistant facts
 
-- **Transport is inverted vs. AITiny (JS-primary, not PHP-primary).** The `boson://` kernel cannot
+- **Transport is inverted vs. AITiny (JS-primary, not PHP-primary).** The `shell://` kernel cannot
   stream — `Http\Json::response()` buffers the whole body and the SPA awaits `res.json()` whole — so
   the **provider call runs in the SPA's JavaScript**, which streams the SSE response token-by-token.
   `assets/private/js/ai/providers.js` (`window.GrafidaAI`) ports AITiny's provider request builders +
@@ -85,7 +85,7 @@ The PHP-side service inventory stays in `CLAUDE.md`'s `src/Ai/` Layout bullet.
   **dumb, host-allowlisted forwarder** (`AiProxy` validates the target host equals the configured
   service endpoint host — no open relay — and never injects the key; the JS supplies headers).
 - **LM Studio (and other local OpenAI-compatible servers) MUST have CORS enabled.** The direct
-  streaming `fetch()` runs from the webview's `boson://app` origin, so a JSON POST triggers a CORS
+  streaming `fetch()` runs from the webview's `shell://app` origin, so a JSON POST triggers a CORS
   **preflight**. If the local server doesn't answer it (LM Studio defaults to CORS **off** — turn on
   *Enable CORS* in its Developer/server settings, or run the server with the CORS flag), the direct
   fetch fails, `sendChat()` falls back to `POST /api/ai/proxy`, and that **synchronous** PHP call
@@ -142,7 +142,7 @@ The PHP-side service inventory stays in `CLAUDE.md`'s `src/Ai/` Layout bullet.
 - **The article's images are collected through three different paths** (`_resolveImageSource()` in
   `panel.js`, called by `_collectDocumentImages()` as it walks the editor body in document order).
   A tagged `data-grafida-media-id` image — which since gh-36 is how a pasted/dropped/picked local
-  image is inserted (`boson://app/api/media/{id}/raw?rev=…` `src`, not a `data:` URI; see
+  image is inserted (`shell://app/api/media/{id}/raw?rev=…` `src`, not a `data:` URI; see
   `src/Media/`) — is fetched by id via `GET /api/media/{id}`, the same JSON data:-URI endpoint the
   intro/full-text preview uses, so this path is unaffected by *how* the blob is referenced; a bare
   `data:` URI with no tag (still possible for a paste that has not run the tagging hook yet, or an
