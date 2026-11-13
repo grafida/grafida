@@ -207,8 +207,8 @@ first copied from Boson's *standard* macOS edition; there is no Boson to mirror 
 
 ## Building the SFX locally (CI bypass)
 
-`build-sfx.yml` is the authoritative recipe; the Boson-era macOS commands are in
-01 ("Signing a Boson build", step 1). Gotchas that will bite you:
+`build-sfx.yml` is the authoritative recipe (the Boson-era macOS commands are in
+01 at the tag `0.3`, "Signing works — via the patched SFX runtime", step 1). Gotchas that will bite you:
 
 * static-php-cli's source is named **`php-micro`** — a `micro:` prefix in
   `-G`/`-L` is **silently ignored** and you build *stock* phpmicro.
@@ -247,87 +247,3 @@ first copied from Boson's *standard* macOS edition; there is no Boson to mirror 
    `Contents/MacOS`. Only signed Mach-O files may live there.
 5. **Verification commands** for a finished macOS build: see "Verifying a
    finished build" in 01.
-
----
-
-## Boson, up to 0.3 (historical)
-
-> **Historical.** Up to 0.3 Grafida shipped a Boson-compiled app. Its runtime
-> was the rolling `sfx-latest`, downloaded into the gitignored `build/sfx/` by
-> `scripts/fetch-sfx.sh` and injected into `boson compile` by
-> `build/tasks/compile-target.php`. 0.4 deleted that build (grafida/grafida#92):
-> `boson.json`, `fetch-sfx.sh`, `compile-target.php`, `make-macos-app.sh` and
-> `build/sfx/` no longer exist. Kept for one release, then archived.
-
-### How the Boson build got its runtime
-
-`scripts/fetch-sfx.sh` downloaded `macos-{aarch64,x86_64}.standard.sfx` and
-`windows-x86_64.standard.sfx` from `sfx-latest` into `build/sfx/` —
-automatically from the Phing `prepare-sfx` step and `scripts/build-all.sh`,
-best-effort, and it **never overwrote an existing file** unless you passed
-`--force`. It did not download the Linux runtimes, which only the native-shell
-tarball used. Because every push to `sibling-phar` rewrote `sfx-latest`, a push
-changed what Boson's next release shipped; that is where the fork's `[skip ci]`
-rule came from.
-
-### When Boson bumped its PHP version
-
-Boson's runtime PHP version and our SFX **had to match the same minor** (the SFX
-*is* the PHP runtime; the phar only needs a compatible engine). When a Boson
-update moved to a new PHP minor (e.g. 8.4 → 8.5):
-
-1. Edit `PHP_VERSION` in the fork's `.github/workflows/build-sfx.yml` and push
-   to `sibling-phar` → CI refreshes the `sfx-latest` release automatically.
-2. On the build machine: `scripts/fetch-sfx.sh --force`.
-3. Rebuild + sign, and run the app once (`phing package-macos-arm`, launch).
-
-### When Boson changed its SFX extension list
-
-Our `EXTENSIONS` in `build-sfx.yml` mirrored Boson's *standard* macOS edition:
-`STANDARD_SFX_EXTENSIONS` in
-`vendor/boson-php/compiler/src/Target/MacOSBuiltinTarget.php`. The **Windows**
-standard edition (`WindowsBuiltinTarget.php`) was **identical**, so the
-single `EXTENSIONS` env fed both the macOS and Windows jobs. After a Boson
-upgrade, diff **both** constants against the workflow's list; if either changed,
-update the workflow (splitting `EXTENSIONS` per-OS if they ever diverge), push,
-`fetch-sfx.sh --force`, rebuild, test.
-
-### When bumping Boson itself
-
-1. `composer update boson-php/*` as usual, then compare (as above): PHP version,
-   extension list, and skim `AssemblyTargetTask` / `FindCustomSfxPathnameTask`
-   in the compiler for changes to the assembly format or the custom-`sfx`
-   config key our `compile-target.php` relied on.
-2. **Check the macOS library's deployment target.**
-   `vtool -show-build vendor/boson-php/saucer/bin/libboson-darwin-universal.dylib`
-   reports `minos` for **both** slices. Upstream builds it on `macos-latest` with
-   no `CMAKE_OSX_DEPLOYMENT_TARGET`, so this silently follows whatever SDK the
-   GitHub runner had and can rise on any bump — locking out every user of the
-   current macOS. If it exceeded `App::MIN_MACOS`, `composer test` said so
-   (`tests/Unit/Startup/MacosDeploymentFloorTest.php`): raise the constant with
-   `App::MIN_MACOS_NAME`, `docs/Requirements.md` and `README.md`. Also confirm
-   both `x86_64` and `arm64` slices are still there — the same test pinned that,
-   since losing the Intel slice would break `build/macos/amd64` with no other
-   warning. ⚠️ `vtool -set-build-version` can rewrite the load command but
-   **cannot** remove the libc++ symbol dependency behind it (gh-58): a patched
-   library still fails to `dlopen` on the older system.
-3. Rebuild, sign, notarise, and launch-test. If anything smells wrong, verify
-   the stub first (stale-binary check below), then run the app with
-   `MICRO_TRACE_OPEN=1` to watch the payload-offset hooks.
-4. Also re-test whether the detour is still needed at all — if a stock Boson
-   binary ever signs cleanly, retire the fork (see the end of 01).
-
-### The stale-binary check
-
-The classic Boson trap: a failed compile left the previous binary in
-`build/<os>/<arch>/`, and everything downstream happily signed the wrong bits.
-Verify:
-`head -c $(stat -f%z build/sfx/<sfx>) build/macos/<dir>/grafida | md5` must
-equal `md5 build/sfx/<sfx>`. (`compile-target.php` pre-cleaned output dirs
-precisely to prevent this — do not bypass it by calling `boson compile`
-directly.)
-⚠️ On Windows this comparison only works on the **unsigned** binary. Signing
-rewrites the PE checksum and the security-directory entry, both of which live
-inside the SFX prefix, so a *signed* stub's prefix hash will never equal the
-raw SFX. Compare the unsigned compiled `grafida.exe` instead — a mismatch
-there is a real stale-binary problem; a mismatch after signing is expected.

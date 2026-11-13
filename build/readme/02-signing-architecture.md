@@ -6,8 +6,7 @@ purpose. Read this before touching anything signing-related, bumping a runtime
 pin, or wondering "can we get rid of that fork yet?". Companion documents:
 
 * [`01-macos-signing.md`](01-macos-signing.md) — the Apple-side setup
-  (certificates, notarisation), how the build signs and notarises, and (as
-  history) the low-level analysis of why a stock Boson binary cannot be signed.
+  (certificates, notarisation), and how the build signs and notarises.
 * [`03-sfx-maintenance.md`](03-sfx-maintenance.md) — the operational playbook
   (bumping a runtime pin, the PHP version and extension list, rebasing the fork,
   troubleshooting).
@@ -16,7 +15,7 @@ pin, or wondering "can we get rid of that fork yet?". Companion documents:
 
 From 0.4 (grafida/grafida#92) every release artefact is the native shell's,
 built by grafida/shell-packager. Up to 0.3 Grafida shipped a Boson-compiled app;
-how that build used the fork is kept at the end, as history.
+how that build used the fork is in these files at the tags `0.1`–`0.3`.
 
 ## The problem, in one paragraph
 
@@ -31,8 +30,8 @@ phpmicro locates it as "Mach-O image end → EOF" — the two constraints are
 mutually exclusive. On Windows, Authenticode appends its certificate table at
 EOF, *past* the PHAR, and a PHAR stores its own signature as its last bytes, so
 the signed binary dies at startup with "broken signature". Full empirical
-analysis: `01-macos-signing.md`, "Why a stock Boson binary cannot be signed"
-(macOS), and `04-exe-signing-on-macos.md` (Windows).
+analysis: `01-macos-signing.md` at the tag `0.3`, "Why a stock Boson binary
+cannot be signed (historical analysis)" (macOS), and `04-exe-signing-on-macos.md` (Windows).
 
 ## The solution, in one paragraph
 
@@ -192,104 +191,3 @@ Key properties:
 | macOS x86_64 | Built from the immutable `sfx-20261111.28` (a promotion of `sfx-latest`'s bytes, checked natively on `macos-15-intel`) and shell 0.4.1. Grafida's Intel bundle is tested only under Rosetta 2; there is no Intel hardware or guest |
 | Windows x64 | **Authenticode via Jsign/Azure Trusted Signing**, four signatures a build (shell, worker stub, uninstaller, installer), each refused if the PE carries an overlay. `grafida-worker.exe` is the **GUI** SFX from the immutable `sfx-20261110.27`, beside `grafida-worker.phar`. Verified (gh-91) signed with a test certificate, installed, run and uninstalled in the Windows 11 guest |
 | Linux | No OS-enforced signature gate. The tarball (gh-86) ships the same split layout anyway: `grafida-worker` (the glibc SFX from the immutable `sfx-20261109.16`) + sibling `grafida-worker.phar` (extra-INI block + PHAR). Sibling mode and the ini block are smoke-tested on Linux by the fork's CI (`check-linux-sfx.sh`) |
-
----
-
-## Boson, up to 0.3 (historical)
-
-> **Historical.** Up to 0.3 Grafida shipped a Boson-compiled app: `boson compile`
-> produced one combined binary (the SFX stub with the app PHAR appended), which
-> the packaging scripts split into a stub and a sibling PHAR for signing. 0.4
-> deleted that build (grafida/grafida#92). `boson.json`,
-> `build/tasks/compile-target.php`, `pe-sfxsize.php`, `scripts/fetch-sfx.sh`,
-> `make-macos-app.sh`, `make-dmg.sh`, Boson's `make-windows-installer.sh`,
-> `sign-windows-exe.sh`, `build/windows-installer.nsi`, the Phing `git-*`, `pack`
-> and `prepare-sfx` targets and `build/sfx/` no longer exist. Kept for one
-> release, then archived.
-
-### How the Boson build used the fork
-
-The macOS packaging script *split* the Boson-compiled binary: the clean, signable
-stub became `Contents/MacOS/grafida`, the payload became
-`Contents/Resources/grafida.phar`. The Windows script did the same to
-`grafida.exe`. Appended-payload mode was untouched, so the same patched runtime
-worked identically on Linux and in unsigned dev builds.
-
-```
-grafida/phpmicro (branch sibling-phar)          ← the C patch lives here
-  └─ .github/workflows/build-sfx.yml            ← CI: builds micro.sfx per platform
-       │  (stock static-php-cli, pointed at the repo itself via -L)
-       ▼
-  GitHub release "sfx-latest" (rolling)         ← macos-{aarch64,x86_64}.standard.sfx
-       │                                           + windows-x86_64.standard.sfx + .sha256
-       ▼  scripts/fetch-sfx.sh                  ← download + SHA-256 verify (auto via
-       │                                           Phing prepare-sfx / build-all.sh)
-       ▼
-  build/sfx/<os>-<cpu>.standard.sfx             ← gitignored, per-machine
-       │
-       ▼  build/tasks/compile-target.php        ← injects target `sfx` key when present;
-       │                                           pre-cleans output dirs; --all for build-all.sh
-       ▼
-  boson compile                                 ← stub = OUR runtime, payload appended as usual
-       │
-       ├─▼  scripts/make-macos-app.sh           ← detects patched runtime, SPLITS stub/payload,
-       │  │                                        Resources layout, signs (ad-hoc or Dev-ID)
-       │  ▼  scripts/make-dmg.sh                ← DMG, notarytool submit, staple
-       │
-       └─▼  scripts/make-windows-installer.sh   ← detects patched runtime, SPLITS grafida.exe into
-          │                                        a clean stub + sibling grafida.phar (offset from
-          │                                        build/tasks/pe-sfxsize.php), signs ONLY the stub
-          │                                        (Authenticode via Jsign — sign-windows-exe.sh),
-          ▼                                        NSIS bundles both (HAVE_PHAR)
-       Grafida-<v>-windows-amd64-Setup.exe      ← installer PE also signed (no PHAR overlay)
-```
-
-The Windows split was the exact analogue of the macOS one. `pe-sfxsize.php`
-computed the split offset the same way phpmicro's `_micro_init_sfxsize()` does at
-run time — `max(PointerToRawData + SizeOfRawData)` over the PE sections — and
-asserted Boson's extra-ini magic (`fd f6 69 e6`) sat there before splitting, so a
-wrong boundary could never ship. `sign-windows-exe.sh` additionally **refused**
-any PE that still carried a PHAR overlay (it ran `pe-sfxsize.php` as a tripwire),
-so the combined binary could never be signed by accident. This is why the split
-stub was signed *before* packaging but the phar was a plain sibling.
-
-Key properties of the Boson build:
-
-* **Everything degraded gracefully.** No `build/sfx/` (offline, fresh machine,
-  fetch failure) → stock Boson runtime, legacy combined binary, ad-hoc
-  signature; Developer-ID signing aborted with an explanatory error instead of a
-  cryptic codesign failure.
-* **The committed `boson.json` was untouched.** The `sfx` key was injected into
-  the throwaway per-build config only when the file actually existed (Boson
-  errors out on a dangling `sfx` path).
-* **The SFX mirrored Boson's runtime**: PHP 8.4 and Boson's *standard* macOS
-  extension list, enumerated in `vendor/boson-php/compiler/src/Target/MacOSBuiltinTarget.php`.
-* **Why NOT fork `boson-php/backend-src`?** It was considered (it is Boson's
-  own SPC fork, from whose releases Boson downloads its stock SFX binaries).
-  Unnecessary: a stock crazywhalecc/static-php-cli build of the patched micro
-  works — the notarised app runs — so there was nothing in Boson's SPC fork we
-  needed.
-
-Boson-only design decisions:
-
-1. **Boson's generated entrypoint mounted `assets/public` and the libboson dylib
-   relative to the phar**, whose `__DIR__` was Resources — so `assets/` were
-   copied to Resources and the dylib (a *real*, signed file in MacOS) got a
-   **symlink** in Resources.
-2. **The split payload kept Boson's extra-INI block** (the boson.json `ini`
-   settings) in front of the PHAR — the split file was never "cleaned" down to
-   the phar bytes.
-3. **Boson's compile cleanup choked on the previous `Grafida.app`** (it cannot
-   delete the symlink-containing bundle) and aborted — historically *silently
-   leaving a stale binary* that the packaging then signed. `compile-target.php`
-   pre-cleaned every target output dir, and `build-all.sh` compiled through
-   `compile-target.php --all` for the same reason. The check was:
-   `head -c $(stat -f%z build/sfx/<sfx>) <binary> | md5` must equal
-   `md5 build/sfx/<sfx>`.
-
-Boson-era platform status: macOS arm64 signed + notarised and verified
-end-to-end (CI-built SFX from `sfx-latest`, split bundle, `spctl`: "Notarized
-Developer ID"); macOS x86_64 SFX built by CI, sibling mode verified under
-Rosetta, full sign/notarise pass never exercised on a real build; Windows
-Authenticode-signed via the split (signing the *combined* binary had failed at
-startup on `Phar::mapPhar`, "grafida.exe has a broken signature"); Linux stock.
