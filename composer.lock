@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "74e50845b747626120c1211c227efeb1",
+    "content-hash": "7dd513b4e9c6848e03eebe18c5858f22",
     "packages": [
         {
             "name": "dflydev/dot-access-data",
@@ -2019,16 +2019,16 @@
         },
         {
             "name": "grafida/shell-packager",
-            "version": "0.5.0",
+            "version": "0.5.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/grafida/shell-packager.git",
-                "reference": "a082b7c194165f7c8ec23ce25872e236183d8394"
+                "reference": "07e2b167b56620d3a33b6efa5c32cf7294ddacd1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/grafida/shell-packager/zipball/a082b7c194165f7c8ec23ce25872e236183d8394",
-                "reference": "a082b7c194165f7c8ec23ce25872e236183d8394",
+                "url": "https://api.github.com/repos/grafida/shell-packager/zipball/07e2b167b56620d3a33b6efa5c32cf7294ddacd1",
+                "reference": "07e2b167b56620d3a33b6efa5c32cf7294ddacd1",
                 "shasum": ""
             },
             "require": {
@@ -2079,10 +2079,10 @@
             "description": "Build and packaging tooling for apps on the Grafida desktop shell: PHAR building, runtime fetch-and-verify, macOS/Windows/Linux bundling, signing and notarisation.",
             "homepage": "https://github.com/grafida/shell-packager",
             "support": {
-                "source": "https://github.com/grafida/shell-packager/tree/0.5.0",
+                "source": "https://github.com/grafida/shell-packager/tree/0.5.1",
                 "issues": "https://github.com/grafida/shell-packager/issues"
             },
-            "time": "2026-11-15T17:34:36+00:00"
+            "time": "2026-11-15T20:38:10+00:00"
         },
         {
             "name": "myclabs/deep-copy",
