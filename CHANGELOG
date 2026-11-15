@@ -8,6 +8,7 @@ Grafida 0.4
 + macOS: a menu bar with Edit and Spelling menus; About opens Grafida's own dialog, Undo follows the editor (gh-88)
 + Windows: the installer upgrades Boson's Grafida in place, keeping your data, settings and taskbar pin (gh-92)
 + Linux: `install.sh` replaces the previous version's desktop entry and icon (gh-92)
++ Linux: `.deb`, `.rpm`, AppImage and an Arch `PKGBUILD` that use the system WebKitGTK 4.1, beside the tarball (gh-87)
 - The cross-platform `.phar` and the portable Windows `.zip` are no longer published (gh-92)
 ~ Runs on macOS 12 or later (was macOS 15), Windows 10 22H2 or later, and Linux with WebKitGTK 4.1 2.40 or later (gh-92)
 ~ Windows: the installer and the uninstaller ask to close a running Grafida instead of failing or leaving files (gh-91)

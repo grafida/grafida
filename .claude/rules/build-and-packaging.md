@@ -96,6 +96,36 @@ worker check (below) only runs on a Linux host of the same architecture.
 - **The sweep (gh-92):** `grep -rni boson` over the tree (vendored code excluded) and over every
   artefact's PHAR listing must find only history (the legacy `boson://` prefix in `InlineMedia`, migration 11 and the 0.3 upgrade test).
 
+## The Linux distribution packages (gh-87)
+
+`composer build:shell-linux [-- amd64|arm64]` → `scripts/make-linux-packages.sh` builds, per architecture,
+the tarball and then `linux-deb`, `linux-rpm` and `linux-appimage`, and finally `linux-pkgbuild` for the
+tarballs: `Grafida-<v>-linux-<debarch>.deb`, `-linux-<arch>.rpm`, `-linux-<arch>.AppImage` (each + `.sha256`)
+and `build/dist/PKGBUILD`. Deliberately **not** in the Phing targets or in `composer build`: they are an extra on the tarball, built on the maintainer's hardware like everything else
+(there is no CI build, gh-88). They need `mksquashfs` (Homebrew `squashfs`) for the AppImage; nfpm is fetched
+and verified by shell-packager itself. The config is `shell-package.json`'s `linux.package` (maintainer,
+`GPL-3.0-or-later`, description, outputs), `linux.appimage` (zsync update information for the `grafida/grafida`
+GitHub releases; only embedded, nothing updates itself) and `linux.pkgbuild` (**`source` is the GitHub release
+asset**, `https://github.com/grafida/grafida/releases/download/{version}/Grafida-{version}-linux-{debarch}.tar.gz`,
+so upload the tarballs before anyone runs the PKGBUILD). The `appimage-runtime` pin sits beside the other Linux
+runtimes (type2-runtime `20251108`).
+- **The system WebKitGTK 4.1 and GTK 3 only, never bundled.** The packages declare them (`libwebkit2gtk-4.1-0`
+  + `libgtk-3-0`; `webkit2gtk4.1` + `gtk3`; `webkit2gtk-4.1` + `gtk3`), so those names are shell-packager's
+  defaults and are not repeated in `shell-package.json`. The AppImage uses the system's too, and the launcher's
+  alert still says what is missing. A Flatpak is not built: grafida/shell `docs/adr/0002-flatpak.md`.
+- **Layout:** `/opt/grafida` (launcher, shell, worker + PHAR, `shell.json`, `LICENSE.txt`), `/usr/bin/grafida`
+  a symlink to the launcher, `app.grafida.desktop` in `/usr/share/applications`, the icons in hicolor. No
+  `install.sh`: the package manager owns install, upgrade and removal. `linux.replaces` is honoured by the
+  post-install for *system-wide* Boson entries only.
+- **Removal deletes `/opt/grafida` whole** (post-removal, final removal only); user data is in the home
+  directory and is never touched.
+- **Unsigned.** An RPM needs `--nogpgcheck`/`--nosignature` to install; there is no repository, PPA, COPR or AUR.
+- **Verification** is on the clean VMs of grafida/shell's `scripts/dev/linuxvm.sh` (Ubuntu 22.04, Fedora 43,
+  Arch): `apt install ./…deb`, `dnf install ./…rpm`, `makepkg -si`. ⚠️ **A stock Fedora Workstation already has
+  `webkit2gtk4.1`**, so its VM cannot show the dependency being pulled in; prove that in a minimal Fedora
+  container with `dnf install --assumeno ./…rpm`. arm64 is built but not run on a VM: it belongs to the Linux
+  machine's pin-refresh phase (gh-88).
+
 ## The macOS disk images (gh-88, gh-92)
 
 `composer build:macos [-- arm64|amd64] [-- --no-style]` / Phing `package-macos-arm|-x86` →

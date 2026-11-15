@@ -42,6 +42,13 @@
                     "x86_64": "45607f6142ab76333ccb80ebfc08d4412552b9e0cf43ae83c8a278057e17b1e4",
                     "aarch64": "cfefff8e185372c5264454d672df0e02a6e219a47a376a376b7dc62724caa242"
                 }
+            },
+            "appimage-runtime": {
+                "url": "https://github.com/AppImage/type2-runtime/releases/download/20251108/runtime-{arch}",
+                "sha256": {
+                    "x86_64": "2fca8b443c92510f1483a883f60061ad09b46b978b2631c807cd873a47ec260d",
+                    "aarch64": "00cbdfcf917cc6c0ff6d3347d59e0ca1f7f45a6df1a428a0d6d8a78664d87444"
+                }
             }
         },
         "macos": {
@@ -92,6 +99,29 @@
         },
         "files": {"LICENSE.txt": "LICENSE.txt"},
         "replaces": ["grafida"],
+        "package": {
+            "maintainer": "Nicholas K. Dionysopoulos <nicholas@akeeba.com>",
+            "license": "GPL-3.0-or-later",
+            "homepage": "https://grafida.app",
+            "description": "Create and edit Joomla! articles offline, then publish them through the Joomla Web Services API.",
+            "section": "web",
+            "output": {
+                "deb": "build/dist/Grafida-{version}-linux-{debarch}.deb",
+                "rpm": "build/dist/Grafida-{version}-linux-{arch}.rpm"
+            }
+        },
+        "appimage": {
+            "updateInformation": "gh-releases-zsync|grafida|grafida|latest|Grafida-*-linux-{debarch}.AppImage.zsync",
+            "output": "build/dist/Grafida-{version}-linux-{arch}.AppImage"
+        },
+        "pkgbuild": {
+            "source": "https://github.com/grafida/grafida/releases/download/{version}/Grafida-{version}-linux-{debarch}.tar.gz",
+            "description": "Create and edit Joomla! articles offline, then publish them through the Joomla Web Services API.",
+            "url": "https://grafida.app",
+            "license": ["GPL-3.0-or-later"],
+            "maintainer": "Nicholas K. Dionysopoulos <nicholas@akeeba.com>",
+            "output": "build/dist/PKGBUILD"
+        },
         "output": "build/dist/Grafida-{version}-linux-{debarch}.tar.gz"
     },
     "macos": {

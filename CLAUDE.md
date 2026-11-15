@@ -90,6 +90,9 @@ the detail, the per-platform layouts and their tests are in `.claude/rules/build
   stub and its PHAR, `shell.json`, `app.grafida.desktop` (named after the manifest id, the window's
   Wayland app_id), the icons and `install.sh`, which also removes Boson's `grafida.desktop` entry
   (`linux.replaces`). There is no `assets/` beside it: the worker serves the SPA from inside the PHAR.
+  Beside it, `composer build:shell-linux` (gh-87; not part of `composer build`) makes a `.deb`, an `.rpm`,
+  an AppImage and an Arch `PKGBUILD`, all on the **system** WebKitGTK 4.1 and GTK 3 (never bundled; no
+  Flatpak, see grafida/shell `docs/adr/0002-flatpak.md`); detail in `.claude/rules/build-and-packaging.md`.
 - **Windows:** a per-user NSIS installer built **on the Mac** (makensis, Jsign, osslsigncode; icon and
   version resources written in PHP) from Grafida's own **`build/shell-windows-installer.nsi`**. It
   **takes over Boson's identity**: `%LOCALAPPDATA%\Programs\Grafida` (honouring
