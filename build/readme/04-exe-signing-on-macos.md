@@ -271,9 +271,10 @@ Grafida.ico
 LICENSE.txt
 ```
 
-* **The runtimes are downloaded, never built here.** The shell (a grafida/shell release) and the
-  SFX (the immutable grafida/phpmicro `sfx-20261110.27`) are pinned by SHA-256 in
-  `shell-package.json` and cached in `~/.cache/grafida-shell-packager`, never `build/sfx/`. See
+* **The runtimes are downloaded, never built here.** The shell (a grafida/shell release, pinned by
+  `shell.version`, its SHA-256s in `shell-package.lock`) and the SFX (the immutable grafida/phpmicro
+  `sfx-20261110.27`, pinned by SHA-256 in `shell-package.json`) are cached in
+  `~/.cache/grafida-shell-packager`, never `build/sfx/`. See
   [`03-sfx-maintenance.md`](03-sfx-maintenance.md).
 * **No Visual C++ runtime is needed or fetched.** The shell links the CRT statically, and the SFX
   imports system DLLs only (its CI check fails otherwise).

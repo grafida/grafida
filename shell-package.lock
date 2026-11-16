@@ -1,0 +1,61 @@
+{
+    "_readme": "Written by shell-packager update. Commit it. Do not edit it by hand.",
+    "content-hash": "664b7b451ea01b1e0eda7ac99739a82bb3574f9ad240bff4141b64365996a31f",
+    "shell": {
+        "repository": "grafida/shell",
+        "constraint": "^0.4.1",
+        "version": "0.4.2",
+        "tag": "0.4.2",
+        "files": {
+            "linux": {
+                "launcher": {
+                    "aarch64": {
+                        "name": "grafida-launcher-linux-aarch64",
+                        "url": "https://github.com/grafida/shell/releases/download/0.4.2/grafida-launcher-linux-aarch64",
+                        "sha256": "0caa881bff8076e27772b060311099c7d431bd310ca8840108647c257f64983d"
+                    },
+                    "x86_64": {
+                        "name": "grafida-launcher-linux-x86_64",
+                        "url": "https://github.com/grafida/shell/releases/download/0.4.2/grafida-launcher-linux-x86_64",
+                        "sha256": "4ad3aa974895c2b9ca3559d47094f87ca616ea458fd7988ec59e57f58df5338e"
+                    }
+                },
+                "shell": {
+                    "aarch64": {
+                        "name": "grafida-shell-linux-aarch64",
+                        "url": "https://github.com/grafida/shell/releases/download/0.4.2/grafida-shell-linux-aarch64",
+                        "sha256": "6ff270aa129e1ee69e920cdd03d1929d15bf9f97012f5973c3fb1a06fd6f2fb9"
+                    },
+                    "x86_64": {
+                        "name": "grafida-shell-linux-x86_64",
+                        "url": "https://github.com/grafida/shell/releases/download/0.4.2/grafida-shell-linux-x86_64",
+                        "sha256": "432b734f15febd3964064f585e2e2998706d24843c1febbc9f11d3be23da9340"
+                    }
+                }
+            },
+            "macos": {
+                "shell": {
+                    "aarch64": {
+                        "name": "grafida-shell-macos-arm64",
+                        "url": "https://github.com/grafida/shell/releases/download/0.4.2/grafida-shell-macos-arm64",
+                        "sha256": "91d60a059e3d5990de8a350bbdd0b0dde06cb8d60e433ce563f5f33cc9e63376"
+                    },
+                    "x86_64": {
+                        "name": "grafida-shell-macos-x86_64",
+                        "url": "https://github.com/grafida/shell/releases/download/0.4.2/grafida-shell-macos-x86_64",
+                        "sha256": "cc4dfcfed58f04bc55751384b66220c7f73d29d72b5724642767220ffee1c855"
+                    }
+                }
+            },
+            "windows": {
+                "shell": {
+                    "x86_64": {
+                        "name": "grafida-shell-windows-x86_64.exe",
+                        "url": "https://github.com/grafida/shell/releases/download/0.4.2/grafida-shell-windows-x86_64.exe",
+                        "sha256": "13723eceb0fc56428de4f8c5a1f43c613aac1f8af6b709bc01655fdc347027b1"
+                    }
+                }
+            }
+        }
+    }
+}

@@ -63,16 +63,22 @@ worker check (below) only runs on a Linux host of the same architecture.
   anything else under that id is left alone, and it says so. shell-packager's generated script, so
   app-agnostic: the list is the only Grafida part.
 
-- **Pins:** `shell-package.json`'s `runtimes` is grouped by platform (`linux`, `macos` gh-88, `windows` gh-91) and
-  pins the shell + launcher (a grafida/shell release tag) and the SFX (an **immutable**
-  grafida/phpmicro `sfx-<YYYYMMDD>.<run>` release, never the rolling `sfx-latest`) by per-arch
-  SHA-256; a mismatch is fatal. A runtime's `url` is one template (`{arch}`), or an object of one URL
-  per architecture when they come from different releases (macOS, gh-92). ⚠️ **Never type a hash.**
-  To bump one, download the release asset, compute its SHA-256 from the bytes, update the URL and
-  the hashes, then prove every pin with `vendor/bin/shell-packager fetch --config=shell-package.json
-  --arch=<x86_64|aarch64> [--platform=macos|windows]` (one hand-typed digit was caught that way in
-  shell-packager's own fixture). Every platform pins shell 0.4.1 (gh-93, Phase 7 of gh-82: one shell
-  release everywhere). The SFX is the newest immutable release for each platform, all PHP 8.4.27:
+- **Pins:** the shell and launcher are pinned **by version** in `shell-package.json`'s top-level
+  `"shell": {"version": "^0.4.1"}` (a Composer constraint, shell-packager 0.6.0+), resolved into the
+  committed **`shell-package.lock`**: the release (now 0.4.2) and GitHub's SHA-256 of each of the seven
+  files, one shell release for every platform. To move to a newer shell, run
+  `vendor/bin/shell-packager update --config=shell-package.json` and commit the lock; to go past `^0.4`,
+  change the constraint first. A build reads the lock and makes no GitHub API call; a stale lock fails
+  it. To try an unreleased shell, `shell.local` (or `--local shell=PATH`) names the files, announced
+  as UNPINNED. `runtimes` is grouped by platform (`linux`, `macos` gh-88, `windows` gh-91) and pins
+  the SFX (an **immutable** grafida/phpmicro `sfx-<YYYYMMDD>.<run>` release, never the rolling
+  `sfx-latest`) and the AppImage runtime by per-arch SHA-256; a mismatch is fatal. A runtime's `url`
+  is one template (`{arch}`), or an object of one URL per architecture when they come from different
+  releases (the macOS SFX, gh-92). ⚠️ **Never type a hash.** To bump one, download the release asset,
+  compute its SHA-256 from the bytes, update the URL and the hashes, then prove every pin with
+  `vendor/bin/shell-packager fetch --config=shell-package.json --arch=<x86_64|aarch64>
+  [--platform=macos|windows]` (one hand-typed digit was caught that way in shell-packager's own
+  fixture). The SFX is the newest immutable release for each platform, all PHP 8.4.27:
   Linux `sfx-20261109.16` (the build #86's clean-VM runs verified), macOS arm64 `sfx-20261109.15`,
   macOS x86_64 `sfx-20261111.28` (gh-92), Windows `sfx-20261110.27`. They are four releases because
   each SFX release carries only some platforms. Downloads are cached in

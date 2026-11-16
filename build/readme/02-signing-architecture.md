@@ -61,7 +61,8 @@ grafida/phpmicro (branch sibling-phar)          ← the C patch lives here
        │                                           (sfx-latest is rolling; nothing Grafida
        │                                           ships uses it any more)
        ▼  shell-package.json `runtimes`         ← URL + SHA-256 per platform and arch,
-       │                                           beside the pinned grafida/shell binaries
+       │                                           beside the grafida/shell binaries (pinned by
+       │                                           `shell.version`, hashes in shell-package.lock)
        ▼  vendor/bin/shell-packager             ← downloads, checks the SHA-256 on every use,
        │                                           caches in ~/.cache/grafida-shell-packager
        │                                           (never build/sfx/); builds the worker PHAR

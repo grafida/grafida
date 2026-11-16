@@ -221,9 +221,10 @@ Output: `build/dist/Grafida-<version>-macos-<arm64|amd64>.dmg` + `.sha256`. The 
 
 * **One bundle and one image per architecture.** arm64 for Apple Silicon; x86_64 for Intel Macs,
   tested only under Rosetta 2.
-* **The runtimes are downloaded, never built here.** The shell (a grafida/shell release) and the
-  phpmicro SFX (an immutable grafida/phpmicro `sfx-<YYYYMMDD>.<run>` release) are pinned by URL and
-  SHA-256 in `shell-package.json`, verified on every use, and cached in
+* **The runtimes are downloaded, never built here.** The shell (a grafida/shell release, pinned by
+  `shell.version` with GitHub's SHA-256s in the committed `shell-package.lock`) and the phpmicro SFX
+  (an immutable grafida/phpmicro `sfx-<YYYYMMDD>.<run>` release, pinned by URL and SHA-256 in
+  `shell-package.json`) are verified on every use, and cached in
   `~/.cache/grafida-shell-packager` (`$XDG_CACHE_HOME`, or `SHELL_PACKAGER_CACHE`). There is no
   `build/sfx/`. Bumping a pin: [`03-sfx-maintenance.md`](03-sfx-maintenance.md).
 * **The worker PHAR** is `bin/worker.php` plus `src`, the assets, the docs, the languages and the

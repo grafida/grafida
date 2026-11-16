@@ -665,8 +665,9 @@ which loads automatically when you touch `build/`, `scripts/`, `build.xml`, `she
 `composer.json`, the CHANGELOG or the release notes. The one rule to carry around without it:
 signing on **both** macOS and Windows depends on the phpmicro `sibling-phar` SFX stub and its PHAR
 being **two files** — signing a *combined* binary appends the certificate past the PHAR, corrupts
-its signature, and the app dies at startup. And every fetched binary is pinned by a SHA-256 computed
-from the downloaded bytes and proven with `shell-packager fetch`, never typed.
+its signature, and the app dies at startup. And every fetched binary is checked against a SHA-256 never
+typed by hand: the shell's come from GitHub into `shell-package.lock` (`shell-packager update`), the
+SFX's are computed from the downloaded bytes and proven with `shell-packager fetch`.
 
 ## Key Joomla API facts (verified against Joomla 5.4 source)
 
