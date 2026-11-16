@@ -1,5 +1,5 @@
 ---
-description: Grafida local drafts — the Draft entity/repository, the alias (URL slug) preview mirroring Joomla's two algorithms, the two-tab Articles screen, and the portable .grafida export format. Lifted verbatim from CLAUDE.md's Layout section.
+description: Grafida local drafts — the Draft entity/repository, the alias (URL slug) preview mirroring Joomla's two algorithms, the two-tab Articles screen, and the portable .grafida export format. Lifted verbatim from AGENTS.md's Layout section.
 paths:
   - "src/Article/**"
   - "src/Http/Controller/DraftController.php"
@@ -8,7 +8,7 @@ paths:
 
 # Local drafts & the Articles screen
 
-The `src/Article/` notes from `CLAUDE.md`'s `## Layout` section. Verbatim — the leading `- `
+The `src/Article/` notes from `AGENTS.md`'s `## Layout` section. Verbatim — the leading `- `
 and two-space continuation indent are the original bullet formatting.
 
 - `src/Article/` — `Draft` entity + repository (local drafts). A draft remembers the
@@ -150,7 +150,7 @@ and two-space continuation indent are the original bullet formatting.
   right edge by `margin-left: auto` on its **own class** rather than by `justify-content` or
   `:last-child`, so a row carrying only one of the two still lands on its own side — and each
   label is bold, built with **`formatNodesStrong()`** so `"Created: %s"` stays one translatable
-  unit (see CLAUDE.md's Conventions). Below a **480px container** the pair stacks, both
+  unit (see `.claude/memory/conventions.md`). Below a **480px container** the pair stacks, both
   left-aligned: that is an `@container article-row` query on `.article-item-info`, **not** a media
   query, because collapsing either sidebar changes the row's width without touching the viewport's;
   480px is set by the widest shipped language (el-GR needs ~437px against ~310px for the rest), and

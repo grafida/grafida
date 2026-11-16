@@ -1,5 +1,5 @@
 ---
-description: Grafida build, packaging, code signing (macOS notarisation + Windows Authenticode via the phpmicro sibling-phar SFX) and release process. Lifted from CLAUDE.md.
+description: Grafida build, packaging, code signing (macOS notarisation + Windows Authenticode via the phpmicro sibling-phar SFX) and release process. Lifted from AGENTS.md.
 paths:
   - "build/**"
   - "scripts/**"
@@ -12,7 +12,7 @@ paths:
 
 # Grafida build & packaging
 
-Moved out of `CLAUDE.md` so it loads only when you are touching the build system. Deeper signing
+Moved out of `AGENTS.md` so it loads only when you are touching the build system. Deeper signing
 documentation lives in `build/readme/01-macos-signing.md`, `02-signing-architecture.md`,
 `03-sfx-maintenance.md` and `04-exe-signing-on-macos.md`.
 

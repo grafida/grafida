@@ -1,5 +1,5 @@
 ---
-description: Grafida's cached site reference data (categories/tags/levels/fields/languages, editor.css and template discovery) plus the verified Joomla 5.4 REST API contracts. Lifted verbatim from CLAUDE.md.
+description: Grafida's cached site reference data (categories/tags/levels/fields/languages, editor.css and template discovery) plus the verified Joomla 5.4 REST API contracts. Lifted verbatim from AGENTS.md.
 paths:
   - "src/Reference/**"
   - "src/Joomla/**"
@@ -10,7 +10,7 @@ paths:
 
 # Site reference cache & Joomla REST API contracts
 
-Two blocks from `CLAUDE.md`, kept together because they are the same subject from two sides:
+Two blocks from `AGENTS.md`, kept together because they are the same subject from two sides:
 what we cache about a site, and the API contracts that govern reading it. Verbatim.
 
 - `src/Reference/` — cached categories/tags/levels/fields + `EditorCssService` (5s fetch, rebase, cache).

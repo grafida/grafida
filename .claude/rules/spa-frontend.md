@@ -1,16 +1,16 @@
 ---
-description: Grafida SPA front-end (assets/private) — TinyMCE/CodeMirror wiring, editor gotchas, media browser, theming, layout, spell checking. Lifted verbatim from CLAUDE.md's Layout section.
+description: Grafida SPA front-end (assets/private) — TinyMCE/CodeMirror wiring, editor gotchas, media browser, theming, layout, spell checking. Lifted verbatim from AGENTS.md's Layout section.
 paths:
   - "assets/private/**"
 ---
 
 # Grafida SPA front-end (`assets/private/`)
 
-These are the front-end notes from `CLAUDE.md`'s `## Layout` section, moved here so they load
+These are the front-end notes from `AGENTS.md`'s `## Layout` section, moved here so they load
 only when you are working under `assets/private/`. They are **verbatim** — the leading `- ` and
 two-space continuation indent are the original bullet formatting.
 
-⚠️ Do **not** move this file to `assets/private/CLAUDE.md`: the worker PHAR carries `assets/private`
+⚠️ Do **not** move this file to `assets/private/AGENTS.md`: the worker PHAR carries `assets/private`
 wholesale (`shell-package.json`'s `phar.include`) into every package, so a memory file placed there would
 ship inside the app.
 
@@ -425,7 +425,7 @@ ship inside the app.
   reimplemented here. A field with no `categoryIds` array at all stays visible everywhere (an
   unknown assignment must never hide a field the user may have typed into).
   ⚠️ **A `media` field's control is the one that does not expose a `.value`.** Its value is a
-  three-subfield record collapsing into a JSON string (see `CLAUDE.md`'s `src/Field/` bullet), so
+  three-subfield record collapsing into a JSON string (see the `src/Field/` bullet in `.claude/memory/sites-reference-and-fields.md`), so
   `buildMediaFieldInput()` keeps the record in a closure and hangs a **`_getMediaValue()`** getter on
   the container — the same trick `buildTagsInput()`'s `_getTags` uses — and `collectDraftFormData()`
   has a `media` branch beside the `checkboxes`/`radio` ones. `encodeMediaFieldValue()` /

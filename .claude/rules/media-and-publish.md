@@ -1,5 +1,5 @@
 ---
-description: Grafida's offline media blobs and the publish pipeline — inline image references, the gh-36/gh-43 image rules, upload-on-publish rewriting, the Media Manager screen, and the tests/corpus/ round-trip conformance format. Lifted verbatim from CLAUDE.md's Layout section.
+description: Grafida's offline media blobs and the publish pipeline — inline image references, the gh-36/gh-43 image rules, upload-on-publish rewriting, the Media Manager screen, and the tests/corpus/ round-trip conformance format. Lifted verbatim from AGENTS.md's Layout section.
 paths:
   - "src/Media/**"
   - "src/Publish/**"
@@ -9,7 +9,7 @@ paths:
 
 # Media & publishing
 
-The `src/Media/` and `src/Publish/PublishService.php` notes from `CLAUDE.md`'s `## Layout`
+The `src/Media/` and `src/Publish/PublishService.php` notes from `AGENTS.md`'s `## Layout`
 section, kept together because they are one pipeline: a picture pasted into an article is a
 local blob until a publish uploads it and rewrites the HTML. Verbatim — the leading `- ` and
 two-space continuation indent are the original bullet formatting.
@@ -268,7 +268,7 @@ two-space continuation indent are the original bullet formatting.
   the published article.
   TinyMCE's own **"Upload" tab is disabled** (`image_uploadtab: false`) because its "Browse for an image"
   dropzone creates a plain `<input type="file">`, and files reach the page only through the shell's
-  own dialog (see the file-picker note in `CLAUDE.md`; Boson's webview never opened that input) — so local uploads go exclusively through the Source-field "Choose file…",
+  own dialog (see the file-picker note in `.claude/memory/native-shell.md`; Boson's webview never opened that input) — so local uploads go exclusively through the Source-field "Choose file…",
   which calls the native picker. The **quickbars insert toolbar is disabled** for the same reason
   (`quickbars_insert_toolbar: false`, gh-6): the toolbar it pops up on every empty line offers a
   `quickimage` button that clicks that same dead `<input type="file">`. The `quickbars` plugin stays
@@ -288,7 +288,7 @@ two-space continuation indent are the original bullet formatting.
   adapter-qualified path** (com_media's `getFile()` prefixes every path it returns with `<adapter>:`),
   because without one we would be naming an adapter we guessed at; the value is perfectly valid
   without it, the site just renders no dimensions. The record shape itself — and why a partial one is
-  no save at all — is `Field\MediaFieldValue`'s; see `CLAUDE.md`'s `src/Field/` bullet.
+  no save at all — is `Field\MediaFieldValue`'s; see the `src/Field/` bullet in `.claude/memory/sites-reference-and-fields.md`.
   a local pick is inserted as `<img src="shell://app/api/media/{id}/raw?rev=…"
   data-grafida-media-id="N">` (`GRAFIDA_MEDIA_ATTR`, mirroring `InlineMedia::ATTRIBUTE`) — **not**
   a `data:` URI (gh-36, see `src/Media/` above) — so `PublishService` uploads the referenced blob

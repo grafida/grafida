@@ -1,5 +1,5 @@
 ---
-description: Grafida's internal shell:// API — the shell-php HTTP types and the entry point (bin/worker.php), the Router, the per-area controllers, exception-to-status mapping, the two-kinds-of-transport-failure rule (gh-29) and the no-store caching rule (gh-35). Lifted verbatim from CLAUDE.md's Layout section.
+description: Grafida's internal shell:// API — the shell-php HTTP types and the entry point (bin/worker.php), the Router, the per-area controllers, exception-to-status mapping, the two-kinds-of-transport-failure rule (gh-29) and the no-store caching rule (gh-35). Lifted verbatim from AGENTS.md's Layout section.
 paths:
   - "src/Http/**"
   - "src/Application/**"
@@ -8,7 +8,7 @@ paths:
 
 # The internal API (`src/Http/`)
 
-The `src/Http/` notes from `CLAUDE.md`'s `## Layout` section. Verbatim — the leading `- ` and
+The `src/Http/` notes from `AGENTS.md`'s `## Layout` section. Verbatim — the leading `- ` and
 two-space continuation indent are the original bullet formatting.
 
 - `src/Http/` — `HttpClient` (curl/stream transport to Joomla), `Json`, and the internal API.
@@ -180,7 +180,7 @@ controller take and return them. (Up to 0.3 Boson's HTTP types were adapted at `
 - **`bin/worker.php`** is the only entry point: the container, served by shell-php's `Worker::run()`
   over stdin/stdout in `GSF1` frames (grafida/shell `protocol/v1.md`). Exit status: 0 on
   EOF/`shutdown`, 65 on a protocol error, 74 when stdout is gone, 69 when it could not build the app
-  (FailureReporter's sentence on stderr, see `CLAUDE.md`'s `src/Startup/`). A handler that throws is
+  (FailureReporter's sentence on stderr, see the `src/Startup/` bullet in `.claude/memory/backend-architecture.md`). A handler that throws is
   a `500` response, never an exit. Anything printed during a request goes to stderr as
   `[stray-output]` and never into the stream. `ApiController` already turns exceptions into JSON
   errors, so the worker's own 500 is a last resort.

@@ -7,7 +7,7 @@ description: Drive the real Grafida SPA against the real PHP backend in a browse
 
 Grafida is a desktop app on its own native shell: a native webview whose SPA talks to
 the PHP worker over the `shell://` scheme. You can drive the real window through the
-shell's automation channel (see `CLAUDE.md`), but for most changes you don't need
+shell's automation channel (see `AGENTS.md`), but for most changes you don't need
 to. **The `shell://` scheme handler is the only piece that has to be replaced.** Everything behind `Kernel::handle()` and everything in
 `assets/private` is the shipping code, so an HTTP bridge + Chromium gives you a
 genuine end-to-end run.

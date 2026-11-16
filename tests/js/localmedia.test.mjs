@@ -87,7 +87,7 @@ test('idFromUrl() returns null for anything not the local /raw form', () => {
  * .plans/00-overview.md's truth table, plus the string-attribute and
  * no-change-needed cases. Must stay identical to Grafida\Media\ImageDimensions::fit().
  *
- * The sandbox is its own realm (see the module doc comment / CLAUDE.md's
+ * The sandbox is its own realm (see the module doc comment / `.claude/rules/build-and-packaging.md`'s
  * "test:js" note), so a plain object *returned* from it fails a strict
  * deep-equal against an outer-realm literal on the prototype alone —
  * `fit()` below re-homes it with a plain field-by-field comparison instead

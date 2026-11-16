@@ -122,7 +122,7 @@ GRAFIDA_TEST_RESPONSES_MODEL=gpt-5 composer test:integration
 - These tests go through PHP (`AiProxy` → curl), so the app's usual browser-side constraints — the
   server needing **CORS** enabled, and macOS **ATS** blocking plain HTTP from the webview — do
   **not** apply here. A server that passes these tests can still fail in the running app for those
-  reasons; see the AI facts in `CLAUDE.md`.
+  reasons; see the AI facts in `.claude/memory/ai-assistant-backend.md`.
 - `testUnknownPreviousResponseIdIsRejected` asserts that a garbage chain id is rejected with a 4xx.
   OpenAI does this. A local server may simply *ignore* the unknown field instead — if that one test
   fails, it is telling you something real about that server (the self-healing retry has nothing to

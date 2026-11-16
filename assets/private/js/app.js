@@ -2031,7 +2031,7 @@ function referencesMaxAgeMs() {
     return Number.isFinite(minutes) && minutes > 0 ? minutes * 60 * 1000 : 0;
 }
 
-/** `Y-m-d H:i:s` in UTC, N ms ago — comparable as a plain string (see CLAUDE.md). */
+/** `Y-m-d H:i:s` in UTC, N ms ago — comparable as a plain string (see .claude/memory/ai-assistant-backend.md). */
 function utcStampAgo(ms) {
     const d = new Date(Date.now() - ms);
     const p = n => String(n).padStart(2, '0');

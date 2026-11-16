@@ -1,5 +1,5 @@
 ---
-description: Grafida AI assistant — JS-primary streaming transport, the three SSE dialects, Responses-API chaining, CORS/ATS traps, multimodal rules and the panel UI. Lifted verbatim from CLAUDE.md.
+description: Grafida AI assistant — JS-primary streaming transport, the three SSE dialects, Responses-API chaining, CORS/ATS traps, multimodal rules and the panel UI. Lifted verbatim from AGENTS.md.
 paths:
   - "src/Ai/**"
   - "assets/private/js/ai/**"
@@ -10,8 +10,8 @@ paths:
 
 # Grafida AI assistant facts
 
-Moved verbatim out of `CLAUDE.md` so it loads only when you are working on the AI assistant.
-The PHP-side service inventory stays in `CLAUDE.md`'s `src/Ai/` Layout bullet.
+Moved verbatim out of `AGENTS.md` so it loads only when you are working on the AI assistant.
+The PHP-side service inventory is in `.claude/memory/ai-assistant-backend.md` (the `src/Ai/` bullet).
 
 ## Key AI assistant facts
 

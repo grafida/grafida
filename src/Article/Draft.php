@@ -108,7 +108,7 @@ final class Draft
             // plain strings — that format sorts lexicographically in
             // chronological order — so the sort never has to hand them to
             // Date.parse(), which WKWebView does not handle reliably for the
-            // naive form (see the ai_chats.last_response_at note in CLAUDE.md).
+            // naive form (see the ai_chats.last_response_at note in .claude/memory/ai-assistant-backend.md).
             // Displaying them on an article row (gh-53) does need a real Date,
             // which js/util/datetime.js builds component-wise via Date.UTC()
             // rather than by parsing the string, for exactly the same reason.
