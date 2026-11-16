@@ -107,10 +107,10 @@ final class AiServiceManager
         // Insert with no key fields first to obtain the auto-generated id.
         $stub = new AiService(
             id: null,
-            name: is_string($data['name'] ?? null) ? $data['name'] : '',
-            provider: is_string($data['provider'] ?? null) ? $data['provider'] : '',
-            endpoint: is_string($data['endpoint'] ?? null) ? $data['endpoint'] : '',
-            model: is_string($data['model'] ?? null) ? $data['model'] : '',
+            name: $data['name'],
+            provider: $data['provider'],
+            endpoint: $data['endpoint'],
+            model: $data['model'],
             params: $params,
             secretRef: null,
             insecureKey: null,

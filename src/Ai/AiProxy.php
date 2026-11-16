@@ -58,6 +58,10 @@ final class AiProxy
         array $headers,
         string $body,
     ): array {
+        if (trim($method) === '') {
+            throw new AiProxyException('An HTTP method is required.', 400);
+        }
+
         $service = $this->services->find($serviceId);
 
         if ($service === null) {

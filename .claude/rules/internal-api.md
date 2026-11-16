@@ -70,6 +70,10 @@ two-space continuation indent are the original bullet formatting.
   because that pair is the most commonly disabled one in PHP code and leaving it implicit makes a
   decision look like an oversight. `CURLOPT_PROTOCOLS_STR` confines libcurl to http/https, so the
   transport cannot reach the local filesystem even if something got past the guard.
+  `request()` refuses an **empty method or URL** with `\InvalidArgumentException` before the guard
+  runs (gh-89), so `requestCurl()`/`requestStream()` only ever see `non-empty-string`s. It is
+  deliberately not an `HttpException`: that would be mapped to a 503 the SPA words as a connectivity
+  problem. A caller fed from request data refuses it first as bad input (`AiProxy` → 400).
   `UrlGuard::baseDomain()` is a **heuristic, not the Public Suffix List** (two labels, or three when
   the TLD is two letters and the label before it is ≤3). Its only failure mode is taking *more*
   labels than a true PSL lookup, i.e. being stricter, which is the safe direction here — do not

@@ -66,9 +66,25 @@ final class HttpClient implements Transport
      * @throws HttpException                                        on transport failure (DNS, connection, timeout).
      * @throws InsecureUrlException                                 when the URL is not permitted by the policy.
      * @throws \Grafida\Http\Security\BlockedRedirectException       when a redirect would leave the original domain.
+     * @throws \InvalidArgumentException                            when the method or the URL is empty.
      */
     public function request(string $method, string $url, array $headers = [], ?string $body = null): HttpResponse
     {
+        // Ruled out here, before anything reaches cURL or the stream wrapper:
+        // an empty CURLOPT_CUSTOMREQUEST or CURLOPT_URL is not a request
+        // anybody meant, and what libcurl would make of one is not ours to
+        // guess. Both are a caller's mistake, not a transport failure, so
+        // neither is an HttpException (which reads as "check your connection").
+        $method = strtoupper($method);
+
+        if ($method === '') {
+            throw new \InvalidArgumentException('An HTTP request needs a method.');
+        }
+
+        if ($url === '') {
+            throw new \InvalidArgumentException('An HTTP request needs a URL.');
+        }
+
         $this->guard->assertAllowed($url, $this->policy);
 
         $currentUrl = $url;
@@ -86,7 +102,7 @@ final class HttpClient implements Transport
 
             $next = self::absoluteUrl($currentUrl, $location);
 
-            if ($next === null) {
+            if ($next === null || $next === '') {
                 throw new HttpException(
                     sprintf('Cannot follow the redirect from %s: "%s" is not a usable URL.', $currentUrl, $location)
                 );
@@ -177,6 +193,8 @@ final class HttpClient implements Transport
     /**
      * One request, one response — redirects are **not** followed here.
      *
+     * @param non-empty-string      $method  Already upper-cased by request().
+     * @param non-empty-string      $url
      * @param array<string, string> $headers
      */
     private function requestCurl(string $method, string $url, array $headers, ?string $body): HttpResponse
@@ -192,7 +210,7 @@ final class HttpClient implements Transport
 
         curl_setopt_array($ch, [
             \CURLOPT_URL            => $url,
-            \CURLOPT_CUSTOMREQUEST  => strtoupper($method),
+            \CURLOPT_CUSTOMREQUEST  => $method,
             \CURLOPT_RETURNTRANSFER => true,
             // Off, and it must stay off: see the class docblock. The chain is
             // walked by request(), which vets each hop before it is contacted.
@@ -247,6 +265,8 @@ final class HttpClient implements Transport
     /**
      * One request, one response — redirects are **not** followed here.
      *
+     * @param non-empty-string      $method  Already upper-cased by request().
+     * @param non-empty-string      $url
      * @param array<string, string> $headers
      */
     private function requestStream(string $method, string $url, array $headers, ?string $body): HttpResponse
@@ -258,7 +278,7 @@ final class HttpClient implements Transport
 
         $context = stream_context_create([
             'http' => [
-                'method'          => strtoupper($method),
+                'method'          => $method,
                 'header'          => $headerString,
                 'content'         => $body ?? '',
                 'timeout'         => $this->timeout,

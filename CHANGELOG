@@ -38,6 +38,7 @@ Grafida 0.4
 # [LOW] An upgrade could keep an outdated translation or migration, and a removed language stayed selectable (gh-86)
 # [LOW] The window's title bar stayed light when Grafida started in dark mode (gh-92)
 # [LOW] Linux, KDE Plasma: the window's title bar stayed light in dark mode (gh-92)
+# [LOW] An AI proxy request with no HTTP method was sent on to the AI server instead of being refused (gh-89)
 
 Grafida 0.3
 ================================================================================

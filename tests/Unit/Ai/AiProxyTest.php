@@ -131,6 +131,29 @@ final class AiProxyTest extends TestCase
         }
     }
 
+    public function testRejectsAnEmptyMethodAsBadInputWithoutContactingTheTransport(): void
+    {
+        $transport = new FakeTransport(new HttpResponse(200, '{}'));
+        $serviceId = $this->createService('custom', 'https://api.example.com/v1');
+        $proxy     = $this->proxy($transport);
+
+        try {
+            $proxy->forward(
+                serviceId: $serviceId,
+                url: 'https://api.example.com/v1/chat/completions',
+                method: '',
+                headers: [],
+                body: '',
+            );
+            self::fail('Expected AiProxyException was not thrown.');
+        } catch (AiProxyException $e) {
+            // 400, not the 500 an InvalidArgumentException from the transport would become.
+            self::assertSame(400, $e->httpStatus);
+        }
+
+        self::assertCount(0, $transport->requests);
+    }
+
     public function testHostMatchIsCaseInsensitive(): void
     {
         $transport = new FakeTransport(new HttpResponse(200, 'ok'));

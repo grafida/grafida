@@ -83,7 +83,6 @@ final class InlineMedia
         foreach ($dom->getElementsByTagName('img') as $img) {
             $src = $img->getAttribute('src') ?? '';
 
-            $mediaId = null;
             $dataUri = null;
 
             if (self::isLocalUrl($src)) {

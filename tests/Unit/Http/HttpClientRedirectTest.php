@@ -102,4 +102,31 @@ final class HttpClientRedirectTest extends TestCase
             'The refusal must happen before any connection attempt, not after one times out'
         );
     }
+
+    /** @return iterable<string, array{0: string, 1: string}> */
+    public static function emptyRequestParts(): iterable
+    {
+        yield 'empty method' => ['', 'https://192.0.2.1/index.php/api'];
+        yield 'empty URL'    => ['GET', ''];
+    }
+
+    #[DataProvider('emptyRequestParts')]
+    public function testAnEmptyMethodOrUrlIsRefusedBeforeAnyConnectionIsAttempted(string $method, string $url): void
+    {
+        // An empty CURLOPT_CUSTOMREQUEST / CURLOPT_URL is a caller's mistake, so it
+        // must never reach cURL — and must not dress up as a transport failure
+        // (HttpException), which the SPA would report as a connectivity problem.
+        $client = new HttpClient(30, UrlPolicy::Site);
+
+        $started = microtime(true);
+
+        try {
+            $client->request($method, $url);
+            $this->fail('An empty method or URL must be refused');
+        } catch (\InvalidArgumentException) {
+            // expected
+        }
+
+        $this->assertLessThan(1.0, microtime(true) - $started);
+    }
 }
