@@ -45,3 +45,6 @@ Thumbs.db
 
 # A running list of things I am working on
 TODO.md
+
+# Webview cookie store the shell may drop in the working directory
+/.saucer
