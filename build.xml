@@ -10,7 +10,7 @@
 
 	<property name="dirs.root" value="${phing.dir}" />
 	<property name="dirs.icon" value="${dirs.root}/assets/logo" />
-	<property name="dirs.dist" value="${dirs.root}/build/dist" />
+	<property name="dirs.dist" value="${dirs.root}/release" />
 	<property name="setversion.script" value="${dirs.root}/build/tasks/set-version.php" />
 	<property name="assets.marker" value="${dirs.root}/assets/private/js/tinymce/tinymce.min.js" />
 
@@ -27,14 +27,14 @@
 	(above); they merely default to empty so the package-macos-* targets can forward them to the build
 	scripts without leaving an unexpanded ${...} literal when build.properties omits them. Set
 	macos.sign.identity + macos.notary.profile in build.properties to sign+notarise — see
-	build/readme/01-macos-signing.md.
+	assets/docs/macos-signing.md.
 	-->
 	<property name="macos.sign.identity" value="" />
 	<property name="macos.notary.profile" value="" />
 
 	<!--
 	Windows code-signing defaults (Azure Artifact Signing + Jsign — see
-	build/readme/04-exe-signing-on-macos.md). windows.sign.op-item empty (the default) leaves the
+	assets/docs/windows-signing-on-macos.md). windows.sign.op-item empty (the default) leaves the
 	installer and everything in it unsigned, exactly like the macOS defaults above. Only set these in
 	build.properties: Azure's Basic tier is capped at 5,000 signatures a month, and a signed Windows
 	build costs four (the shell, the worker stub, the uninstaller, the installer).
@@ -71,7 +71,9 @@
 	exception: it always runs, see below.
 	-->
 	<target name="prepare" depends="prepare-composer,prepare-icons,prepare-assets,set-version"
-			description="Ensure dependencies, icons + front-end libraries are on disk before packaging" />
+			description="Ensure dependencies, icons + front-end libraries are on disk before packaging">
+		<mkdir dir="${dirs.dist}" />
+	</target>
 
 	<!--
 	Stamp the application version (App::VERSION) from the topmost CHANGELOG entry before every package,
@@ -179,7 +181,7 @@
 	====================================================================================================
 	Tasks - Packages (gh-92)
 
-	Each package-* target builds one distributable into build/dist/ with grafida/shell-packager, from
+	Each package-* target builds one distributable into release/ with grafida/shell-packager, from
 	shell-package.json (pins, names, outputs) and shell.json (the app manifest), through the
 	scripts/make-*.sh helpers that scripts/build-all.sh (`composer build`) also uses. All five are
 	built on the Mac: the macOS bundles need codesign, notarytool and hdiutil; the Windows installer
@@ -199,7 +201,7 @@
 	<target name="package"
 			description="Package every platform: the macOS DMGs, the Linux tarballs and the Windows installer"
 			depends="package-macos-arm,package-macos-x86,package-windows-x86,package-linux-x86,package-linux-arm">
-		<echo>Packaged all Grafida platforms into build/dist/.</echo>
+		<echo>Packaged all Grafida platforms into release/.</echo>
 	</target>
 
 	<!--
@@ -291,7 +293,7 @@
 	Publishing docs/ to the Grafida.app Documentation section is scripts/upload-docs.sh
 	(`composer docs:publish`), and it is deliberately NOT a Phing target and NOT a release step: the
 	app serves Help out of its own bundle, so the site and the shipped build are independent and a
-	typo fix should not wait for a version bump. See build/readme/05-documentation-publishing.md.
+	typo fix should not wait for a version bump. See assets/docs/documentation-publishing.md.
 	-->
 
 	<target name="release" depends="all"

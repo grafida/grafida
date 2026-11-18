@@ -148,7 +148,7 @@ password**:
 
    ```bash
    xcrun notarytool store-credentials "grafida-notary" \
-     --apple-id "nikosdion@gmail.com" \
+     --apple-id "you@example.com" \
      --team-id "ABCDE12345" \
      --password "abcd-efgh-ijkl-mnop"
    ```
@@ -211,13 +211,13 @@ Mac:
 
 ```bash
 php vendor/bin/shell-packager macos-app --config=shell-package.json --arch=<arm64|amd64> \
-  --app-version=<v> --output=build/shell-macos/<arm64|amd64>/Grafida.app
+  --app-version=<v> --output=tmp/shell-macos/<arm64|amd64>/Grafida.app
 php vendor/bin/shell-packager macos-dmg --config=shell-package.json --arch=<arm64|amd64> \
-  --app-version=<v> --app=build/shell-macos/<arm64|amd64>/Grafida.app
+  --app-version=<v> --app=tmp/shell-macos/<arm64|amd64>/Grafida.app
 ```
 
-Output: `build/dist/Grafida-<version>-macos-<arm64|amd64>.dmg` + `.sha256`. The bundle stays in
-`build/shell-macos/<arm64|amd64>/Grafida.app`.
+Output: `release/Grafida-<version>-macos-<arm64|amd64>.dmg` + `.sha256`. The bundle stays in
+`tmp/shell-macos/<arm64|amd64>/Grafida.app`.
 
 * **One bundle and one image per architecture.** arm64 for Apple Silicon; x86_64 for Intel Macs,
   tested only under Rosetta 2.
@@ -226,10 +226,10 @@ Output: `build/dist/Grafida-<version>-macos-<arm64|amd64>.dmg` + `.sha256`. The 
   (an immutable grafida/phpmicro `sfx-<YYYYMMDD>.<run>` release, pinned by URL and SHA-256 in
   `shell-package.json`) are verified on every use, and cached in
   `~/.cache/grafida-shell-packager` (`$XDG_CACHE_HOME`, or `SHELL_PACKAGER_CACHE`). There is no
-  `build/sfx/`. Bumping a pin: [`03-sfx-maintenance.md`](03-sfx-maintenance.md).
+  `sfx/` directory in the repository. Bumping a pin: [`sfx-maintenance.md`](sfx-maintenance.md).
 * **The worker PHAR** is `bin/worker.php` plus `src`, the assets, the docs, the languages and the
   `--no-dev` vendor `*.php` (`shell-package.json`'s `phar`), behind phpmicro's extra-INI block. The
-  stub and its PHAR are two files and stay two: see [`02-signing-architecture.md`](02-signing-architecture.md).
+  stub and its PHAR are two files and stay two: see [`signing-architecture.md`](signing-architecture.md).
 * **The bundle:**
 
   ```
@@ -287,10 +287,10 @@ shell-packager runs the image checks itself when it notarises. By hand (`amd64` 
 build):
 
 ```bash
-codesign --verify --deep --strict --verbose=2 build/shell-macos/arm64/Grafida.app
-codesign -d --entitlements - build/shell-macos/arm64/Grafida.app/Contents/MacOS/grafida-worker
-spctl -a -vv -t open --context context:primary-signature build/dist/Grafida-<version>-macos-arm64.dmg
-xcrun stapler validate build/dist/Grafida-<version>-macos-arm64.dmg
+codesign --verify --deep --strict --verbose=2 tmp/shell-macos/arm64/Grafida.app
+codesign -d --entitlements - tmp/shell-macos/arm64/Grafida.app/Contents/MacOS/grafida-worker
+spctl -a -vv -t open --context context:primary-signature release/Grafida-<version>-macos-arm64.dmg
+xcrun stapler validate release/Grafida-<version>-macos-arm64.dmg
 ```
 
 If notarisation is rejected, get the details with:

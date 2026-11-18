@@ -3,7 +3,7 @@
 Read before adding or changing any UI string or language file.
 
 The canonical source is **en-GB**. Translations use the **Joomla INI** format. Before each
-translation run, consult the per-language glossary in `build/glossaries/<tag>.md` (create it
+translation run, consult the per-language glossary in `language/glossaries/<tag>.md` (create it
 if missing) and update it with any new terms — glossaries keep terminology consistent. A new
 language needs only its `<tag>/<tag>.ini` file (e.g. `language/de-DE/de-DE.ini`) — there is no
 `.sys.ini` and no manifest to register it in (`LanguageService` discovers languages by scanning

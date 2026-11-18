@@ -25,7 +25,7 @@ final class Resources
 {
     private static ?string $base = null;
 
-    /** Directory containing `language/` and `storage/migrations/`. */
+    /** Directory containing `language/` and `src/sql/`. */
     public static function base(): string
     {
         if (self::$base !== null) {
@@ -42,7 +42,7 @@ final class Resources
         $target = Paths::dataDir() . \DIRECTORY_SEPARATOR . 'resources';
 
         self::sync($pharUrl . '/language', $target . \DIRECTORY_SEPARATOR . 'language');
-        self::sync($pharUrl . '/storage/migrations', $target . \DIRECTORY_SEPARATOR . 'storage' . \DIRECTORY_SEPARATOR . 'migrations');
+        self::sync($pharUrl . '/src/sql', $target . \DIRECTORY_SEPARATOR . 'src' . \DIRECTORY_SEPARATOR . 'sql');
 
         return self::$base = $target;
     }
@@ -50,7 +50,7 @@ final class Resources
     /** Directory containing the SQL migration files. */
     public static function migrationsDir(): string
     {
-        return self::base() . \DIRECTORY_SEPARATOR . 'storage' . \DIRECTORY_SEPARATOR . 'migrations';
+        return self::base() . \DIRECTORY_SEPARATOR . 'src' . \DIRECTORY_SEPARATOR . 'sql';
     }
 
     /**

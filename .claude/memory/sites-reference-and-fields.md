@@ -4,7 +4,7 @@ Read before touching `src/Site/`, `src/Reference/` or `src/Field/`.
 
 - `src/Site/` — site entity, repository, `SiteService` (token storage + connection test).
   `UnicodeAliases` is the per-site **tri-state** `auto`/`yes`/`no` behind the Sites form's "Site
-  uses Unicode Aliases" (gh-61, `storage/migrations/10_sites_unicode_aliases.sql`); `normalise()`
+  uses Unicode Aliases" (gh-61, `src/sql/10_sites_unicode_aliases.sql`); `normalise()`
   snaps NULL, `''` and anything unrecognised back to `auto`, which is what a pre-migration row and
   a form that omitted the field have to mean. It exists because reading Joomla's `unicodeslugs`
   needs `core.admin`, so "we could not read it" and "it is off" were the same answer — see

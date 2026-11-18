@@ -94,7 +94,7 @@ The `src/` layout notes for the composition root, internal API, Joomla client, s
   extends `Joomla\Database\Sqlite\SqliteDriver` and overrides `connect()` to apply the pragmas the
   app depends on (`journal_mode = WAL`, `foreign_keys = ON` — the AI-chat cascade deletes need it —
   and `busy_timeout = 5000`); `DatabaseFactory` builds one from a path.
-  `Migrator` applies `storage/migrations/*.sql` in lexicographic order, exactly once each, tracked
+  `Migrator` applies `src/sql/*.sql` in lexicographic order, exactly once each, tracked
   by file name in `schema_migrations`. **Its bookkeeping runs through the driver but each migration
   file's body is still handed to the raw `\PDO::exec()`** (via `getConnection()`) — deliberately: the
   `.sql` files hold multiple statements *and* `--` comments, which a prepared statement cannot run
@@ -115,7 +115,7 @@ The `src/` layout notes for the composition root, internal API, Joomla client, s
   documentation). A future secret gets a third loop; `StorageServiceTest` pins this.
 
 - `src/Support/` — `Resources`/`Paths` (filesystem locations; inside a PHAR, `Resources::base()`
-  mirrors `language/` and `storage/migrations/` into the data dir on every launch, by **content**, and
+  mirrors `language/` and `src/sql/` into the data dir on every launch, by **content**, and
   removes what the build no longer ships, gh-86), `App` (app identity/legal
   metadata: name, `VERSION`, copyright, licence + FSF URL, the verbatim Joomla! trademark
   disclaimer — sent to the SPA in the `bootstrap` payload's `app` key), and `UrlOpener`

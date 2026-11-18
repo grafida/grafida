@@ -9,8 +9,8 @@
             {"directory": "assets/private"},
             {"directory": "assets/public"},
             {"directory": "docs"},
-            {"directory": "language"},
-            {"directory": "storage/migrations"},
+            {"directory": "language", "notName": ["*.md"]},
+            {"directory": "src/sql"},
             {"directory": "vendor", "name": "*.php", "notName": ["*Test.php", "*TestCase.php", ".phpstorm.meta.php"]}
         ],
         "ini": {
@@ -81,13 +81,13 @@
             "description": "Create and edit Joomla! articles offline, then publish them through the Joomla Web Services API.",
             "section": "web",
             "output": {
-                "deb": "build/dist/Grafida-{version}-linux-{debarch}.deb",
-                "rpm": "build/dist/Grafida-{version}-linux-{arch}.rpm"
+                "deb": "release/Grafida-{version}-linux-{debarch}.deb",
+                "rpm": "release/Grafida-{version}-linux-{arch}.rpm"
             }
         },
         "appimage": {
             "updateInformation": "gh-releases-zsync|grafida|grafida|latest|Grafida-*-linux-{debarch}.AppImage.zsync",
-            "output": "build/dist/Grafida-{version}-linux-{arch}.AppImage"
+            "output": "release/Grafida-{version}-linux-{arch}.AppImage"
         },
         "pkgbuild": {
             "source": "https://github.com/grafida/grafida/releases/download/{version}/Grafida-{version}-linux-{debarch}.tar.gz",
@@ -95,9 +95,9 @@
             "url": "https://grafida.app",
             "license": ["GPL-3.0-or-later"],
             "maintainer": "Nicholas K. Dionysopoulos <nicholas@akeeba.com>",
-            "output": "build/dist/PKGBUILD"
+            "output": "release/PKGBUILD"
         },
-        "output": "build/dist/Grafida-{version}-linux-{debarch}.tar.gz"
+        "output": "release/Grafida-{version}-linux-{debarch}.tar.gz"
     },
     "macos": {
         "name": "Grafida",
@@ -118,8 +118,8 @@
             "volumeIcon": "assets/logo/Grafida.icns",
             "volumeName": "Grafida"
         },
-        "app": "build/shell-macos/{debarch}/{name}.app",
-        "output": "build/dist/Grafida-{version}-macos-{debarch}.dmg"
+        "app": "tmp/shell-macos/{debarch}/{name}.app",
+        "output": "release/Grafida-{version}-macos-{debarch}.dmg"
     },
     "windows": {
         "name": "Grafida",
@@ -131,14 +131,14 @@
         },
         "files": {"LICENSE.txt": "LICENSE.txt"},
         "installer": {
-            "script": "build/shell-windows-installer.nsi",
+            "script": "build/windows/shell-windows-installer.nsi",
             "defines": {
                 "DISPLAYNAME": "Grafida",
                 "APPURL": "https://grafida.app",
                 "COPYRIGHT": "Copyright (c) 2026 Nicholas K. Dionysopoulos. GNU GPL v3 or later."
             }
         },
-        "tree": "build/shell-windows/{name}",
-        "output": "build/dist/Grafida-{version}-windows-{debarch}-Setup.exe"
+        "tree": "tmp/shell-windows/{name}",
+        "output": "release/Grafida-{version}-windows-{debarch}-Setup.exe"
     }
 }

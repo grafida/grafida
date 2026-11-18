@@ -16,7 +16,7 @@
 # (.claude/rules/documentation.md).
 #
 # ⚠️ **This is NOT a release step**, which is why it is its own script and its own document
-# (build/readme/05-documentation-publishing.md). A typo fix, a corrected instruction or a new
+# (assets/docs/documentation-publishing.md). A typo fix, a corrected instruction or a new
 # screenshot is worth publishing the day it is committed; waiting for the next release would leave
 # the site wrong for weeks. The reverse is also true — the site can be republished without building
 # anything, and an installed copy keeps whatever pages it shipped with.
@@ -118,7 +118,7 @@ missing=()
 if [ ${#missing[@]} -gt 0 ]; then
     echo "upload-docs: error: not configured — ${missing[*]} unset in the environment and in" >&2
     echo "             $PROPERTIES_FILE" >&2
-    echo "             See the header of this script, or build/readme/05-documentation-publishing.md." >&2
+    echo "             See the header of this script, or assets/docs/documentation-publishing.md." >&2
     exit 1
 fi
 

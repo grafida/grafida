@@ -49,5 +49,10 @@ later**. See [LICENSE.txt](LICENSE.txt).
 * [Build from source](assets/docs/build.md)
 * [Automated testing](assets/docs/testing.md)
 * [Code signing](assets/docs/code-signing.md)
+* [macOS signing and notarisation setup](assets/docs/macos-signing.md)
+* [Windows signing on macOS](assets/docs/windows-signing-on-macos.md)
+* [Signing architecture](assets/docs/signing-architecture.md)
+* [Maintaining the phpmicro runtime pins](assets/docs/sfx-maintenance.md)
+* [Publishing the documentation](assets/docs/documentation-publishing.md)
 * [Statement on the use of AI](assets/docs/ai-use.md)
 

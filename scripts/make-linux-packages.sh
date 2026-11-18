@@ -10,8 +10,8 @@
 #
 # Usage:  scripts/make-linux-packages.sh [arch ...]   (amd64|arm64; default: both)
 #
-# Output: build/dist/Grafida-<version>-linux-<debarch>.deb, -linux-<arch>.rpm, -linux-<arch>.AppImage
-#         (each + .sha256) and build/dist/PKGBUILD.
+# Output: release/Grafida-<version>-linux-<debarch>.deb, -linux-<arch>.rpm, -linux-<arch>.AppImage
+#         (each + .sha256) and release/PKGBUILD.
 #
 # Needs `mksquashfs` for the AppImage (Homebrew `squashfs`, apt `squashfs-tools`). nfpm is fetched
 # and verified by the packager. The PKGBUILD names the tarballs, so they are built first (this
@@ -21,6 +21,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
+mkdir -p release   # deliverables; gitignored, created when missing
 
 [ -x vendor/bin/shell-packager ] || { echo "vendor/bin/shell-packager is missing: run composer install." >&2; exit 1; }
 command -v mksquashfs >/dev/null || { echo "mksquashfs is missing (Homebrew: squashfs; apt: squashfs-tools)." >&2; exit 1; }

@@ -77,7 +77,7 @@ that starts with it (`fr-FR`).
 
 ## The glossaries
 
-Under `build/glossaries/` there is one Markdown file per language, `<tag>.md`, holding a table of
+Under `language/glossaries/` there is one Markdown file per language, `<tag>.md`, holding a table of
 the terms that must be translated the same way everywhere. Here's a short excerpt from the German glossary:
 
 | Englisch (Quellbegriff) | Deutsch | Anmerkungen |
@@ -118,12 +118,12 @@ day. A wording that is technically correct but nobody would actually say is a re
 report it.
 
 **Every correction belongs in the glossary too.** If you change how a term is translated, change it
-in `build/glossaries/<tag>.md` in the same breath, otherwise the next translation run — machine or
+in `language/glossaries/<tag>.md` in the same breath, otherwise the next translation run — machine or
 human — will helpfully change it back.
 
 ## Improving an existing language
 
-1. Open `language/<tag>/<tag>.ini` and `build/glossaries/<tag>.md` side by side.
+1. Open `language/<tag>/<tag>.ini` and `language/glossaries/<tag>.md` side by side.
 2. Make the change. If it involves a term rather than a one-off phrase, update the glossary row —
    or add one — including a short note saying why.
 3. Check that the placeholders in the value still match the English source exactly, in kind if not
@@ -138,7 +138,7 @@ is not sacred, and fixing it there fixes it for everybody.
 1. Copy `language/en-GB/en-GB.ini` to `language/<tag>/<tag>.ini`, using the BCP 47 tag for your
    language and region, e.g. `nl-NL`.
 2. Set `GRAFIDA_LANGUAGE_ENDONYM` to the language's name in its own tongue.
-3. Create `build/glossaries/<tag>.md` and settle the core terms **first**, before translating the
+3. Create `language/glossaries/<tag>.md` and settle the core terms **first**, before translating the
    body of the file. Start from the official Joomla language pack for your language; a term that
    Joomla already translates should be translated the same way here.
 4. Translate the values, leaving the keys alone.

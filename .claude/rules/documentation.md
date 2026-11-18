@@ -15,7 +15,7 @@ paths:
 Documentation section, uploaded over SFTP by `scripts/upload-docs.sh` (`composer docs:publish`).
 The upload is **verbatim** (every page, `docs/images/` and `_manifest.json`) since the website
 renders the files as-is. Run it whenever `docs/` changes — it is not a release step, and the
-procedure is `build/readme/05-documentation-publishing.md`.
+procedure is `assets/docs/documentation-publishing.md`.
 
 The website and app deliberately share one predictable source format.
 
@@ -30,7 +30,7 @@ The website and app deliberately share one predictable source format.
   This is not a preference: `glob()` does not work on a `phar://` path, and the docs are read
   straight out of the compiled binary. A manifest-driven index is what lets
   `Support\Resources::docsDir()` skip the extraction step that `language/` and
-  `storage/migrations/` need. `tests/Feature/HelpRoutingTest::testEveryAdvertisedPageRenders()`
+  `src/sql/` need. `tests/Feature/HelpRoutingTest::testEveryAdvertisedPageRenders()`
   renders every advertised page, so a manifest entry whose file was renamed fails the suite rather
   than becoming a dead link.
 - ⚠️ **The manifest nests; the files do not.** A manifest node is
@@ -172,7 +172,7 @@ from the second render onwards.
 `_manifest.json`. `--dry-run` prints the destination and the whole SFTP batch without connecting to
 anything. The settings are `docs.sftp.host` / `.path` / `.user` / `.port` in
 `build/build.properties`, overridden by `DOCS_SFTP_*` in the environment;
-`build/readme/05-documentation-publishing.md` is the full procedure.
+`assets/docs/documentation-publishing.md` is the full procedure.
 
 ⚠️ **This is deliberately NOT a release step and must not become one.** The app serves Help out of
 its own binary, so the site and the shipped build are independent: a typo fix is worth publishing

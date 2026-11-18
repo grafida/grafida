@@ -5,14 +5,14 @@
 # GNU General Public License version 3, or later.
 #
 # The Windows (x64) installer (gh-91, gh-92): Grafida on the native shell, built by
-# grafida/shell-packager from shell-package.json and build/shell-windows-installer.nsi. Called by
+# grafida/shell-packager from shell-package.json and build/windows/shell-windows-installer.nsi. Called by
 # `phing package-windows-x86` and scripts/build-all.sh. It installs per user where Boson's build did,
 # under its identity (Programs\Grafida, the uninstall key Grafida, its Start menu entry), removing a
 # Boson or preview install first.
 #
 # Usage:  scripts/make-windows-installer.sh [shell-packager options, e.g. --no-check]
 #
-# Output: build/dist/Grafida-<version>-windows-amd64-Setup.exe (+ .sha256)
+# Output: release/Grafida-<version>-windows-amd64-Setup.exe (+ .sha256)
 #
 # Runs on the Mac (or Linux): makensis, Jsign and osslsigncode run there; the shell and the phpmicro
 # SFX are downloaded from the releases pinned in shell-package.json and verified by SHA-256 (cached
@@ -29,6 +29,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
+mkdir -p release   # deliverables; gitignored, created when missing
 
 [ -x vendor/bin/shell-packager ] || { echo "vendor/bin/shell-packager is missing: run composer install." >&2; exit 1; }
 

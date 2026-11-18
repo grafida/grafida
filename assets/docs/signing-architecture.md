@@ -5,12 +5,12 @@ a **forked phpmicro** is involved, and which design decisions were made on
 purpose. Read this before touching anything signing-related, bumping a runtime
 pin, or wondering "can we get rid of that fork yet?". Companion documents:
 
-* [`01-macos-signing.md`](01-macos-signing.md) — the Apple-side setup
+* [`macos-signing.md`](macos-signing.md) — the Apple-side setup
   (certificates, notarisation), and how the build signs and notarises.
-* [`03-sfx-maintenance.md`](03-sfx-maintenance.md) — the operational playbook
+* [`sfx-maintenance.md`](sfx-maintenance.md) — the operational playbook
   (bumping a runtime pin, the PHP version and extension list, rebasing the fork,
   troubleshooting).
-* [`04-exe-signing-on-macos.md`](04-exe-signing-on-macos.md) — Windows
+* [`windows-signing-on-macos.md`](windows-signing-on-macos.md) — Windows
   Authenticode through Azure Trusted Signing, from the Mac.
 
 From 0.4 (grafida/grafida#92) every release artefact is the native shell's,
@@ -30,8 +30,8 @@ phpmicro locates it as "Mach-O image end → EOF" — the two constraints are
 mutually exclusive. On Windows, Authenticode appends its certificate table at
 EOF, *past* the PHAR, and a PHAR stores its own signature as its last bytes, so
 the signed binary dies at startup with "broken signature". Full empirical
-analysis: `01-macos-signing.md` at the tag `0.3`, "Why a stock Boson binary
-cannot be signed (historical analysis)" (macOS), and `04-exe-signing-on-macos.md` (Windows).
+analysis: `macos-signing.md` at the tag `0.3`, "Why a stock Boson binary
+cannot be signed (historical analysis)" (macOS), and `windows-signing-on-macos.md` (Windows).
 
 ## The solution, in one paragraph
 
@@ -65,7 +65,7 @@ grafida/phpmicro (branch sibling-phar)          ← the C patch lives here
        │                                           `shell.version`, hashes in shell-package.lock)
        ▼  vendor/bin/shell-packager             ← downloads, checks the SHA-256 on every use,
        │                                           caches in ~/.cache/grafida-shell-packager
-       │                                           (never build/sfx/); builds the worker PHAR
+       │                                           (never in the repo); builds the worker PHAR
        │                                           (bin/worker.php + src + assets …) behind
        │                                           phpmicro's extra-INI block (`phar.ini`)
        │
@@ -80,15 +80,15 @@ grafida/phpmicro (branch sibling-phar)          ← the C patch lives here
        └─▼  linux-tarball                       ← grafida-worker + grafida-worker.phar, unsigned
                                                    (scripts/make-linux-tarball.sh)
        ▼
-  build/dist/Grafida-<v>-{macos-<arm64|amd64>.dmg, windows-amd64-Setup.exe,
+  release/Grafida-<v>-{macos-<arm64|amd64>.dmg, windows-amd64-Setup.exe,
                           linux-<amd64|arm64>.tar.gz} (+ .sha256)
 ```
 
 Entry points: `phing package` (targets `package-macos-arm`, `package-macos-x86`,
 `package-windows-x86`, `package-linux-x86`, `package-linux-arm`) or `composer
 build` (`scripts/build-all.sh`); everything is built on the Mac. Details:
-macOS in [`01-macos-signing.md`](01-macos-signing.md), Windows in
-[`04-exe-signing-on-macos.md`](04-exe-signing-on-macos.md).
+macOS in [`macos-signing.md`](macos-signing.md), Windows in
+[`windows-signing-on-macos.md`](windows-signing-on-macos.md).
 
 **The one Windows-only subtlety (it cost a debugging cycle):** Authenticode does
 not sign in place — it appends a **certificate table at EOF**, *past* the stub's
@@ -111,7 +111,7 @@ Key properties:
   release is immutable, and `shell-package.json` pins it by SHA-256 computed from
   the downloaded bytes. A mismatch, or an architecture with no pin, is fatal. A
   `.sha256` published beside the download is never consulted. How to move a pin:
-  [`03-sfx-maintenance.md`](03-sfx-maintenance.md).
+  [`sfx-maintenance.md`](sfx-maintenance.md).
 * **Nothing degrades silently.** There is no fallback to a stock runtime or a
   combined binary: a missing download or a bad hash stops the build.
 * **The PHAR is built by shell-packager**, from `shell-package.json`'s `phar`

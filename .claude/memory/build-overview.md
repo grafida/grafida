@@ -4,7 +4,7 @@ Read before running `composer build` / Phing targets. The full detail is in `.cl
 
 ## Build & packaging (one step)
 
-`composer build` → `scripts/build-all.sh` packages every platform into `build/dist/` (the two macOS
+`composer build` → `scripts/build-all.sh` packages every platform into `release/` (the two macOS
 DMGs on a Mac, the two Linux tarballs, the Windows installer, each with a `.sha256`), through the same
 `scripts/make-*.sh` helpers the Phing `package-*` targets call; `phing package` (the default target,
 and `all`) does the same with signing from `build/build.properties`; `phing release` adds the GitHub

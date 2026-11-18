@@ -9,7 +9,7 @@
 #
 # Usage:  scripts/make-linux-tarball.sh [arch ...]   (amd64|arm64; default: both)
 #
-# Output: build/dist/Grafida-<version>-linux-<arch>.tar.gz (+ .sha256)
+# Output: release/Grafida-<version>-linux-<arch>.tar.gz (+ .sha256)
 #
 # The shell, the launcher and the phpmicro SFX are downloaded from the releases pinned in
 # shell-package.json and verified by SHA-256 (cached in ~/.cache/grafida-shell-packager). On a Linux
@@ -19,6 +19,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
+mkdir -p release   # deliverables; gitignored, created when missing
 
 [ -x vendor/bin/shell-packager ] || { echo "vendor/bin/shell-packager is missing: run composer install." >&2; exit 1; }
 

@@ -10,9 +10,11 @@ Thumbs.db
 /.fleet
 
 # Build artifacts and dependencies
-/build/*
-!/build/composer/
-!/build/glossaries/
+/release/
+# Private build configuration (secrets); build/build.sample.properties is the committed template
+/build/build.properties
+# All scratch / temporary build output, caches and hand-off folders
+/tmp/
 /vendor
 /node_modules
 

@@ -1,6 +1,6 @@
 # AI text normalising, in-app Help, Markdown, i18n, language files and docs (Layout notes)
 
-Read before touching `src/Text/`, `src/Help/`, `src/Markdown/`, `src/I18n/`, `language/`, `docs/`, `storage/migrations/` or the glossaries.
+Read before touching `src/Text/`, `src/Help/`, `src/Markdown/`, `src/I18n/`, `language/`, `docs/`, `src/sql/` or the glossaries.
 
 - `src/Text/` — **normalising AI-generated content**: `ContentNormaliser` strips the invisible
   characters LLMs and web pages leave in text (zero-width family, bidi controls and isolates, tag
@@ -43,7 +43,7 @@ Read before touching `src/Text/`, `src/Help/`, `src/Markdown/`, `src/I18n/`, `la
   `/api/help/image/{file}`; none of them touches a site, the network or the database, so the Help
   screen works with nothing configured at all.
   ⚠️ **Detail is in `.claude/rules/documentation.md`** (and the procedure in
-  `build/readme/05-documentation-publishing.md`), which loads when you touch `docs/`, `src/Help/` or
+  `assets/docs/documentation-publishing.md`), which loads when you touch `docs/`, `src/Help/` or
   `scripts/upload-docs.sh`. Two rules worth carrying without it: **no link in a
   documentation page may be followed normally** — the app's webview opens no new window and a
   same-window navigation would replace the SPA with no way back, so an external URL leaves through
@@ -73,10 +73,10 @@ Read before touching `src/Text/`, `src/Help/`, `src/Markdown/`, `src/I18n/`, `la
 
 - `docs/` — the user documentation, in Markdown. Shipped inside every package's worker PHAR (it is in
   `shell-package.json`'s `phar.include`) **and** published on Grafida.app; see `src/Help/` above.
-- `storage/migrations/*.sql` — schema. `.plans/` — implementation step notes (gitignored).
-- `build/glossaries/` — per-language translation glossaries.
-
-- `build/glossaries/` — per-language translation glossaries. `build/` is otherwise gitignored — the
-  whitelisted exceptions are `build/glossaries/`, `build/composer/` (the npm-vendoring install
-  script), `build/tasks/`, `build/readme/`, `build/macos/shell-worker.entitlements` and the Windows
-  installer script `build/shell-windows-installer.nsi` (see `build/.gitignore`).
+- `src/sql/*.sql` — schema. `.plans/` — implementation step notes (gitignored).
+- `language/glossaries/` — per-language translation glossaries (`<tag>.md`). Not a language: `LanguageService`
+  only counts `language/<tag>/<tag>.ini`, and `shell-package.json` keeps `*.md` out of the PHAR.
+- `build/` holds only build inputs: `composer/` (npm-vendoring script), `tasks/` (Phing tasks), `macos/shell-worker.entitlements`,
+  `windows/shell-windows-installer.nsi`, `build.sample.properties`; `build.properties` is gitignored; deliverables go to the gitignored `release/`. Build
+  documentation lives in `assets/docs/`; every scratch directory (shell-packager work trees, hand-off folders) is the
+  gitignored `tmp/`.

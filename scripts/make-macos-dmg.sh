@@ -12,8 +12,8 @@
 # Usage:  scripts/make-macos-dmg.sh [arm64|amd64 …] [-- shell-packager options, e.g. --no-style]
 #         (no architecture: both)
 #
-# Output: build/dist/Grafida-<version>-macos-<arm64|amd64>.dmg (+ .sha256), and the bundles in
-#         build/shell-macos/<arch>/Grafida.app
+# Output: release/Grafida-<version>-macos-<arm64|amd64>.dmg (+ .sha256), and the bundles in
+#         tmp/shell-macos/<arch>/Grafida.app
 #
 # The shell and the phpmicro SFX are downloaded from the releases pinned in shell-package.json and
 # verified by SHA-256 (cached in ~/.cache/grafida-shell-packager). The packaged worker is run inside
@@ -29,6 +29,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
+mkdir -p release   # deliverables; gitignored, created when missing
 
 [ "$(uname -s)" = Darwin ] || { echo "The macOS bundles and images are built on a Mac." >&2; exit 1; }
 [ -x vendor/bin/shell-packager ] || { echo "vendor/bin/shell-packager is missing: run composer install." >&2; exit 1; }
@@ -54,7 +55,7 @@ export SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(git log -1 --format=%ct)}"
 
 for arch in "${ARCHES[@]}"; do
   echo "==> Grafida $VERSION, macOS $arch, signed: ${MACOS_SIGN_IDENTITY:-ad hoc}"
-  APP="$ROOT/build/shell-macos/$arch/Grafida.app"
+  APP="$ROOT/tmp/shell-macos/$arch/Grafida.app"
   php vendor/bin/shell-packager macos-app --config="$ROOT/shell-package.json" --arch="$arch" --app-version="$VERSION" --output="$APP"
   php vendor/bin/shell-packager macos-dmg --config="$ROOT/shell-package.json" --arch="$arch" --app-version="$VERSION" --app="$APP" "$@"
 done

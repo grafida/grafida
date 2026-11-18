@@ -38,7 +38,7 @@ if ($version !== '0.3') {
 @unlink($out);
 $files = [];
 
-foreach (['src', 'vendor', 'language', 'storage/migrations', 'docs'] as $dir) {
+foreach (['src', 'vendor', 'language', 'src/sql', 'docs'] as $dir) {
     $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($tree . '/' . $dir, FilesystemIterator::SKIP_DOTS));
 
     foreach ($iterator as $file) {

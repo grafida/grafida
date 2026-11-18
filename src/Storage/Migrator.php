@@ -17,14 +17,14 @@ use PDO;
 /**
  * Applies SQL migration files in lexicographic order, exactly once each.
  *
- * Migrations live in storage/migrations/NN_name.sql. Applied file names are
+ * Migrations live in src/sql/NN_name.sql. Applied file names are
  * tracked in the `schema_migrations` table so re-runs are idempotent.
  */
 final class Migrator
 {
     public function __construct(
         private readonly DatabaseInterface $db,
-        private readonly string $migrationsDir = __DIR__ . '/../../storage/migrations',
+        private readonly string $migrationsDir = __DIR__ . '/../sql',
     ) {}
 
     public function migrate(): void

@@ -2,10 +2,10 @@
 
 Operational notes for the patched `micro.sfx` runtimes that Grafida's worker
 runs on, and that make its macOS and Windows packages code-signable. Background
-and rationale: [`02-signing-architecture.md`](02-signing-architecture.md);
+and rationale: [`signing-architecture.md`](signing-architecture.md);
 Apple-side setup and how the build signs:
-[`01-macos-signing.md`](01-macos-signing.md); Windows signing:
-[`04-exe-signing-on-macos.md`](04-exe-signing-on-macos.md).
+[`macos-signing.md`](macos-signing.md); Windows signing:
+[`windows-signing-on-macos.md`](windows-signing-on-macos.md).
 
 The binaries are built by GitHub Actions on
 [`grafida/phpmicro`](https://github.com/grafida/phpmicro) (branch
@@ -25,7 +25,7 @@ grafida/shell-packager downloads it, checks the hash on every use and caches it
 in `~/.cache/grafida-shell-packager` (`$XDG_CACHE_HOME`, or
 `SHELL_PACKAGER_CACHE`). A mismatch is fatal. The rolling **`sfx-latest`**
 release, which most runs also rewrite, is **no longer used by anything Grafida
-ships** (Boson's build downloaded it, up to 0.3). There is no `build/sfx/`.
+ships** (Boson's build downloaded it, up to 0.3). There is no `sfx/` directory in the repository.
 
 ## Current pins
 

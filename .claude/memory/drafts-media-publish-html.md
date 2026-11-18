@@ -15,7 +15,7 @@ Read before touching `src/Article/`, `src/Media/`, `src/Publish/` or `src/Html/`
 - `src/Media/` — offline image blobs (`media_blobs`) + `SiteImageFetcher`, the Media Manager
   screen (Site + Local tabs), the in-app crop/resize/rotate/flip image editor, and
   `MediaUploadTarget` — **where a publish uploads to** (gh-57), i.e. the per-site
-  `media_adapter`/`media_folder` settings (`storage/migrations/09_sites_media_target.sql`, Sites
+  `media_adapter`/`media_folder` settings (`src/sql/09_sites_media_target.sql`, Sites
   form) and the automatic resolution behind them. It also owns the two statics `PublishService`
   used to keep privately — `safeName()` (the blob-id-prefixed upload name) and `publicPath()`
   (adapter path → site-relative URL) — because `predictedPublicPath()`, which answers

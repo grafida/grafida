@@ -78,7 +78,7 @@ the detail, the per-platform layouts and their tests are in `.claude/rules/build
   an AppImage and an Arch `PKGBUILD`, all on the **system** WebKitGTK 4.1 and GTK 3 (never bundled; no
   Flatpak, see grafida/shell `docs/adr/0002-flatpak.md`); detail in `.claude/rules/build-and-packaging.md`.
 - **Windows:** a per-user NSIS installer built **on the Mac** (makensis, Jsign, osslsigncode; icon and
-  version resources written in PHP) from Grafida's own **`build/shell-windows-installer.nsi`**. It
+  version resources written in PHP) from Grafida's own **`build/windows/shell-windows-installer.nsi`**. It
   **takes over Boson's identity**: `%LOCALAPPDATA%\Programs\Grafida` (honouring
   `HKCU\Software\Grafida\InstallDir`), the uninstall key `Grafida`, the Start menu entry
   `Grafida\Grafida.lnk`; before it writes anything it checks neither Grafida is running and removes a

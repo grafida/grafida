@@ -64,6 +64,6 @@ so those never depend on a rules file being loaded. A change that moves content 
 keep the root file's pointers accurate.
 
 ⚠️ A new rules file's `paths:` must actually cover the code it describes, or it will silently
-never load. Deep build/signing recipes live in `build/readme/01`–`04`, and publishing the
-documentation to Grafida.app in `build/readme/05-documentation-publishing.md`.
+never load. Deep build/signing recipes live in `assets/docs/macos-signing.md`, `signing-architecture.md`, `sfx-maintenance.md` and `windows-signing-on-macos.md`, and publishing the
+documentation to Grafida.app in `assets/docs/documentation-publishing.md`.
 

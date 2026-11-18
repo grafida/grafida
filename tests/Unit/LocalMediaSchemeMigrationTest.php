@@ -25,7 +25,7 @@ final class LocalMediaSchemeMigrationTest extends TestCase
 {
     public function testMigrationRewritesStoredLocalMediaUrlsOnce(): void
     {
-        $real = __DIR__ . '/../../storage/migrations';
+        $real = __DIR__ . '/../../src/sql';
         $dir  = sys_get_temp_dir() . '/grafida-mig-' . bin2hex(random_bytes(4));
         mkdir($dir);
 

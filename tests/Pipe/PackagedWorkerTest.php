@@ -98,7 +98,7 @@ final class PackagedWorkerTest extends TestCase
         $resources = glob($base . '/{,.}*/resources', \GLOB_BRACE | \GLOB_ONLYDIR) ?: [];
         self::assertCount(1, $resources, 'one resources directory under the data dir');
         self::assertFileExists($resources[0] . '/language/en-GB/en-GB.ini');
-        self::assertNotEmpty(glob($resources[0] . '/storage/migrations/*.sql'));
+        self::assertNotEmpty(glob($resources[0] . '/src/sql/*.sql'));
     }
 
     public function testABodyAtTheLimitFitsInMemory(): void

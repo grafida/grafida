@@ -245,10 +245,10 @@ checks the chain only when `WINDOWS_SIGN_CAFILE` names the roots (see "Wiring in
 From 0.4 (grafida/grafida#92) the Windows release build is the native shell's x64 installer,
 built **on the Mac** (Linux works too) by grafida/shell-packager's `windows-installer` from
 `shell-package.json` (its `runtimes.windows` and `windows` sections) and Grafida's own NSIS
-script, `build/shell-windows-installer.nsi`. Entry points: `phing package-windows-x86` (part of
+script, `build/windows/shell-windows-installer.nsi`. Entry points: `phing package-windows-x86` (part of
 `phing package`), `composer build` (`scripts/build-all.sh`), or `scripts/make-windows-installer.sh`
 (`composer build:windows`; its arguments go to shell-packager). Output:
-`build/dist/Grafida-<version>-windows-amd64-Setup.exe` + `.sha256`.
+`release/Grafida-<version>-windows-amd64-Setup.exe` + `.sha256`.
 
 Install the tools beside `jsign` (makensis 3.08 or later, for `!uninstfinalize`):
 
@@ -260,7 +260,7 @@ brew install osslsigncode makensis
 set (an agent's or a CI shell can have none). `make-windows-installer.sh` defaults `LANG` to
 `en_US.UTF-8` for that reason.
 
-What it builds, in `build/shell-windows/Grafida`:
+What it builds, in `tmp/shell-windows/Grafida`:
 
 ```
 Grafida.exe            the shell (a GUI program), with Grafida's icon and a version resource
@@ -274,8 +274,8 @@ LICENSE.txt
 * **The runtimes are downloaded, never built here.** The shell (a grafida/shell release, pinned by
   `shell.version`, its SHA-256s in `shell-package.lock`) and the SFX (the immutable grafida/phpmicro
   `sfx-20261110.27`, pinned by SHA-256 in `shell-package.json`) are cached in
-  `~/.cache/grafida-shell-packager`, never `build/sfx/`. See
-  [`03-sfx-maintenance.md`](03-sfx-maintenance.md).
+  `~/.cache/grafida-shell-packager`, never inside the repository. See
+  [`sfx-maintenance.md`](sfx-maintenance.md).
 * **No Visual C++ runtime is needed or fetched.** The shell links the CRT statically, and the SFX
   imports system DLLs only (its CI check fails otherwise).
 * **Icon and version resources are written in PHP** (no `rcedit`), keeping each executable's
@@ -308,7 +308,7 @@ differently.)
   inherits (`WINDOWS_SIGN_ENDPOINT`, `_PROFILE`, `_TOKEN`, `_PKCS12`, `_PKCS12_PASSWORD`), so
   nothing signs by accident. The same "blank disables it" convention as the macOS
   `macos.sign.identity`/`macos.notary.profile` properties (see
-  [`01-macos-signing.md`](01-macos-signing.md)).
+  [`macos-signing.md`](macos-signing.md)).
 * **Set**: the target passes it and the other `windows.sign.*` properties to
   `scripts/make-windows-installer.sh`, which reads the service principal from 1Password
   (`op item get`), logs `az` in, fetches an access token for `https://codesigning.azure.net`, and
@@ -351,7 +351,7 @@ So shell-packager never builds a combined binary: `grafida-worker.exe` is the ba
 (the grafida/phpmicro `sibling-phar` fork), signed, and `grafida-worker.phar` sits beside it, a
 plain data file. The patched stub loads `<self-without-.exe>.phar` from its own directory at run
 time, and knows to look past its own certificate table (see
-[`02-signing-architecture.md`](02-signing-architecture.md)).
+[`signing-architecture.md`](signing-architecture.md)).
 
 ---
 

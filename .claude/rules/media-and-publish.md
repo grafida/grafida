@@ -23,7 +23,7 @@ two-space continuation indent are the original bullet formatting.
   "Image URL" note under `src/Publish/` below).
   ⚠️ **A pasted/dropped/picked image is no longer inlined as a `data:` URI in the article body**
   (gh-36): `MediaRepository` still stores the bytes in `media_blobs` (now also carrying
-  `updated_at`/`width`/`height`/`size`, added by `storage/migrations/07_media_blobs_local.sql` —
+  `updated_at`/`width`/`height`/`size`, added by `src/sql/07_media_blobs_local.sql` —
   not re-runnable, following the `04_ai_chat_response_chain.sql` pattern), but the editor
   references it by a **local URL the worker itself serves**:
   `shell://app/api/media/{id}/raw?rev=<token>` (`MediaController::mediaBlobRaw()`, ~60 bytes

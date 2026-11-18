@@ -13,8 +13,8 @@ paths:
 # Grafida build & packaging
 
 Moved out of `AGENTS.md` so it loads only when you are touching the build system. Deeper signing
-documentation lives in `build/readme/01-macos-signing.md`, `02-signing-architecture.md`,
-`03-sfx-maintenance.md` and `04-exe-signing-on-macos.md`.
+documentation lives in `assets/docs/macos-signing.md`, `signing-architecture.md`,
+`sfx-maintenance.md` and `windows-signing-on-macos.md`.
 
 ## Build & packaging (one step)
 
@@ -30,14 +30,14 @@ Every release artefact is the native shell's (gh-92), built **on the Mac** by **
 | `Grafida-<v>-linux-arm64.tar.gz` | `package-linux-arm` | `scripts/make-linux-tarball.sh arm64` |
 | `Grafida-<v>-windows-amd64-Setup.exe` | `package-windows-x86` | `scripts/make-windows-installer.sh` |
 
-each with a `.sha256` beside it, into **`build/dist/`** (gitignored). `phing package` (the default
+each with a `.sha256` beside it, into **`release/`** (gitignored). `phing package` (the default
 target; `all` is an alias; `composer build:package`) builds all five with signing from
 `build/build.properties`; `composer build` → `scripts/build-all.sh` runs the same scripts with
 signing from the environment and a tolerant per-platform summary (one failure does not stop the
 others, the exit status reports it). `composer build:macos|build:linux|build:windows` build one
 platform. There is no compile step: the worker PHAR is built by shell-packager, the shell and the
 phpmicro SFX are downloaded, pinned binaries. Boson's build (`boson.json`, `boson compile`, the
-libboson patch, `build/sfx/`, the `.phar` and `.zip` artefacts) was deleted in gh-92.
+libboson patch, `sfx/`, the `.phar` and `.zip` artefacts) was deleted in gh-92.
 
 **Front-end vendoring:** the build host needs `node`+`npm`. The npm-managed libraries (TinyMCE,
 CodeMirror, FontAwesome — see `.claude/rules/spa-frontend.md`) are gitignored, so `prepare-assets`
@@ -55,7 +55,7 @@ system `php bin/worker.php`.
 **`shell-package.json`** (repo root, beside `shell.json`, which names everything: `id`, `title`,
 `worker.binary`). It stamps `App::VERSION` first (the PHAR carries `App.php`) and sets
 `SOURCE_DATE_EPOCH` to the commit time, so **one commit builds one byte-identical tarball**. Output:
-`build/dist/Grafida-<v>-linux-<arch>.tar.gz` + `.sha256`. Built on the Mac like everything else; the
+`release/Grafida-<v>-linux-<arch>.tar.gz` + `.sha256`. Built on the Mac like everything else; the
 worker check (below) only runs on a Linux host of the same architecture.
 - **`linux.replaces: ["grafida"]`**: the tarball's `install.sh` removes Boson's
   `~/.local/share/applications/grafida.desktop` and that id's hicolor icons, but only when the entry
@@ -86,7 +86,7 @@ worker check (below) only runs on a Linux host of the same architecture.
 - **The Linux SFX links glibc dynamically** (2.35 floor, = the shell's), everything else static: musl
   has no NSS, so `.local`/systemd-resolved names would not resolve for sites or local AI servers.
 - **The PHAR** is `bin/worker.php` + `src`, `assets/private|public`, `docs`, `language`,
-  `storage/migrations`, `src/Ai/resources` and the `--no-dev` vendor `*.php`: 1,690 files against the
+  `src/sql`, `src/Ai/resources` and the `--no-dev` vendor `*.php`: 1,690 files against the
   Boson PHAR's 4,915. Its ini block sets `memory_limit=1G`, because a body at `shell.json`'s
   `maxBodyBytes` (128 MiB) peaks at ~600 MiB RSS (the body, the decoded JSON string, the decoded bytes,
   and `getimagesizefromstring()`'s copy); 512M died in `ImageInfo`. Keep the two in step:
@@ -107,7 +107,7 @@ worker check (below) only runs on a Linux host of the same architecture.
 `composer build:shell-linux [-- amd64|arm64]` → `scripts/make-linux-packages.sh` builds, per architecture,
 the tarball and then `linux-deb`, `linux-rpm` and `linux-appimage`, and finally `linux-pkgbuild` for the
 tarballs: `Grafida-<v>-linux-<debarch>.deb`, `-linux-<arch>.rpm`, `-linux-<arch>.AppImage` (each + `.sha256`)
-and `build/dist/PKGBUILD`. Deliberately **not** in the Phing targets or in `composer build`: they are an extra on the tarball, built on the maintainer's hardware like everything else
+and `release/PKGBUILD`. Deliberately **not** in the Phing targets or in `composer build`: they are an extra on the tarball, built on the maintainer's hardware like everything else
 (there is no CI build, gh-88). They need `mksquashfs` (Homebrew `squashfs`) for the AppImage; nfpm is fetched
 and verified by shell-packager itself. The config is `shell-package.json`'s `linux.package` (maintainer,
 `GPL-3.0-or-later`, description, outputs), `linux.appimage` (zsync update information for the `grafida/grafida`
@@ -136,8 +136,8 @@ runtimes (type2-runtime `20251108`).
 
 `composer build:macos [-- arm64|amd64] [-- --no-style]` / Phing `package-macos-arm|-x86` →
 `scripts/make-macos-dmg.sh <arch>` → `vendor/bin/shell-packager macos-app --arch=…` (into
-`build/shell-macos/<arch>/Grafida.app`) then `macos-dmg --arch=… --app=…` →
-`build/dist/Grafida-<v>-macos-<arm64|amd64>.dmg` + `.sha256`. It stamps `App::VERSION` and
+`tmp/shell-macos/<arch>/Grafida.app`) then `macos-dmg --arch=… --app=…` →
+`release/Grafida-<v>-macos-<arm64|amd64>.dmg` + `.sha256`. It stamps `App::VERSION` and
 `SOURCE_DATE_EPOCH` as the Linux build does, but only the PHAR inside is reproducible (`codesign` and
 `hdiutil` are not).
 - ⚠️ **Intel Macs (amd64) are tested only under Rosetta 2**, in Rosetta clones of the Apple Silicon
@@ -160,10 +160,10 @@ runtimes (type2-runtime `20251108`).
   shell-packager computes is an error there, which is why `NSHighResolutionCapable` is not listed.
   It is the only macOS floor: shell-packager refuses a binary whose `minos` is above it.
 - **Entitlements**: the shell none, the worker `com.apple.security.cs.allow-jit` only
-  (`build/macos/shell-worker.entitlements`, whitelisted in `build/.gitignore`), because PCRE's JIT
+  (`build/macos/shell-worker.entitlements`), because PCRE's JIT
   needs MAP_JIT under the hardened runtime. shell-packager reads every signature back and fails
   unless it carries exactly the configured set. Add one only with the test that fails without it.
-- **Testing a packaged build:** `GRAFIDA_PIPE_WORKER="$PWD/build/shell-macos/arm64/Grafida.app/Contents/MacOS/grafida-worker"
+- **Testing a packaged build:** `GRAFIDA_PIPE_WORKER="$PWD/tmp/shell-macos/arm64/Grafida.app/Contents/MacOS/grafida-worker"
   composer test:pipe` (the amd64 one under Rosetta 2); `../shell/scripts/dev/parity-macos.sh` with
   `GRAFIDA_PACKAGED=…/Grafida.app SHELL_BIN=<the debug-automation-macos-<arch> artifact>` runs the
   in-page checks against a copy with only the shell swapped, and its first row proves which
@@ -180,8 +180,8 @@ runtimes (type2-runtime `20251108`).
 
 `composer build:windows` / Phing `package-windows-x86` →
 `scripts/make-windows-installer.sh` → `vendor/bin/shell-packager windows-installer` over
-`shell-package.json` (its `windows` section) and **`build/shell-windows-installer.nsi`**
-(whitelisted in `build/.gitignore`) → `build/dist/Grafida-<v>-windows-amd64-Setup.exe`
+`shell-package.json` (its `windows` section) and **`build/windows/shell-windows-installer.nsi`**
+→ `release/Grafida-<v>-windows-amd64-Setup.exe`
 + `.sha256`. **x64 only.** It stamps `App::VERSION` and `SOURCE_DATE_EPOCH` like the others; only the
 PHAR inside is reproducible. ⚠️ makensis 3.13 aborts with `std::bad_alloc` when `LANG` is unset (an
 agent's or CI shell can have none), so the script defaults it to `en_US.UTF-8`.
@@ -237,7 +237,7 @@ agent's or CI shell can have none), so the script defaults it to `en_US.UTF-8`.
   `GRAFIDA_PIPE_WORKER="$env:LOCALAPPDATA\Programs\Grafida\grafida-worker.exe" composer test:pipe`,
   and `GRAFIDA_PACKAGED='…\Programs\Grafida' parity-windows.sh` for the in-page checks on a copy
   with only the shell swapped for the debug automation build.
-- **A release candidate's hand-off folder** (`build/rc-<version>/`, gitignored, gh-92) holds the
+- **A release candidate's hand-off folder** (`tmp/rc-<version>/`, gitignored, gh-92) holds the
   artefacts, `SHA256SUMS` and the prompt for each test-machine round. It is copied to the shared
   drive the test machine reads. The test machine keeps each round's evidence **inside it**, in one
   subfolder per round (e.g. `idle/`). So an update **merges**: `rsync -a` without `--delete`,
@@ -278,8 +278,7 @@ secrets, never committed; a missing file is tolerated). The committed `build/bui
 is the template (`cp` it to `build/build.properties` and fill in): the signing properties above,
 GitHub Releases (`github.organization`, `github.repository`, `github.token` — the PAT), the CDN upload
 over FTPS (`cdn.ftp.hostname`, `cdn.ftp.username`, `cdn.ftp.password`, `cdn.ftp.directory`) and the
-documentation upload (`docs.sftp.*`). (`build/.gitignore` ignores everything under `build/` except a
-whitelist, so `build.properties` is ignored automatically; the sample is explicitly whitelisted.)
+documentation upload (`docs.sftp.*`). (The root `.gitignore` ignores `build/build.properties`, `release/` and `tmp/`; the sample is committed.)
 
 **Run:** the `run` target (also `composer start`) is `composer shell:dev`.
 
@@ -354,11 +353,11 @@ The version comes from the CHANGELOG's top entry; `-Dversion=X.Y.Z` overrides it
    "Release-notes layout" below). Paste it again whenever the CHANGELOG changes before the release.
 2. **Check credentials.** `build/build.properties` must have non-blank `github.*` and `cdn.ftp.*`
    values, or the release fails early.
-3. **Full packaging build.** Clear stale `build/dist/*` first, then `phing package -Dversion=X.Y.Z`.
+3. **Full packaging build.** Clear stale `release/*` first, then `phing package -Dversion=X.Y.Z`.
    This produces the real DMGs, tarballs and installer (macOS DMGs notarised, Windows
    Authenticode-signed).
 4. ⛔ **HUMAN-VERIFICATION BREAKPOINT — the key step.** Stop after step 3 and wait for the human to
-   install and test the **fully packaged artifacts in `build/dist/`** (the DMG/installer). Do not tag
+   install and test the **fully packaged artifacts in `release/`** (the DMG/installer). Do not tag
    or publish until they confirm. The breakpoint belongs here, after full packaging: anything
    earlier tests nothing that a user will actually run.
 5. **Commit** — only if the working tree is dirty. `set-version` is idempotent, so a CHANGELOG that
@@ -381,7 +380,7 @@ The version comes from the CHANGELOG's top entry; `-Dversion=X.Y.Z` overrides it
 change; the app serves Help out of its own binary, so the site and the shipped build are
 independent, and folding the upload into `release` would leave the public documentation stale
 between versions. That is also why it is not a Phing target. See
-`build/readme/05-documentation-publishing.md` and `.claude/rules/documentation.md`.
+`assets/docs/documentation-publishing.md` and `.claude/rules/documentation.md`.
 
 The whole flow builds no feature branch — commit on `main`.
 

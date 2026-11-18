@@ -14,7 +14,7 @@ composer install                     # also vendors the front-end libraries via 
 composer shell:dev                   # or: composer start, phing run
 
 # One step: package every platform's distributable.
-composer build                       # artifacts land in build/dist/
+composer build                       # artifacts land in release/
 ```
 
 **Dev mode** (`composer shell:dev`) builds the native shell from a sibling clone of
@@ -41,7 +41,7 @@ and the Windows installer can also be built on Linux.
 
 The build is driven by [`build.xml`](../../build.xml) (Phing) alongside the one-shot
 `scripts/build-all.sh` pipeline. Both call the same per-platform `scripts/make-*.sh` helpers, so they
-produce the same artifacts in **`build/dist/`**:
+produce the same artifacts in **`release/`**:
 
 ```bash
 phing package                        # package every platform (the default target; also: phing all)
@@ -78,7 +78,7 @@ What each package holds:
   worker stub (`grafida-worker`) and `grafida-worker.phar`, `shell.json`, the desktop entry, the
   icons and `install.sh`, which installs the desktop entry and icons for the current user.
 - **Windows**: a per-user NSIS installer, built from
-  [`build/shell-windows-installer.nsi`](../../build/shell-windows-installer.nsi), which installs
+  [`build/windows/shell-windows-installer.nsi`](../../build/windows/shell-windows-installer.nsi), which installs
   `Grafida.exe` (the shell), `grafida-worker.exe` and `grafida-worker.phar` into
   `%LOCALAPPDATA%\Programs\Grafida`. It needs NSIS's `makensis` 3.08 or later, which runs natively
   on macOS and Linux (`brew install makensis`); there is no portable `.zip` fallback.
@@ -110,8 +110,8 @@ which is enough to run the app on the build machine, and the Windows installer i
   shell, the worker stub, the uninstaller and the installer — four signatures a build — with the
   other `windows.sign.*` properties.
 
-The full recipes are in [`build/readme/01-macos-signing.md`](../../build/readme/01-macos-signing.md)
-(macOS) and [`build/readme/04-exe-signing-on-macos.md`](../../build/readme/04-exe-signing-on-macos.md)
+The full recipes are in [`macos-signing.md`](macos-signing.md)
+(macOS) and [`windows-signing-on-macos.md`](windows-signing-on-macos.md)
 (Windows).
 
 ## Application icons
@@ -147,4 +147,4 @@ composer docs:publish                # upload over SFTP
 This is deliberately not a release step: the app serves Help out of its own binary, so a corrected
 page is worth publishing the day it is committed. Configure the destination with the `docs.sftp.*`
 properties in `build/build.properties` — see
-[`build/readme/05-documentation-publishing.md`](../../build/readme/05-documentation-publishing.md).
+[`documentation-publishing.md`](documentation-publishing.md).

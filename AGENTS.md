@@ -22,13 +22,13 @@ plugins or builder shortcodes.
 
 `src/` (PHP back-end, one folder per area) · `assets/private/` (SPA) · `bin/worker.php` (the only entry point) ·
 `shell.json` + `shell-package.json` (shell manifest / packager config) · `language/<tag>/<tag>.ini` ·
-`storage/migrations/*.sql` · `docs/` (user docs, shipped in-app and published) · `build/`, `scripts/` · `tests/`.
+`src/sql/*.sql` · `docs/` (user docs, shipped in-app and published) · `build/` (build inputs), `release/` (gitignored deliverables), `tmp/` (gitignored scratch), `scripts/` · `tests/`.
 Request flow: shell → frame → `bin/worker.php` → `FrontController` → `Kernel` (pure `Request → Response`) → `ApiController` / static files.
 
 ## Commands
 
 - `composer test` — the whole suite (PHPUnit unit/integration/feature/pipe + `test:js`); `composer linter:check` — PHPStan (level max + strict rules).
-- `composer shell:dev` (also `composer start`, `phing run`) — dev mode; `composer build` — package every platform into `build/dist/`.
+- `composer shell:dev` (also `composer start`, `phing run`) — dev mode; `composer build` — package every platform into `release/`.
 
 ## Always-on rules
 
@@ -61,7 +61,7 @@ Project memory lives in `.claude/memory/`. Read the matching file before startin
 | [`sites-reference-and-fields.md`](.claude/memory/sites-reference-and-fields.md) | Before you touch `src/Site/`, `src/Reference/` or `src/Field/` |
 | [`drafts-media-publish-html.md`](.claude/memory/drafts-media-publish-html.md) | Before you touch `src/Article/`, `src/Media/`, `src/Publish/` or `src/Html/` |
 | [`settings-and-services.md`](.claude/memory/settings-and-services.md) | Before you touch `src/Update/`, `src/Display/`, `src/Clipboard/` or `src/Editor/` |
-| [`text-help-i18n-docs.md`](.claude/memory/text-help-i18n-docs.md) | Before you touch `src/Text/`, `src/Help/`, `src/Markdown/`, `src/I18n/`, `language/`, `docs/`, `storage/migrations/` or glossaries |
+| [`text-help-i18n-docs.md`](.claude/memory/text-help-i18n-docs.md) | Before you touch `src/Text/`, `src/Help/`, `src/Markdown/`, `src/I18n/`, `language/`, `docs/`, `src/sql/` or glossaries |
 | [`ai-assistant-backend.md`](.claude/memory/ai-assistant-backend.md) | Before you touch `src/Ai/`, the AI controllers or `assets/private/js/ai/` |
 | [`spa-and-branding-assets.md`](.claude/memory/spa-and-branding-assets.md) | Before you touch the `assets/private/` layout or `assets/logo/` |
 | [`joomla-api-key-facts.md`](.claude/memory/joomla-api-key-facts.md) | Before you build or change any request to the Joomla REST API |

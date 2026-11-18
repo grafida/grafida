@@ -7,7 +7,7 @@
 # License: GNU General Public License version 3, or later
 #
 # The one-shot pipeline behind `composer build` (gh-92). It vendors the
-# front-end libraries, then builds every distributable into build/dist/ with
+# front-end libraries, then builds every distributable into release/ with
 # grafida/shell-packager, through the same scripts the Phing package-* targets
 # call:
 #
@@ -33,6 +33,7 @@ set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(dirname "$SCRIPT_DIR")"
 cd "$ROOT" || exit 1
+mkdir -p release   # deliverables; gitignored, created when missing
 
 [ -x vendor/bin/shell-packager ] || { echo "vendor/bin/shell-packager is missing: run composer install." >&2; exit 1; }
 
@@ -65,7 +66,7 @@ run "Linux arm64" bash scripts/make-linux-tarball.sh arm64
 run "Windows x64" bash scripts/make-windows-installer.sh
 
 echo
-find build/dist -maxdepth 1 -type f 2>/dev/null | sort | sed "s/^/  /"
+find release -maxdepth 1 -type f 2>/dev/null | sort | sed "s/^/  /"
 
 if [ ${#FAILED[@]} -gt 0 ]; then
   echo "FAILED: ${FAILED[*]}" >&2
