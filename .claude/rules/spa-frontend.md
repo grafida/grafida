@@ -34,6 +34,16 @@ ship inside the app.
   + `css/solid.min.css` + `webfonts/fa-solid-900.woff2`) — never images/emoji. Action
   buttons carry a leading `<i class="fa-solid fa-…" aria-hidden="true">` before the label;
   in `app.js` use the `icon()` / `iconBtn()` helpers.
+  **Colours follow the Akeeba FEF 1.x brand palette** (`akeeba/fef-1.x`, relative to the common
+  projects root: teal primary/info, warm greys, FEF green/orange/red), defined once as tokens on
+  `:root` (dark) and `:root[data-theme="light"]` atop `css/app.css`. Each semantic colour has up
+  to three roles — `--color-X` (brand value: decorative borders, tints), `--color-X-text` (shaded
+  to ≥ 4.5:1 on every surface of the theme) and `--color-X-fill` (shaded to ≥ 4.5:1 under
+  `--color-on-fill`) — plus `--color-accent-ui` (teal at ≥ 3:1 for focus rings and active/selected
+  indicators), because FEF's raw pairings fail contrast (teal on white is 2.5:1).
+  Use `-text` for any `color:`, `-fill` behind text, `--color-accent-ui` for indicators and
+  `color-mix()` on `--color-X` for tints; never hard-code a hex/rgba of a palette colour. The TinyMCE content iframe cannot see the tokens,
+  so its read-more marker colour is hard-coded in `content_style` (FEF orange, darkened).
   ⚠️ **A stored timestamp is never handed to `Date.parse()`** — `js/util/datetime.js`
   (`window.GrafidaDateTime = {parse, format}`, gh-53) is the one place a naive UTC `Y-m-d H:i:s`
   becomes a `Date`, building it component-wise from `Date.UTC()` because WKWebView does not parse

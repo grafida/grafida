@@ -1,7 +1,8 @@
 :root {
-    --color-bg: #0d1119;
-    --color-text: rgba(255, 255, 255, 0.9);
-    --color-text-brand: #F93904;
+    /* Akeeba FEF palette; see the colour-scheme notes atop app.css. */
+    --color-bg: #1d1d1d;
+    --color-text: #efefef;
+    --color-text-brand: #40b5b8;
 
     --font-fallback-main: BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
     --font-fallback-mono: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
@@ -23,8 +24,9 @@
    follows the operating system's light/dark setting. */
 @media (prefers-color-scheme: light) {
     :root {
-        --color-bg: #f3f4f6;
-        --color-text: rgba(17, 24, 39, 0.92);
+        --color-bg: #efefef;
+        --color-text: #514f50;
+        --color-text-brand: #287274;
 
         color-scheme: light;
     }

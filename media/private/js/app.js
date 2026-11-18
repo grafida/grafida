@@ -4336,7 +4336,7 @@ async function initTinyMCE(draft) {
         // is ever hidden inside the overflow menu on a narrow window.
         toolbar_mode: 'wrap',
         // Make the read-more break clearly visible inside the editor: a thick
-        // dashed coloured line that reads on both light and dark site CSS.
+        // dashed line in FEF orange (darkened to read on light site CSS too).
         // (::before/::after can't be used here — <hr> is a void element.)
         // Every spelling of the marker is styled, Joomla's id form included
         // (gh-71) — an unstyled marker is invisible, which is how a read-more
@@ -4345,7 +4345,7 @@ async function initTinyMCE(draft) {
             READMORE_SELECTOR + ' {' +
             '  height: 0;' +
             '  border: 0;' +
-            '  border-top: 3px dashed #ff7a45;' +
+            '  border-top: 3px dashed #df8a13;' +
             '  margin: 1.6em 0;' +
             '  cursor: pointer;' +
             '}' +

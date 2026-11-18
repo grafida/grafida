@@ -1,26 +1,69 @@
 /* Grafida SPA stylesheet */
 /* Copyright (c) 2026 Nicholas K. Dionysopoulos — GPL v3 or later */
 
+/* ------------------------------------------------------------------ */
+/*  Colour scheme: Akeeba FEF brand palette                            */
+/*                                                                     */
+/*  Brand colours (FEF 1.x _variables.scss): teal #40B5B8 (primary and */
+/*  info), grey #514F50, light grey #EFEFEF, green #93C34E (success),  */
+/*  orange #F0AD4E (warning), red #E2363C (danger). Surfaces are FEF's */
+/*  grey ladder (dark mode is grey darkened 20%, as in FEF's dark.scss).*/
+/*                                                                     */
+/*  Each semantic colour comes in up to three roles, because FEF's own */
+/*  pairings fail WCAG contrast when used as text (teal on white is    */
+/*  2.5:1); FEF allows tints to move "for accessibility or color       */
+/*  contrast on an as-needed basis":                                   */
+/*    --color-X       the brand colour: decorative borders and tints   */
+/*    --color-X-text  the brand colour shaded to >= 4.5:1 against every */
+/*                    surface of the current theme                     */
+/*    --color-X-fill  the brand colour shaded to >= 4.5:1 under        */
+/*                    --color-on-fill (white), for filled buttons etc. */
+/*    --color-accent-ui  teal shaded to >= 3:1 on every surface, for    */
+/*                    focus rings, active/selected indicators, spinners */
+/*  Translucent tints use color-mix() on --color-X.                    */
+/*                                                                     */
+/*  The default :root below is the dark theme; the SPA sets            */
+/*  <html data-theme="light"> for the light one (applyTheme() in       */
+/*  app.js).                                                           */
+/* ------------------------------------------------------------------ */
+
 :root {
-    --color-bg: #0d1119;
-    --color-surface: #161b27;
-    --color-surface-2: #1e2535;
-    --color-border: #2a3347;
-    --color-text: rgba(255, 255, 255, 0.9);
-    --color-text-muted: rgba(255, 255, 255, 0.5);
-    --color-text-brand: #F93904;
-    --color-accent: #F93904;
-    --color-accent-hover: #d42f03;
-    --color-success: #2db55d;
-    --color-warning: #e09010;
-    --color-danger: #e03030;
-    --color-info: #3080e0;
-    --color-input-bg: #1a2030;
-    --color-input-border: #2a3347;
-    --color-input-focus: #F93904;
-    /* The one alert level with no existing semantic colour: GitHub's "Important"
-       is purple, and the other four map onto info/success/warning/danger. */
+    --color-bg: #1d1d1d;
+    --color-surface: #2a292a;
+    --color-surface-2: #373636;
+    --color-border: #514f50;
+    --color-text: #efefef;
+    --color-text-muted: #afafaf;
+
+    --color-accent: #40b5b8;
+    --color-accent-text: #40b5b8;
+    --color-accent-text-hover: #62c6c9;
+    --color-accent-fill: #2e8183;
+    --color-accent-fill-hover: #266b6c;
+    --color-accent-ui: #40b5b8;
+    --color-text-brand: var(--color-accent-text);
+    --color-on-fill: #ffffff;
+
+    --color-success: #93c34e;
+    --color-success-text: #93c34e;
+    --color-success-fill: #5d802b;
+    --color-warning: #f0ad4e;
+    --color-warning-text: #f0ad4e;
+    --color-danger: #e2363c;
+    --color-danger-text: #ed8286;
+    --color-danger-fill: #e12d33;
+    /* FEF uses teal for informational blocks and labels. */
+    --color-info: var(--color-accent);
+    --color-info-text: var(--color-accent-text);
+    --color-info-fill: var(--color-accent-fill);
+    /* The one alert level with no FEF colour: GitHub's "Important" is purple,
+       and the other four map onto info/success/warning/danger. */
     --color-important: #a371f7;
+    --color-important-text: #b392f0;
+
+    --color-input-bg: #1d1d1d;
+    --color-input-border: #6b686a;
+    --color-input-focus: var(--color-accent-ui);
 
     --font-fallback-main: BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
     --font-main: Inter, var(--font-fallback-main);
@@ -38,28 +81,29 @@
 
 /* ------------------------------------------------------------------ */
 /*  Light theme                                                        */
-/*  Applied when the SPA sets <html data-theme="light"> — see          */
-/*  applyTheme() in app.js. The default :root above is the dark theme. */
+/*  Only the values that differ from the dark theme; the fills and the */
+/*  brand colours themselves are the same in both.                     */
 /* ------------------------------------------------------------------ */
 
 :root[data-theme="light"] {
-    --color-bg: #f3f4f6;
+    --color-bg: #efefef;
     --color-surface: #ffffff;
-    --color-surface-2: #eaecf1;
-    --color-border: #d6dae2;
-    --color-text: rgba(17, 24, 39, 0.92);
-    --color-text-muted: rgba(17, 24, 39, 0.55);
-    --color-text-brand: #F93904;
-    --color-accent: #F93904;
-    --color-accent-hover: #d42f03;
-    --color-success: #1f9d4d;
-    --color-warning: #b9740a;
-    --color-danger: #c62828;
-    --color-info: #1565c0;
+    --color-surface-2: #e7e7e7;
+    --color-border: #d6d6d6;
+    --color-text: #514f50;
+    --color-text-muted: #666364;
+
+    --color-accent-text: #287274;
+    --color-accent-text-hover: #1d5355;
+    --color-accent-ui: #2e8183;
+
+    --color-success-text: #527026;
+    --color-warning-text: #8f590c;
+    --color-danger-text: #c81d23;
+    --color-important-text: #6639ba;
+
     --color-input-bg: #ffffff;
-    --color-input-border: #c4c9d4;
-    --color-input-focus: #F93904;
-    --color-important: #8250df;
+    --color-input-border: #bcbcbc;
 
     color-scheme: light;
 }
@@ -67,20 +111,12 @@
 /* Light-theme overrides for the handful of hardcoded colours that were
    tuned for a dark background and would otherwise wash out. */
 :root[data-theme="light"] select.form-control {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(17,24,39,0.45)' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(81,79,80,0.6)' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 }
 
-:root[data-theme="light"] .alert-success { color: #1c7a3c; }
-:root[data-theme="light"] .alert-error   { color: #b02525; }
-:root[data-theme="light"] .alert-warning { color: #8a5800; }
-:root[data-theme="light"] .alert-info    { color: #15509c; }
-
-:root[data-theme="light"] .state-error { color: #b02525; }
-:root[data-theme="light"] .state-info  { color: #15509c; }
-
 :root[data-theme="light"] .spinner {
-    border-color: rgba(17, 24, 39, 0.15);
-    border-top-color: var(--color-accent);
+    border-color: rgba(81, 79, 80, 0.15);
+    border-top-color: var(--color-accent-ui);
 }
 
 *, *::before, *::after {
@@ -198,7 +234,7 @@ html, body {
     font-family: var(--font-title);
     font-size: 20px;
     font-weight: 700;
-    color: var(--color-accent);
+    color: var(--color-accent-text);
     margin: 0;
     letter-spacing: -0.3px;
 }
@@ -322,13 +358,13 @@ html, body {
  * buttons also carry aria-pressed (set in renderThemeSwitch()).
  */
 .theme-switch-btn.active {
-    background: var(--color-accent);
-    border-color: var(--color-accent);
-    color: #fff;
+    background: var(--color-accent-fill);
+    border-color: var(--color-accent-fill);
+    color: var(--color-on-fill);
 }
 
 .theme-switch-btn.active + .theme-switch-btn {
-    border-left-color: var(--color-accent);
+    border-left-color: var(--color-accent-ui);
 }
 
 /*
@@ -358,7 +394,7 @@ html, body {
 }
 
 #sidebar.collapsed .theme-switch-btn.active + .theme-switch-btn {
-    border-top-color: var(--color-accent);
+    border-top-color: var(--color-accent-ui);
 }
 
 nav#main-nav {
@@ -404,7 +440,7 @@ nav#main-nav a.disabled {
 nav#main-nav a.active {
     color: var(--color-text);
     background: var(--color-surface-2);
-    border-left: 3px solid var(--color-accent);
+    border-left: 3px solid var(--color-accent-ui);
     padding-left: 13px;
 }
 
@@ -451,7 +487,7 @@ nav#main-nav a .nav-icon {
 
 #sidebar-update .update-msg {
     font-weight: 700;
-    color: var(--color-success);
+    color: var(--color-success-text);
     font-size: 12px;
 }
 
@@ -534,14 +570,14 @@ nav#main-nav a .nav-icon {
 }
 
 .btn-primary {
-    background: var(--color-accent);
-    color: #fff;
-    border-color: var(--color-accent);
+    background: var(--color-accent-fill);
+    color: var(--color-on-fill);
+    border-color: var(--color-accent-fill);
 }
 
 .btn-primary:not(:disabled):hover {
-    background: var(--color-accent-hover);
-    border-color: var(--color-accent-hover);
+    background: var(--color-accent-fill-hover);
+    border-color: var(--color-accent-fill-hover);
 }
 
 .btn-secondary {
@@ -555,9 +591,9 @@ nav#main-nav a .nav-icon {
 }
 
 .btn-success {
-    background: var(--color-success);
-    color: #fff;
-    border-color: var(--color-success);
+    background: var(--color-success-fill);
+    color: var(--color-on-fill);
+    border-color: var(--color-success-fill);
 }
 
 .btn-success:not(:disabled):hover {
@@ -565,9 +601,9 @@ nav#main-nav a .nav-icon {
 }
 
 .btn-info {
-    background: var(--color-info);
-    color: #fff;
-    border-color: var(--color-info);
+    background: var(--color-info-fill);
+    color: var(--color-on-fill);
+    border-color: var(--color-info-fill);
 }
 
 .btn-info:not(:disabled):hover {
@@ -576,13 +612,13 @@ nav#main-nav a .nav-icon {
 
 .btn-danger {
     background: transparent;
-    color: var(--color-danger);
+    color: var(--color-danger-text);
     border-color: var(--color-danger);
 }
 
 .btn-danger:not(:disabled):hover {
-    background: var(--color-danger);
-    color: #fff;
+    background: var(--color-danger-fill);
+    color: var(--color-on-fill);
 }
 
 .btn-sm {
@@ -649,7 +685,7 @@ nav#main-nav a .nav-icon {
 }
 
 .field-info:hover {
-    color: var(--color-accent);
+    color: var(--color-accent-text);
 }
 
 /* A value we are showing rather than asking for: the path an image that is still
@@ -700,7 +736,7 @@ textarea.form-control {
 select.form-control {
     cursor: pointer;
     appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,0.4)' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(239,239,239,0.5)' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 10px center;
     padding-right: 30px;
@@ -731,7 +767,7 @@ select.form-control {
 
 .form-check input[type="checkbox"],
 .form-check input[type="radio"] {
-    accent-color: var(--color-accent);
+    accent-color: var(--color-accent-ui);
     width: 15px;
     height: 15px;
     cursor: pointer;
@@ -785,27 +821,27 @@ input[type="color"].form-control {
 }
 
 .alert-success {
-    background: rgba(45, 181, 93, 0.12);
+    background: color-mix(in srgb, var(--color-success) 12%, transparent);
     border-color: var(--color-success);
-    color: #6ee09c;
+    color: var(--color-success-text);
 }
 
 .alert-error {
-    background: rgba(224, 48, 48, 0.12);
+    background: color-mix(in srgb, var(--color-danger) 12%, transparent);
     border-color: var(--color-danger);
-    color: #f08080;
+    color: var(--color-danger-text);
 }
 
 .alert-warning {
-    background: rgba(224, 144, 16, 0.12);
+    background: color-mix(in srgb, var(--color-warning) 12%, transparent);
     border-color: var(--color-warning);
-    color: #e0b060;
+    color: var(--color-warning-text);
 }
 
 .alert-info {
-    background: rgba(48, 128, 224, 0.12);
+    background: color-mix(in srgb, var(--color-info) 12%, transparent);
     border-color: var(--color-info);
-    color: #80b0f0;
+    color: var(--color-info-text);
 }
 
 /* ------------------------------------------------------------------ */
@@ -847,15 +883,15 @@ input[type="color"].form-control {
 .state-block .state-block-actions { margin-top: 12px; }
 
 .state-error {
-    background: rgba(224, 48, 48, 0.12);
+    background: color-mix(in srgb, var(--color-danger) 12%, transparent);
     border-color: var(--color-danger);
-    color: #f08080;
+    color: var(--color-danger-text);
 }
 
 .state-info {
-    background: rgba(48, 128, 224, 0.12);
+    background: color-mix(in srgb, var(--color-info) 12%, transparent);
     border-color: var(--color-info);
-    color: #80b0f0;
+    color: var(--color-info-text);
 }
 
 /* ------------------------------------------------------------------ */
@@ -958,7 +994,7 @@ input[type="color"].form-control {
    applies whichever option is active. */
 .modal-footer .btn:focus,
 .modal-footer .btn:focus-visible {
-    outline: 2px solid var(--color-accent);
+    outline: 2px solid var(--color-accent-ui);
     outline-offset: 2px;
 }
 
@@ -968,11 +1004,11 @@ input[type="color"].form-control {
     padding: 0;
     background: none;
     border: none;
-    color: var(--color-accent);
+    color: var(--color-accent-text);
 }
 
 .btn-link:not(:disabled):hover {
-    color: var(--color-accent-hover);
+    color: var(--color-accent-text-hover);
     text-decoration: underline;
 }
 
@@ -984,7 +1020,7 @@ input[type="color"].form-control {
     font-family: var(--font-title);
     font-size: 22px;
     font-weight: 700;
-    color: var(--color-accent);
+    color: var(--color-accent-text);
     margin: 0;
 }
 
@@ -997,7 +1033,7 @@ input[type="color"].form-control {
 }
 
 .about-copyright {
-    color: var(--color-accent);
+    color: var(--color-accent-text);
 }
 
 .about-disclaimer {
@@ -1126,8 +1162,8 @@ input[type="color"].form-control {
 }
 
 .articles-tab.active {
-    color: var(--color-accent);
-    border-bottom-color: var(--color-accent);
+    color: var(--color-accent-text);
+    border-bottom-color: var(--color-accent-ui);
 }
 
 /* Right-hand group of the tab strip: the Reload metadata button then the
@@ -1253,7 +1289,7 @@ input[type="color"].form-control {
 }
 
 .article-item:hover {
-    border-color: var(--color-accent);
+    border-color: var(--color-accent-ui);
     background: var(--color-surface-2);
 }
 
@@ -1296,9 +1332,9 @@ input[type="color"].form-control {
     font-size: 11px;
 }
 
-.article-state-icon.state-published   { color: var(--color-success); }
-.article-state-icon.state-unpublished { color: var(--color-danger); }
-.article-state-icon.state-archived    { color: var(--color-info); }
+.article-state-icon.state-published   { color: var(--color-success-text); }
+.article-state-icon.state-unpublished { color: var(--color-danger-text); }
+.article-state-icon.state-archived    { color: var(--color-info-text); }
 .article-state-icon.state-trashed     { color: var(--color-text-muted); }
 
 /* The Joomla article id in an article row. Monospaced and muted so it reads as
@@ -1406,19 +1442,19 @@ input[type="color"].form-control {
 }
 
 .article-item-delete:not(:disabled):hover {
-    color: var(--color-danger);
+    color: var(--color-danger-text);
 }
 
 .badge-draft {
-    background: rgba(224, 144, 16, 0.2);
-    color: var(--color-warning);
-    border: 1px solid rgba(224, 144, 16, 0.3);
+    background: color-mix(in srgb, var(--color-warning) 20%, transparent);
+    color: var(--color-warning-text);
+    border: 1px solid color-mix(in srgb, var(--color-warning) 30%, transparent);
 }
 
 .badge-remote {
-    background: rgba(48, 128, 224, 0.2);
-    color: var(--color-info);
-    border: 1px solid rgba(48, 128, 224, 0.3);
+    background: color-mix(in srgb, var(--color-info) 20%, transparent);
+    color: var(--color-info-text);
+    border: 1px solid color-mix(in srgb, var(--color-info) 30%, transparent);
 }
 
 /* A remote article that is already mirrored by a local draft. */
@@ -1431,8 +1467,8 @@ input[type="color"].form-control {
     display: inline-block;
     width: 18px;
     height: 18px;
-    border: 2px solid rgba(255,255,255,0.15);
-    border-top-color: var(--color-accent);
+    border: 2px solid rgba(239, 239, 239, 0.15);
+    border-top-color: var(--color-accent-ui);
     border-radius: 50%;
     animation: spin 0.7s linear infinite;
     flex-shrink: 0;
@@ -1511,7 +1547,7 @@ input[type="color"].form-control {
 }
 
 #editor-title-input:focus {
-    border-bottom-color: var(--color-accent);
+    border-bottom-color: var(--color-accent-ui);
 }
 
 #editor-title-input::placeholder {
@@ -1883,7 +1919,7 @@ body.distraction-free #sidebar.collapsed .site-favicon-empty {
 }
 
 .cm-source-host .CodeMirror-dialog button:hover {
-    border-color: var(--color-accent);
+    border-color: var(--color-accent-ui);
 }
 
 .media-browser {
@@ -1940,7 +1976,7 @@ body.distraction-free #sidebar.collapsed .site-favicon-empty {
 .media-item-dir .fa-solid {
     font-size: 28px;
     margin-top: 8px;
-    color: var(--color-accent);
+    color: var(--color-accent-text);
 }
 
 .media-item-file img {
@@ -1998,7 +2034,7 @@ body.distraction-free #sidebar.collapsed .site-favicon-empty {
 .media-mgr-crumb {
     background: none;
     border: none;
-    color: var(--color-accent);
+    color: var(--color-accent-text);
     cursor: pointer;
     font: inherit;
     padding: 2px 4px;
@@ -2057,7 +2093,7 @@ body.distraction-free #sidebar.collapsed .site-favicon-empty {
 
 .media-mgr-thumb .fa-solid {
     font-size: 42px;
-    color: var(--color-accent);
+    color: var(--color-accent-text);
 }
 
 .media-mgr-item-dir .media-mgr-thumb { background: transparent; }
@@ -2089,7 +2125,7 @@ body.distraction-free #sidebar.collapsed .site-favicon-empty {
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.03em;
-    color: var(--color-success);
+    color: var(--color-success-text);
     background: color-mix(in srgb, var(--color-success) 14%, transparent);
     border-radius: 999px;
 }
@@ -2114,7 +2150,7 @@ body.distraction-free #sidebar.collapsed .site-favicon-empty {
     transition: background var(--transition), color var(--transition);
 }
 
-.media-mgr-action:hover { background: var(--color-accent); color: #fff; border-color: var(--color-accent); }
+.media-mgr-action:hover { background: var(--color-accent-fill); color: var(--color-on-fill); border-color: var(--color-accent-fill); }
 
 .media-mgr-preview { text-align: center; }
 .media-mgr-preview-img { max-width: 100%; max-height: 70vh; border-radius: var(--radius); }
@@ -2141,11 +2177,9 @@ body.distraction-free #sidebar.collapsed .site-favicon-empty {
 
 .img-editor-stage.cropping {
     cursor: crosshair;
-    /* Arming crop mode has to be visible without moving the mouse (gh-31). The
-       glow is --color-accent at 35%, spelled out because rgba() cannot take a
-       hex custom property; the accent is the same in both themes. */
-    border-color: var(--color-accent);
-    box-shadow: 0 0 0 3px rgba(249, 57, 4, 0.35);
+    /* Arming crop mode has to be visible without moving the mouse (gh-31). */
+    border-color: var(--color-accent-ui);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 35%, transparent);
 }
 
 .img-editor-canvas { display: block; }
@@ -2211,7 +2245,7 @@ body.distraction-free #sidebar.collapsed .site-favicon-empty {
     font-size: 12px;
 }
 
-.img-editor .btn.active { background: var(--color-accent); color: #fff; border-color: var(--color-accent); }
+.img-editor .btn.active { background: var(--color-accent-fill); color: var(--color-on-fill); border-color: var(--color-accent-fill); }
 
 .img-editor-statusbar {
     display: flex;
@@ -2230,7 +2264,7 @@ body.distraction-free #sidebar.collapsed .site-favicon-empty {
 /* While crop mode is armed the hint stops being ambient advice and becomes
    live state (the instruction, then the selection's size), so it is no longer
    styled as muted background text. */
-.img-editor-hint-active { color: var(--color-accent); font-weight: 600; }
+.img-editor-hint-active { color: var(--color-accent-text); font-weight: 600; }
 
 /* ------------------------------------------------------------------ */
 /*  AI panel (right-hand column in the editor layout)                 */
@@ -2263,7 +2297,7 @@ body.distraction-free #sidebar.collapsed .site-favicon-empty {
 
 #ai-panel-resizer:hover,
 body.resizing-col #ai-panel-resizer {
-    background: var(--color-accent);
+    background: var(--color-accent-ui);
 }
 
 /* While dragging the resizer, suppress text selection and force the cursor. */
@@ -2385,8 +2419,8 @@ body.resizing-col {
 
 .ai-bubble-user {
     align-self: flex-end;
-    background: var(--color-accent);
-    color: #fff;
+    background: var(--color-accent-fill);
+    color: var(--color-on-fill);
     border-bottom-right-radius: 2px;
 }
 
@@ -2399,7 +2433,7 @@ body.resizing-col {
     max-width: 100%;
     background: var(--color-surface-2);
     border: 1px solid var(--color-border);
-    border-right: 3px solid var(--color-accent);
+    border-right: 3px solid var(--color-accent-ui);
     color: var(--color-text-muted);
     border-bottom-right-radius: 2px;
 }
@@ -2417,7 +2451,7 @@ body.resizing-col {
 }
 
 .ai-bubble-instructions-header .fa-solid {
-    color: var(--color-accent);
+    color: var(--color-accent-text);
     font-size: 11px;
 }
 
@@ -2444,7 +2478,7 @@ body.resizing-col {
 
 /* Keep links legible on the user bubble's accent background. */
 .ai-bubble-user .ai-bubble-text.ai-rich a {
-    color: #fff;
+    color: var(--color-on-fill);
     text-decoration: underline;
 }
 
@@ -2499,7 +2533,7 @@ body.resizing-col {
 }
 
 .ai-rich a {
-    color: var(--color-accent);
+    color: var(--color-accent-text);
 }
 
 .ai-rich table {
@@ -2606,9 +2640,9 @@ body.resizing-col {
 .ai-bubble-error {
     align-self: stretch;
     max-width: 100%;
-    background: rgba(224, 48, 48, 0.10);
+    background: color-mix(in srgb, var(--color-danger) 10%, transparent);
     border: 1px solid var(--color-danger);
-    color: #f08080;
+    color: var(--color-danger-text);
     border-radius: var(--radius);
     font-size: 12px;
     padding: 8px 12px;
@@ -2777,7 +2811,7 @@ body.resizing-col {
 }
 
 #settings-screen .settings-more > summary:focus-visible {
-    outline: 2px solid var(--color-accent);
+    outline: 2px solid var(--color-accent-ui);
     outline-offset: 2px;
 }
 
@@ -2899,9 +2933,9 @@ body.resizing-col {
 }
 
 .badge-default {
-    background: rgba(249, 57, 4, 0.15);
-    color: var(--color-accent);
-    border: 1px solid rgba(249, 57, 4, 0.3);
+    background: color-mix(in srgb, var(--color-accent) 15%, transparent);
+    color: var(--color-accent-text);
+    border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
 }
 
 /* Model field row: text input + fetch button side by side */
@@ -2958,7 +2992,7 @@ body.resizing-col {
     justify-content: center;
     width: 20px;
     font-size: 15px;
-    color: var(--color-accent);
+    color: var(--color-accent-text);
 }
 
 .icon-picker-label { flex: 1; }
@@ -3019,8 +3053,8 @@ body.resizing-col {
 }
 
 .icon-picker-cell.selected {
-    border-color: var(--color-accent);
-    color: var(--color-accent);
+    border-color: var(--color-accent-ui);
+    color: var(--color-accent-text);
 }
 
 .icon-picker-empty {
@@ -3150,7 +3184,7 @@ body.resizing-col {
 .http-method {
     font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
     font-weight: 600;
-    color: var(--color-accent);
+    color: var(--color-accent-text);
 }
 
 .http-url {
@@ -3170,9 +3204,9 @@ body.resizing-col {
     font-weight: 600;
 }
 
-.http-status.http-status-ok    { color: var(--color-success); }
-.http-status.http-status-warn  { color: var(--color-warning); }
-.http-status.http-status-error { color: var(--color-danger); }
+.http-status.http-status-ok    { color: var(--color-success-text); }
+.http-status.http-status-warn  { color: var(--color-warning-text); }
+.http-status.http-status-error { color: var(--color-danger-text); }
 
 .http-headers {
     display: flex;
@@ -3356,7 +3390,7 @@ body.resizing-col {
 
 #help-toc-resizer:hover,
 body.resizing-col #help-toc-resizer {
-    background: var(--color-accent);
+    background: var(--color-accent-ui);
 }
 
 #help-toc-list {
@@ -3496,6 +3530,7 @@ body.resizing-col #help-toc-resizer {
    transparent and the coloured bar still carries the meaning. */
 .help-page .help-alert {
     --alert: var(--color-info);
+    --alert-text: var(--color-info-text);
     border-left-color: var(--alert);
     background: color-mix(in srgb, var(--alert) 10%, transparent);
     border-radius: 0 var(--radius) var(--radius) 0;
@@ -3503,10 +3538,10 @@ body.resizing-col #help-toc-resizer {
     color: var(--color-text);
 }
 
-.help-page .help-alert-tip       { --alert: var(--color-success); }
-.help-page .help-alert-important { --alert: var(--color-important); }
-.help-page .help-alert-warning   { --alert: var(--color-warning); }
-.help-page .help-alert-caution   { --alert: var(--color-danger); }
+.help-page .help-alert-tip       { --alert: var(--color-success);   --alert-text: var(--color-success-text); }
+.help-page .help-alert-important { --alert: var(--color-important); --alert-text: var(--color-important-text); }
+.help-page .help-alert-warning   { --alert: var(--color-warning);   --alert-text: var(--color-warning-text); }
+.help-page .help-alert-caution   { --alert: var(--color-danger);    --alert-text: var(--color-danger-text); }
 
 .help-page .help-alert-title {
     display: flex;
@@ -3514,7 +3549,7 @@ body.resizing-col #help-toc-resizer {
     gap: 8px;
     margin: 0 0 0.4em;
     font-weight: 600;
-    color: var(--alert);
+    color: var(--alert-text);
 }
 
 /* The last paragraph's bottom margin would otherwise show as dead space inside

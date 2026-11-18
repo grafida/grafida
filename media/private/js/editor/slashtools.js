@@ -75,14 +75,14 @@
         const ctx = canvas.getContext('2d');
         if (!ctx) return '';
 
-        ctx.fillStyle = '#dedede';
+        ctx.fillStyle = '#efefef';
         ctx.fillRect(0, 0, w, h);
 
-        ctx.strokeStyle = '#555555';
+        ctx.strokeStyle = '#514f50';
         ctx.lineWidth   = 2;
         ctx.strokeRect(1, 1, w - 2, h - 2);
 
-        ctx.fillStyle    = '#555555';
+        ctx.fillStyle    = '#514f50';
         ctx.font         = '18px monospace';
         ctx.textAlign    = 'center';
         ctx.textBaseline = 'middle';
