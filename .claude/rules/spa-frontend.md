@@ -616,6 +616,9 @@ ship inside the app.
     a modal over Help would then reach Help's handler with `isModalOpen()` already false and close
     Help too. Cmd/Ctrl+N stands down while `isHelpOpen()`; Cmd/Ctrl+, closes Help first (Settings is
     a screen and would otherwise open hidden behind it); Cmd/Ctrl+S still saves the article behind.
+    ⚠️ **A shell file drop is the one input `inert` cannot stop** — `shell:drop` arrives on `window`,
+    never through `#app` — so `insertDroppedImages()` checks `isHelpOpen()` itself; without it a
+    drop on the overlay landed, unseen, in the article underneath.
   - The sidebar entry keeps **`data-screen="help"` only because `syncSidebarTooltips()` selects nav
     items by it**; the nav click handler special-cases it *before* the editor-leave branch and calls
     `openHelp()`, so it never gets an `.active` highlight.
@@ -645,7 +648,8 @@ ship inside the app.
     hides — inside, collapsing would take the way back with it. `setupCollapsible()` already takes
     the toggle id separately from the aside id, so this needed no change to that helper. It is
     static markup and sits deliberately *outside* `#help-actions`, which `renderHelpActions()`
-    clears and rebuilds on every page change — as does the close button `#help-close`.
+    clears and rebuilds on every page change; the close button `#help-close` sits outside it for
+    the same reason.
   - The width is written to **`--help-toc-width` on `#help-layout`**, not to `#help-toc`: the pane
     is a grid *track*, and a width set on the item cannot widen the track constraining it.
     `syncHelpTocToggle()` mirrors the collapsed state onto the layout as a class rather than the CSS

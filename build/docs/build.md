@@ -136,7 +136,7 @@ files are committed, so you only need to re-run this after editing the SVG.
 
 ## Documentation
 
-The Markdown pages under `docs/` are both the in-app Help screen and the Documentation section of
+The Markdown pages under `docs/` are both the in-app Help overlay and the Documentation section of
 [Grafida.app](https://grafida.app). Publish the site copy with:
 
 ```bash

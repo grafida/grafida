@@ -5494,6 +5494,10 @@ const DROPPABLE_IMAGE = /\.(png|jpe?g|gif|webp|svg|bmp|avif)$/i;
 async function insertDroppedImages({ files, x, y }) {
     const editor = State.tinyMCEEditor;
     if (State.activeScreen !== 'editor' || !editor || !Array.isArray(files)) return;
+    // Help leaves activeScreen alone and `inert` cannot stop this (the shell's drop event never
+    // passes through #app), so a drop on the Help overlay would otherwise land, unseen, in the
+    // article underneath it.
+    if (isHelpOpen()) return;
     const frame = editor.iframeElement;
     if (!frame) return;
     const rect = frame.getBoundingClientRect();
@@ -10072,7 +10076,7 @@ function initLayoutControls() {
     // Unlike the other two, the Help contents collapses to nothing rather than to
     // an icon rail — its entries are page titles, so there are no icons a rail
     // could show, and the width it gives back is the whole point on a small
-    // screen. Its toggle therefore lives in the screen header, outside the pane
+    // screen. Its toggle therefore lives in the overlay's header, outside the pane
     // it hides, or collapsing it would take the way back with it.
     setupCollapsible('help-toc', 'help-toc-toggle', HELP_TOC_COLLAPSED_KEY, syncHelpTocToggle);
     setupHelpTocResize();
