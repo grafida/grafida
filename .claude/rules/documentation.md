@@ -1,5 +1,5 @@
 ---
-description: Grafida's documentation — the docs/ Markdown shared by the in-app Help screen and the Grafida.app Documentation section. Source-format constraints, the manifest, the in-app renderer, and publishing to the site.
+description: Grafida's documentation — the docs/ Markdown shared by the in-app Help overlay and the Grafida.app Documentation section. Source-format constraints, the manifest, the in-app renderer, and publishing to the site.
 paths:
   - "docs/**"
   - "src/Help/**"
@@ -10,8 +10,8 @@ paths:
 
 (gh-55.)
 
-`docs/` is a **single source with two consumers**: the in-app **Help** screen (`src/Help/`,
-`src/Http/Controller/HelpController.php`, the SPA's `help` screen), and the Grafida.app
+`docs/` is a **single source with two consumers**: the in-app **Help** overlay (`src/Help/`,
+`src/Http/Controller/HelpController.php`, the SPA's Help overlay), and the Grafida.app
 Documentation section, uploaded over SFTP by `build/scripts/upload-docs.sh` (`composer docs:publish`).
 The upload is **verbatim** (every page, `docs/images/` and `_manifest.json`) since the website
 renders the files as-is. Run it whenever `docs/` changes — it is not a release step, and the
@@ -72,7 +72,7 @@ The website and app deliberately share one predictable source format.
   deliberately left as a plain blockquote, which is what GitHub does with it too.
 - **Keep the `# H1`** at the top of each file. It is what makes the file readable on its own, in
   the repository and on GitHub's blob view, and the website uses it as the page heading.
-- **The documentation is English only**, deliberately. The two consumers share one source. Only the Help screen's
+- **The documentation is English only**, deliberately. The two consumers share one source. Only the Help overlay's
   *chrome* (filter box, buttons, error states) is translated, through the usual
   `language/en-GB/en-GB.ini` + `UiStrings::KEYS` route.
 
@@ -142,20 +142,20 @@ before any of this runs.
 `..`), so a traversal attempt matches no pattern and dies at the router's 404 — the file-name check
 in `HelpService::image()` is defence in depth, not the only guard.
 
-None of it touches a site, the network or the database, so **the Help screen works with nothing
+None of it touches a site, the network or the database, so **Help works with nothing
 configured at all** — which is exactly when someone is most likely to open it. Keep it that way.
 
 ## Contextual help
 
-Any element anywhere in the SPA carrying **`data-help-page="Some-Slug"`** opens the Help screen on
+Any element anywhere in the SPA carrying **`data-help-page="Some-Slug"`** opens Help on
 that page — a document-level delegation in `initHelpLinks()`, excluding `#help-page` itself so a
 link inside a rendered page is not handled twice. A contextual help button is therefore **pure
 markup** in `view/index.html`: it localises its tooltip through `applyStrings()`'s existing
 `data-i18n-title` pass and needs no JavaScript of its own.
 
 Every screen reachable from the sidebar carries one, pointing at that screen's own **Reference**
-page: Sites, Articles, Media Manager, Settings and Request Log. The Help screen itself does not —
-`Help.md` documents it, but that page is already visible in the screen's own table of contents, so a
+page: Sites, Articles, Media Manager, Settings and Request Log. The Help overlay itself does not —
+`Help.md` documents it, but that page is already visible in the overlay's own table of contents, so a
 button there would be pure noise. A new screen gets a button *and* a Reference page; never a button
 pointing at a page that does not exist yet.
 

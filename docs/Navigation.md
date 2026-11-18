@@ -46,7 +46,7 @@ Below the colour scheme controls there's the main menu of the application, with 
 * [Articles](Articles). Manage the articles and article drafts.
 * [Media Manager](Media-Manager). Manage the media files uploaded to your site.
 * [Settings](Settings). Change the way Grafida works. Set up LLM (AI) connectivity. 
-* [Help](Help). Read the documentation built into the product.
+* [Help](Help). Read the documentation built into the product, over whatever you are doing.
 * [Request Log](Request-Log). See the latest API calls to your site. Troubleshoot connectivity issues.
 
 Some of these menu items may be missing, depending on the application state and your settings.
@@ -54,7 +54,7 @@ Some of these menu items may be missing, depending on the application state and 
 > [!TIP]
 > You can go to the Settings page from anywhere in the application by holding down CONTROL (CTRL) and pressing the comma key (Windows, Linux), or holding down COMMAND (CMD) and pressing the comma key (macOS). 
 
-Please note that the Help page displays a snapshot of the documentation for the version of the software you are using. This documentation is included in the software itself; you do not need an Internet connection to use it.
+Please note that Help displays a snapshot of the documentation for the version of the software you are using. This documentation is included in the software itself; you do not need an Internet connection to use it.
 
 ## Update notification
 

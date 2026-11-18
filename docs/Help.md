@@ -1,8 +1,12 @@
 # Help
 
-The Help view is this documentation, built into the application.
+Help is this documentation, built into the application. It opens over whatever you are doing.
 
-![The Help view](images/help.png)
+![Help, open over the Articles page](images/help.png)
+
+Close it with the **×** button in its top right corner, or press Escape, and you are back exactly
+where you were. That includes an article you are editing: nothing needs saving first, and your
+unsaved changes are still there when Help closes.
 
 It needs no Internet connection, no configured site and no API token: the pages ship inside
 Grafida itself. That is deliberate — the moment you most need the manual is usually the moment
@@ -18,7 +22,7 @@ The `☰` button in the header hides the contents pane altogether, which is wort
 screen. You can also drag the divider between the two panes to give one of them more room. Both the
 width and whether the pane is hidden are remembered.
 
-Grafida comes back to the page you were reading when you leave the Help view and return to it.
+Grafida comes back to the page you were reading when you close Help and open it again.
 
 **Read on the web** opens the page you are reading in your normal browser, in the Documentation
 section on Grafida.app. The website has the same documentation for the **latest released version**
@@ -28,12 +32,12 @@ something has changed since.
 ## Help buttons on other screens
 
 Every screen reachable from the sidebar carries a small **?** button next to its own actions. It
-opens the Help view directly on that screen's page, so you do not have to go looking.
+opens Help directly on that screen's page, so you do not have to go looking.
 
 ## About this documentation
 
 The documentation is **English only**, even when you are running Grafida in another language. It is
-a single source shared with the Grafida.app Documentation section. The Help view's own buttons and
+a single source shared with the Grafida.app Documentation section. Help's own buttons and
 labels are translated.
 
 The pages you are reading are a snapshot taken when your copy of Grafida was built. They describe

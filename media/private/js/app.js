@@ -8163,7 +8163,7 @@ async function exportRequestLogHandler() {
 // The documentation bundled in docs/ (see src/Help/HelpService.php), which is
 // also what gets published in the Grafida.app Documentation section. Everything here reads
 // files that shipped inside the binary — no site, no network, no database — so
-// the Help screen works with nothing configured at all, which is exactly when
+// Help works with nothing configured at all, which is exactly when
 // someone is most likely to open it.
 //
 // The pages are English-only, deliberately: they are one source shared with the
@@ -8367,7 +8367,7 @@ function syncHelpTocToggle() {
     if (toggle) toggle.setAttribute('aria-pressed', collapsed ? 'false' : 'true');
 }
 
-/** The Help screen's own toolbar: read the current page on Grafida.app. */
+/** The Help overlay's own toolbar: read the current page on Grafida.app. */
 function renderHelpActions() {
     const actions = document.getElementById('help-actions');
     if (!actions) return;
@@ -9957,7 +9957,7 @@ function syncSidebarTooltips() {
  * Makes a panel width-resizable by dragging a handle on one of its edges, and
  * persists the chosen width.
  *
- * Shared by the AI panel and the Help screen's table of contents, which differ
+ * Shared by the AI panel and the Help overlay's table of contents, which differ
  * in two ways this parameterises and in nothing else:
  *
  * - **Which edge the handle is on.** `edge` is `-1` when the handle is on the
@@ -10042,7 +10042,7 @@ function setupAiPanelResize() {
 }
 
 /**
- * Make the Help screen's table of contents resizable by dragging its right-edge
+ * Make the Help overlay's table of contents resizable by dragging its right-edge
  * handle.
  *
  * The width is written to `--help-toc-width` on `#help-layout` rather than to

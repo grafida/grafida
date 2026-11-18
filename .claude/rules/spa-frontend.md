@@ -591,15 +591,35 @@ ship inside the app.
   changed, so the two selectors' independent `change` events never clobber each other; the response
   carries the **effective**, clamped values, which the SPA writes back so a server-side clamp is
   visible rather than silently reverted on the next render).
-  **The Help screen** (`#help-screen`, `loadHelpScreen()` / `renderHelpToc()` / `openHelpPage()`)
-  shows the documentation bundled in `docs/` — the same Markdown files that are published in the
-  Grafida.app Documentation section. Two panes, each scrolling independently: the table of contents (a
+  **The Help overlay** (`#help-overlay` > `#help-panel`, `openHelp()` / `closeHelp()` /
+  `isHelpOpen()`, then `loadHelpScreen()` / `renderHelpToc()` / `openHelpPage()`) shows the
+  documentation bundled in `docs/` — the same Markdown files that are published in the Grafida.app
+  Documentation section. It is **an overlay, not a screen**: it opens over whatever is on display and
+  closing it (✕ `#help-close`, or Escape) returns there untouched — no `showScreen()`, no
+  `State.activeScreen` change, no editor unsaved-changes prompt — so reading the manual never costs
+  an open article. Two panes, each scrolling independently: the table of contents (a
   recursively rendered tree from `docs/_manifest.json`, with a filter box that keeps a node whenever
   any *descendant* matches, or the only route to a matching page would be hidden) and the rendered
-  page. `#help-screen` sets `overflow: hidden` so the screen itself never grows a second scrollbar
+  page. `#help-panel` sets `overflow: hidden` so the panel itself never grows a second scrollbar
   around the one that matters. `State.helpContents` is fetched once per session (it cannot change
-  without a new build) and `State.helpSlug` remembers the open page, so leaving and re-entering the
-  screen comes back to where you were. ⚠️ Three things:
+  without a new build) and `State.helpSlug` remembers the open page, so closing and reopening Help
+  comes back to where you were. ⚠️ How the overlay is layered, and why:
+  - **z-index 1350**: above TinyMCE's dialogs (1300), below `#modal-overlay` (1400) and the toasts
+    (9999), so an app modal opened while Help is up (About, from the macOS menu) and a toast from
+    Help itself (Read on the web failing) both appear *above* it. That is why it is **not** a native
+    `<dialog>.showModal()` — the browser's top layer would bury both.
+  - **`#app` goes `inert` while it is open**, keeping both the mouse and Tab out of the page behind;
+    that is why the overlay lives *outside* `#app` (before `#modal-overlay`). `openHelp()` remembers
+    `document.activeElement` and `closeHelp()` hands focus back to it.
+  - ⚠️ **Escape is a capture-phase `document` listener guarded by `isModalOpen()`.**
+    `_modalEscHandler` is a bubble listener on `document`; in the bubble phase an Escape that closed
+    a modal over Help would then reach Help's handler with `isModalOpen()` already false and close
+    Help too. Cmd/Ctrl+N stands down while `isHelpOpen()`; Cmd/Ctrl+, closes Help first (Settings is
+    a screen and would otherwise open hidden behind it); Cmd/Ctrl+S still saves the article behind.
+  - The sidebar entry keeps **`data-screen="help"` only because `syncSidebarTooltips()` selects nav
+    items by it**; the nav click handler special-cases it *before* the editor-leave branch and calls
+    `openHelp()`, so it never gets an `.active` highlight.
+  ⚠️ Three things about its content:
   - **`openHelpPage()` writes the rendered Markdown with `innerHTML`** — the only whole-document
     `innerHTML` in the app. Safe *because of where it comes from*: `docs/` ships inside the binary,
     is never user input, and PHP has already applied GitHub's own escaping (`DisallowedRawHtml`).
@@ -612,7 +632,7 @@ ship inside the app.
     `preventDefault()` is what stops an unclassified link (a `mailto:`, or whatever a future change
     fails to tag) from navigating the webview away.
   - **Contextual help is pure markup.** Any element anywhere in the app carrying
-    `data-help-page="Some-Slug"` opens the Help screen on that page, via a document-level delegation
+    `data-help-page="Some-Slug"` opens Help on that page, via a document-level delegation
     in `initHelpLinks()` that excludes `#help-page` itself (so a link inside a rendered page is not
     handled twice). A contextual help button therefore needs no JavaScript of its own and localises
     its tooltip through `applyStrings()`'s existing `data-i18n-title` pass.
@@ -621,11 +641,11 @@ ship inside the app.
   other collapsibles, all deliberately:
   - It collapses **to nothing**, not to an icon rail. Its entries are page titles, so there are no
     icons a rail could show, and giving the width back is the entire point.
-  - Its toggle (`#help-toc-toggle`) therefore lives in the **screen header**, outside the pane it
+  - Its toggle (`#help-toc-toggle`) therefore lives in the **overlay's header**, outside the pane it
     hides — inside, collapsing would take the way back with it. `setupCollapsible()` already takes
     the toggle id separately from the aside id, so this needed no change to that helper. It is
     static markup and sits deliberately *outside* `#help-actions`, which `renderHelpActions()`
-    clears and rebuilds on every page change.
+    clears and rebuilds on every page change — as does the close button `#help-close`.
   - The width is written to **`--help-toc-width` on `#help-layout`**, not to `#help-toc`: the pane
     is a grid *track*, and a width set on the item cannot widen the track constraining it.
     `syncHelpTocToggle()` mirrors the collapsed state onto the layout as a class rather than the CSS
@@ -635,15 +655,15 @@ ship inside the app.
   `#help-toc`: that pane scrolls, so a handle inside it would scroll away with the content and be
   clipped by its `overflow`. It sits in the 20px grid gutter, overlapping neither pane.
   The documentation is **English only** — one source shared with the website — so
-  `applyStrings()` re-renders only the screen's chrome, never the page or its titles.
+  `applyStrings()` re-renders only the overlay's chrome, never the page or its titles.
   The rest is in `.claude/rules/documentation.md`.
   **Collapsible/resizable layout** (`initLayoutControls()` in `app.js`): the left **`#sidebar`**
   and the editor metadata **`#editor-sidebar`** ("Article properties") each carry an `.icon-toggle`
   button (`#sidebar-toggle` / `#editor-sidebar-toggle`) that toggles a `.collapsed` class — the left
   sidebar collapses to a 56px icon-only rail, the metadata sidebar to a 40px rail; the state persists
-  in `localStorage` (`grafida.sidebarCollapsed` / `grafida.propsCollapsed`). The Help screen's
+  in `localStorage` (`grafida.sidebarCollapsed` / `grafida.propsCollapsed`). The Help overlay's
   contents pane is a third `setupCollapsible()` caller (`grafida.helpTocCollapsed`) — see the Help
-  screen notes above for why it alone collapses to nothing rather than to a rail.
+  overlay notes above for why it alone collapses to nothing rather than to a rail.
   Two panels are width-**resizable** by dragging a `col-resize` handle, both through the shared
   **`setupPanelResize(resizerId, opts)`**: `#ai-panel` via `#ai-panel-resizer` on its *left* edge
   (`setupAiPanelResize()`, clamped 280px…`min(innerWidth−360, 760)`, persisted in

@@ -27,7 +27,7 @@ Read before touching `src/Text/`, `src/Help/`, `src/Markdown/`, `src/I18n/`, `la
   HTML as a flat string — none of the characters it touches can occur in HTML syntax, and a string
   pass cannot reformat the markup the way a parse/serialise round trip would.
 - `src/Help/HelpService.php` — the **in-app documentation** (gh-55). `docs/` is a **single source
-  with two consumers**: the sidebar's **Help** screen and the Grafida.app Documentation section,
+  with two consumers**: the sidebar's **Help** overlay and the Grafida.app Documentation section,
   published by `build/scripts/upload-docs.sh` (`composer docs:publish`), which uploads the pages,
   `docs/images/` and `_manifest.json` over SFTP — the manifest last, so a reader loading the site
   mid-upload never sees a table of contents pointing at a page that has not arrived. It is
@@ -40,8 +40,8 @@ Read before touching `src/Text/`, `src/Help/`, `src/Markdown/`, `src/I18n/`, `la
   node with no `slug` is a heading). It is not a convenience: `glob()` does not work on `phar://`,
   so a manifest-driven index is what lets `Resources::docsDir()` read the docs straight out of the
   compiled binary with no extraction step. Endpoints `GET /api/help`, `/api/help/page/{key}`,
-  `/api/help/image/{file}`; none of them touches a site, the network or the database, so the Help
-  screen works with nothing configured at all.
+  `/api/help/image/{file}`; none of them touches a site, the network or the database, so Help works
+  with nothing configured at all.
   ⚠️ **Detail is in `.claude/rules/documentation.md`** (and the procedure in
   `build/docs/documentation-publishing.md`), which loads when you touch `docs/`, `src/Help/` or
   `build/scripts/upload-docs.sh`. Two rules worth carrying without it: **no link in a
