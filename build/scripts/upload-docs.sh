@@ -6,7 +6,7 @@
 #
 # Publishes the in-app Help pages to the Grafida.app site over SFTP.
 #
-#     scripts/upload-docs.sh [--dry-run] [--verbose]
+#     build/scripts/upload-docs.sh [--dry-run] [--verbose]
 #
 # The pages under docs/ are BOTH the app's own Help (inside every package's worker PHAR —
 # shell-package.json's phar.include lists docs/) and the public documentation at grafida.app. This script mirrors the
@@ -16,7 +16,7 @@
 # (.claude/rules/documentation.md).
 #
 # ⚠️ **This is NOT a release step**, which is why it is its own script and its own document
-# (assets/docs/documentation-publishing.md). A typo fix, a corrected instruction or a new
+# (build/docs/documentation-publishing.md). A typo fix, a corrected instruction or a new
 # screenshot is worth publishing the day it is committed; waiting for the next release would leave
 # the site wrong for weeks. The reverse is also true — the site can be republished without building
 # anything, and an installed copy keeps whatever pages it shipped with.
@@ -62,7 +62,7 @@
 
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 DOCS_DIR="$ROOT/docs"
 IMAGE_DIR="$DOCS_DIR/images"
 PROPERTIES_FILE="${GRAFIDA_BUILD_PROPERTIES:-$ROOT/build/build.properties}"
@@ -118,7 +118,7 @@ missing=()
 if [ ${#missing[@]} -gt 0 ]; then
     echo "upload-docs: error: not configured — ${missing[*]} unset in the environment and in" >&2
     echo "             $PROPERTIES_FILE" >&2
-    echo "             See the header of this script, or assets/docs/documentation-publishing.md." >&2
+    echo "             See the header of this script, or build/docs/documentation-publishing.md." >&2
     exit 1
 fi
 

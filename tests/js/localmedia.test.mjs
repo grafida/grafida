@@ -4,7 +4,7 @@
  * @copyright Copyright (c) 2026 Nicholas K. Dionysopoulos
  * @license   GNU General Public License version 3, or later
  *
- * Unit tests for assets/private/js/editor/localmedia.js — the module that
+ * Unit tests for media/private/js/editor/localmedia.js — the module that
  * builds/parses the shell://app/api/media/{id}/raw?rev=… local-media URL
  * (gh-36).
  *
@@ -23,7 +23,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
 
-const SOURCE = readFileSync(new URL('../../assets/private/js/editor/localmedia.js', import.meta.url), 'utf8');
+const SOURCE = readFileSync(new URL('../../media/private/js/editor/localmedia.js', import.meta.url), 'utf8');
 
 /** Loads localmedia.js into a fresh sandbox and returns its public API. */
 function load() {

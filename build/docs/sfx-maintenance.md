@@ -221,7 +221,7 @@ first copied from Boson's *standard* macOS edition; there is no Boson to mirror 
 * To package a local build, any shell-packager command that downloads runtimes
   takes `--local=sfx=<path>` (also `shell`, `launcher`). It is **UNPINNED**,
   announced on every use, and for testing an unreleased build only; ship only a
-  pinned release. `scripts/make-windows-installer.sh` passes its arguments to
+  pinned release. `build/scripts/make-windows-installer.sh` passes its arguments to
   shell-packager; for the other platforms run `vendor/bin/shell-packager`
   directly.
 

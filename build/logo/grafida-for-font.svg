@@ -10,7 +10,7 @@
   down to a single filled path here: the strokes are expanded to outlines, the
   pencil's transform is applied to the coordinates, the shiny blue background
   is dropped, and the pencil is knocked out of the "J" so the two stay legible
-  in one colour. Not used by the app or by scripts/make-icons.sh; if the master
+  in one colour. Not used by the app or by build/scripts/make-icons.sh; if the master
   artwork changes, this file has to be rebuilt from it.
 -->
 <svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">

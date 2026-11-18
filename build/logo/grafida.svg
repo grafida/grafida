@@ -6,7 +6,7 @@
 
   Master application icon (clipart style): a pencil drawing a capital "J".
   This is the single source of truth for every platform icon; run
-  scripts/make-icons.sh to rasterise it into .icns / .ico / PNG.
+  build/scripts/make-icons.sh to rasterise it into .icns / .ico / PNG.
 -->
 <svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
   <defs>

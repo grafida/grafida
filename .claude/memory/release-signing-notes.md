@@ -9,4 +9,4 @@ not a build break**.
 signed binary.
 
 **How to apply:** do not treat that line as a failed build; check the signature through the procedure in
-`assets/docs/windows-signing-on-macos.md` and the release procedure in `.claude/rules/build-and-packaging.md`.
+`build/docs/windows-signing-on-macos.md` and the release procedure in `.claude/rules/build-and-packaging.md`.

@@ -168,7 +168,7 @@ final class InlineMedia
      * draft's stored `html` column. {@see \Grafida\Media\LocalMediaSync} finds
      * the affected drafts and persists what this method returns; the
      * live-open-editor counterpart of the same rule is
-     * `assets/private/js/editor/localmedia.js`'s `fitDimensions()`.
+     * `media/private/js/editor/localmedia.js`'s `fitDimensions()`.
      *
      * An `<img>` "belongs" to the blob when either its `src` parses (via
      * {@see idFromLocalUrl()}) to `$mediaId`, or its {@see ATTRIBUTE} tag

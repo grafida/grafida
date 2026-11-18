@@ -1,13 +1,12 @@
 {
     "manifest": "shell.json",
     "phar": {
-        "entrypoint": "bin/worker.php",
+        "entrypoint": "src/worker.php",
         "include": [
-            {"directory": "bin", "name": "worker.php"},
             {"directory": "src", "name": "*.php"},
             {"directory": "src/Ai/resources"},
-            {"directory": "assets/private"},
-            {"directory": "assets/public"},
+            {"directory": "media/private"},
+            {"directory": "media/public"},
             {"directory": "docs"},
             {"directory": "language", "notName": ["*.md"]},
             {"directory": "src/sql"},
@@ -61,16 +60,16 @@
     },
     "linux": {
         "name": "grafida",
-        "desktop": "assets/logo/grafida.desktop",
+        "desktop": "build/logo/grafida.desktop",
         "icons": {
-            "16": "assets/logo/png/grafida-16.png",
-            "24": "assets/logo/png/grafida-24.png",
-            "32": "assets/logo/png/grafida-32.png",
-            "48": "assets/logo/png/grafida-48.png",
-            "64": "assets/logo/png/grafida-64.png",
-            "128": "assets/logo/png/grafida-128.png",
-            "256": "assets/logo/png/grafida-256.png",
-            "512": "assets/logo/png/grafida-512.png"
+            "16": "build/logo/png/grafida-16.png",
+            "24": "build/logo/png/grafida-24.png",
+            "32": "build/logo/png/grafida-32.png",
+            "48": "build/logo/png/grafida-48.png",
+            "64": "build/logo/png/grafida-64.png",
+            "128": "build/logo/png/grafida-128.png",
+            "256": "build/logo/png/grafida-256.png",
+            "512": "build/logo/png/grafida-512.png"
         },
         "files": {"LICENSE.txt": "LICENSE.txt"},
         "replaces": ["grafida"],
@@ -101,7 +100,7 @@
     },
     "macos": {
         "name": "Grafida",
-        "icon": "assets/logo/Grafida.icns",
+        "icon": "build/logo/Grafida.icns",
         "infoPlist": {
             "NSHumanReadableCopyright": "Copyright (c) 2026 Nicholas K. Dionysopoulos. GNU GPL v3 or later.",
             "LSApplicationCategoryType": "public.app-category.productivity",
@@ -110,12 +109,12 @@
         "entitlements": {"worker": "build/macos/shell-worker.entitlements"},
         "resources": {"LICENSE.txt": "LICENSE.txt"},
         "dmg": {
-            "background": "assets/logo/dmg-background.tiff",
+            "background": "build/logo/dmg-background.tiff",
             "window": [640, 400],
             "iconSize": 128,
             "textSize": 13,
             "positions": {"app": [160, 210], "applications": [480, 210]},
-            "volumeIcon": "assets/logo/Grafida.icns",
+            "volumeIcon": "build/logo/Grafida.icns",
             "volumeName": "Grafida"
         },
         "app": "tmp/shell-macos/{debarch}/{name}.app",
@@ -123,7 +122,7 @@
     },
     "windows": {
         "name": "Grafida",
-        "icon": "assets/logo/Grafida.ico",
+        "icon": "build/logo/Grafida.ico",
         "version": {
             "companyName": "Akeeba Ltd",
             "legalCopyright": "Copyright (c) 2026 Nicholas K. Dionysopoulos. GNU GPL v3 or later.",

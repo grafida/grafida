@@ -13,7 +13,7 @@
  * Grafida's only entry point (gh-92): the packaged SFX stub runs it from its PHAR, and dev mode runs
  * it with the system PHP.
  *
- *   php bin/worker.php
+ *   php src/worker.php
  *
  * Deliberately absent, because they belong to the process that owns the window, i.e. the shell:
  * the webview pre-flight (a too-old macOS, a missing WebKitGTK or WebView2), the macOS spell-check
@@ -51,8 +51,8 @@ require $root . '/vendor/autoload.php';
 try {
     $container = ContainerFactory::create([
         'static.provider' => new StaticFiles([
-            $root . '/assets/private',
-            $root . '/assets/public',
+            $root . '/media/private',
+            $root . '/media/public',
         ]),
     ]);
 

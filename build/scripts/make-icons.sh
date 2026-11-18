@@ -4,12 +4,12 @@
 # Copyright (c) 2026 Nicholas K. Dionysopoulos
 # GNU General Public License version 3, or later.
 #
-# Rasterises the master icon (assets/logo/grafida.svg) into every per-platform
+# Rasterises the master icon (build/logo/grafida.svg) into every per-platform
 # format used when packaging the app:
 #
-#   assets/logo/png/grafida-<size>.png   PNG set (Linux hicolor theme, sources)
-#   assets/logo/Grafida.icns             macOS .app bundle icon
-#   assets/logo/Grafida.ico              Windows .exe icon (multi-resolution)
+#   build/logo/png/grafida-<size>.png   PNG set (Linux hicolor theme, sources)
+#   build/logo/Grafida.icns             macOS .app bundle icon
+#   build/logo/Grafida.ico              Windows .exe icon (multi-resolution)
 #
 # Re-run this whenever grafida.svg changes, then commit the regenerated assets.
 #
@@ -20,8 +20,8 @@
 
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-ICON_DIR="$ROOT/assets/logo"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+ICON_DIR="$ROOT/build/logo"
 SVG="$ICON_DIR/grafida.svg"
 PNG_DIR="$ICON_DIR/png"
 
@@ -91,7 +91,7 @@ fi
 # Regenerate the disk-image background artwork from its own SVG master too, so
 # "refresh the visual assets" stays a single command. Best-effort.
 if [ -x "$ROOT/scripts/make-dmg-background.sh" ]; then
-  echo "Rendering DMG background (scripts/make-dmg-background.sh)"
+  echo "Rendering DMG background (build/scripts/make-dmg-background.sh)"
   bash "$ROOT/scripts/make-dmg-background.sh" || echo "DMG background generation reported problems" >&2
 fi
 

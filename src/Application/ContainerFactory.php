@@ -30,7 +30,7 @@ final class ContainerFactory
      * @param array<string, mixed> $parameters Overrides for the default
      *     parameters below. `static.provider` (a `Grafida\Shell\StaticFiles`)
      *     has no default and must be supplied by the entry point (`index.php`
-     *     or `bin/worker.php`) for `Kernel`/`FrontController` to be resolvable.
+     *     or `src/worker.php`) for `Kernel`/`FrontController` to be resolvable.
      */
     public static function create(array $parameters = []): Container
     {

@@ -21,7 +21,7 @@
         "restart": {"max": 3, "windowSeconds": 60}
     },
     "dev": {
-        "worker": ["php", "bin/worker.php"]
+        "worker": ["php", "src/worker.php"]
     },
     "webview": {
         "contextMenu": true,

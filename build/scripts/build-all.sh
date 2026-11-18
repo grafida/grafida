@@ -12,11 +12,11 @@
 # call:
 #
 #   - macOS  : a .dmg per architecture, arm64 and amd64 (on a Mac only)
-#              scripts/make-macos-dmg.sh
+#              build/scripts/make-macos-dmg.sh
 #   - Linux  : a .tar.gz per architecture, amd64 and arm64
-#              scripts/make-linux-tarball.sh
+#              build/scripts/make-linux-tarball.sh
 #   - Windows: the x64 NSIS installer (makensis, on a Mac or Linux)
-#              scripts/make-windows-installer.sh
+#              build/scripts/make-windows-installer.sh
 #
 # Each artefact gets a .sha256 beside it. Signing comes from the environment
 # (MACOS_SIGN_IDENTITY / MACOS_NOTARY_PROFILE, WINDOWS_SIGN_OP_ITEM and the
@@ -31,7 +31,7 @@
 set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(dirname "$SCRIPT_DIR")"
+ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
 cd "$ROOT" || exit 1
 mkdir -p release   # deliverables; gitignored, created when missing
 
@@ -55,15 +55,15 @@ run() { # label, command…
 }
 
 if [ "$(uname -s)" = Darwin ]; then
-  run "macOS arm64" bash scripts/make-macos-dmg.sh arm64
-  run "macOS amd64" bash scripts/make-macos-dmg.sh amd64
+  run "macOS arm64" bash build/scripts/make-macos-dmg.sh arm64
+  run "macOS amd64" bash build/scripts/make-macos-dmg.sh amd64
 else
   echo "Skipping macOS: its bundles are built and signed on a Mac."
 fi
 
-run "Linux amd64" bash scripts/make-linux-tarball.sh amd64
-run "Linux arm64" bash scripts/make-linux-tarball.sh arm64
-run "Windows x64" bash scripts/make-windows-installer.sh
+run "Linux amd64" bash build/scripts/make-linux-tarball.sh amd64
+run "Linux arm64" bash build/scripts/make-linux-tarball.sh arm64
+run "Windows x64" bash build/scripts/make-windows-installer.sh
 
 echo
 find release -maxdepth 1 -type f 2>/dev/null | sort | sed "s/^/  /"

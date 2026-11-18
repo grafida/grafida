@@ -6519,7 +6519,7 @@ async function localMediaDelete(entry) {
  *     `src` rewritten to the new URL, and — via
  *     `window.GrafidaLocalMedia.fitDimensions()`, the gh-43 sizing rule
  *     (see `.plans/00-overview.md`'s truth table and
- *     `assets/private/js/editor/localmedia.js`'s doc comment) — its
+ *     `media/private/js/editor/localmedia.js`'s doc comment) — its
  *     `width`/`height` re-fitted to the new intrinsic size without ever
  *     distorting the picture or silently reverting a deliberate in-article
  *     resize. Both happen in one undo step, and the draft is forced dirty

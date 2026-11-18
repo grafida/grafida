@@ -178,7 +178,7 @@ macos.sign.identity=Developer ID Application: Nicholas K. Dionysopoulos (ABCDE12
 macos.notary.profile=grafida-notary
 ```
 
-Or, for a one-off `scripts/build-all.sh` or `scripts/make-macos-dmg.sh` run,
+Or, for a one-off `build/scripts/build-all.sh` or `build/scripts/make-macos-dmg.sh` run,
 export them:
 
 ```bash
@@ -200,9 +200,9 @@ Mac:
   forward `macos.sign.identity` → `MACOS_SIGN_IDENTITY` and `macos.notary.profile` →
   `MACOS_NOTARY_PROFILE`, so a normal `phing package` (or `composer build:package` / `release`)
   signs and notarises automatically.
-* `composer build` (`scripts/build-all.sh`), which builds both architectures on a Mac and skips
+* `composer build` (`build/scripts/build-all.sh`), which builds both architectures on a Mac and skips
   macOS elsewhere.
-* `scripts/make-macos-dmg.sh [arm64|amd64]` (`composer build:macos`); no architecture builds both.
+* `build/scripts/make-macos-dmg.sh [arm64|amd64]` (`composer build:macos`); no architecture builds both.
   Options after a second `--` go to shell-packager's `macos-dmg` step only (not `macos-app`), e.g.
   `composer build:macos -- arm64 -- --no-style`.
 
@@ -227,7 +227,7 @@ Output: `release/Grafida-<version>-macos-<arm64|amd64>.dmg` + `.sha256`. The bun
   `shell-package.json`) are verified on every use, and cached in
   `~/.cache/grafida-shell-packager` (`$XDG_CACHE_HOME`, or `SHELL_PACKAGER_CACHE`). There is no
   `sfx/` directory in the repository. Bumping a pin: [`sfx-maintenance.md`](sfx-maintenance.md).
-* **The worker PHAR** is `bin/worker.php` plus `src`, the assets, the docs, the languages and the
+* **The worker PHAR** is `src/worker.php` plus `src`, the assets, the docs, the languages and the
   `--no-dev` vendor `*.php` (`shell-package.json`'s `phar`), behind phpmicro's extra-INI block. The
   stub and its PHAR are two files and stay two: see [`signing-architecture.md`](signing-architecture.md).
 * **The bundle:**
@@ -243,7 +243,7 @@ Output: `release/Grafida-<version>-macos-<arm64|amd64>.dmg` + `.sha256`. The bun
     Resources/LICENSE.txt
   ```
 
-  There is no `assets/` directory and no dylib: the worker serves the SPA from inside its PHAR.
+  There is no `media/` directory and no dylib: the worker serves the SPA from inside its PHAR.
 * **`Info.plist` is generated.** shell-packager computes `CFBundleIdentifier` (**`app.grafida`**,
   the manifest `id`; Boson's was `app.grafida.desktop`), the names, the version (from the
   CHANGELOG, through `--app-version`), the icon and `LSMinimumSystemVersion` **12.0**. Both binaries

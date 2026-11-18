@@ -19,7 +19,7 @@ composer build                       # artifacts land in release/
 
 **Dev mode** (`composer shell:dev`) builds the native shell from a sibling clone of
 [grafida/shell](https://github.com/grafida/shell) in `../shell`, then starts it with `--dev .`,
-so the worker is your system's `php bin/worker.php` and a PHP edit takes effect when the worker
+so the worker is your system's `php src/worker.php` and a PHP edit takes effect when the worker
 restarts. Nothing is packaged. It needs a Rust toolchain, and on Linux the WebKitGTK 4.1
 development packages. Add `-- --automation` to open the shell's debug automation channel.
 
@@ -27,7 +27,7 @@ development packages. Add `-- --automation` to open the shell's debug automation
 development dependency, which reads [`shell-package.json`](../../shell-package.json) and the app manifest
 [`shell.json`](../../shell.json). There is no compile step. For each package it:
 
-- builds the worker PHAR (`bin/worker.php`, `src/`, the SPA under `assets/`, `docs/`, `language/`,
+- builds the worker PHAR (`src/worker.php`, `src/`, the SPA under `media/`, `docs/`, `language/`,
   the SQL migrations and the PHP files of a `composer install --no-dev` staging copy, so no
   development dependency ships);
 - downloads the native shell (and, on Linux, its launcher) and the phpmicro runtime that runs the
@@ -40,7 +40,7 @@ the Windows installer's tools (`makensis`, Jsign, `osslsigncode`) run there too.
 and the Windows installer can also be built on Linux.
 
 The build is driven by [`build.xml`](../../build.xml) (Phing) alongside the one-shot
-`scripts/build-all.sh` pipeline. Both call the same per-platform `scripts/make-*.sh` helpers, so they
+`build/scripts/build-all.sh` pipeline. Both call the same per-platform `build/scripts/make-*.sh` helpers, so they
 produce the same artifacts in **`release/`**:
 
 ```bash
@@ -51,13 +51,13 @@ phing package-linux-x86              #    package-linux-x86, package-linux-arm
 
 | Platform | Artifact | Phing target | Packaged by |
 | --- | --- | --- | --- |
-| macOS (Apple Silicon) | `Grafida-<version>-macos-arm64.dmg` | `package-macos-arm` | `scripts/make-macos-dmg.sh arm64` *(macOS host only)* |
-| macOS (Intel) | `Grafida-<version>-macos-amd64.dmg` | `package-macos-x86` | `scripts/make-macos-dmg.sh amd64` *(macOS host only)* |
-| Windows (x64) | `Grafida-<version>-windows-amd64-Setup.exe` | `package-windows-x86` | `scripts/make-windows-installer.sh` |
-| Linux (x64) | `Grafida-<version>-linux-amd64.tar.gz` | `package-linux-x86` | `scripts/make-linux-tarball.sh amd64` |
-| Linux (ARM64) | `Grafida-<version>-linux-arm64.tar.gz` | `package-linux-arm` | `scripts/make-linux-tarball.sh arm64` |
+| macOS (Apple Silicon) | `Grafida-<version>-macos-arm64.dmg` | `package-macos-arm` | `build/scripts/make-macos-dmg.sh arm64` *(macOS host only)* |
+| macOS (Intel) | `Grafida-<version>-macos-amd64.dmg` | `package-macos-x86` | `build/scripts/make-macos-dmg.sh amd64` *(macOS host only)* |
+| Windows (x64) | `Grafida-<version>-windows-amd64-Setup.exe` | `package-windows-x86` | `build/scripts/make-windows-installer.sh` |
+| Linux (x64) | `Grafida-<version>-linux-amd64.tar.gz` | `package-linux-x86` | `build/scripts/make-linux-tarball.sh amd64` |
+| Linux (ARM64) | `Grafida-<version>-linux-arm64.tar.gz` | `package-linux-arm` | `build/scripts/make-linux-tarball.sh arm64` |
 
-Equivalent Composer shortcuts: `composer build` (`scripts/build-all.sh`, every platform; one
+Equivalent Composer shortcuts: `composer build` (`build/scripts/build-all.sh`, every platform; one
 platform failing does not stop the others), `composer build:package` (`phing package`), and one
 platform at a time with `composer build:macos`, `composer build:linux` and `composer build:windows`.
 `build:macos` and `build:linux` take an architecture to build just one, e.g.
@@ -117,14 +117,14 @@ The full recipes are in [`macos-signing.md`](macos-signing.md)
 ## Application icons
 
 The application icon (a pencil drawing a capital “J”) lives as a single master SVG at
-`assets/logo/grafida.svg`. Regenerate every per-platform format from it with:
+`build/logo/grafida.svg`. Regenerate every per-platform format from it with:
 
 ```bash
-scripts/make-icons.sh
+build/scripts/make-icons.sh
 ```
 
-This writes `assets/logo/Grafida.icns` (macOS), `assets/logo/Grafida.ico` (Windows) and a PNG
-set under `assets/logo/png/` (Linux), plus a 512px `assets/logo/grafida.png`. The generated
+This writes `build/logo/Grafida.icns` (macOS), `build/logo/Grafida.ico` (Windows) and a PNG
+set under `build/logo/png/` (Linux), plus a 512px `build/logo/grafida.png`. The generated
 files are committed, so you only need to re-run this after editing the SVG.
 
 - **macOS** — shell-packager puts `Grafida.icns` into the bundle and its `Info.plist`, and uses it
@@ -132,7 +132,7 @@ files are committed, so you only need to re-run this after editing the SVG.
 - **Windows** — shell-packager writes `Grafida.ico` and a version resource into `Grafida.exe` and
   `grafida-worker.exe` itself, in PHP (no `rcedit`), and the installer uses it for its shortcuts.
 - **Linux** — the tarball carries the PNG set as hicolor icons and the desktop entry built from
-  `assets/logo/grafida.desktop`; its `install.sh` installs both for the current user.
+  `build/logo/grafida.desktop`; its `install.sh` installs both for the current user.
 
 ## Documentation
 

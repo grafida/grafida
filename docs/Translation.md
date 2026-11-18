@@ -150,7 +150,7 @@ That is the whole of it for the application itself. Two optional extras are wort
 **The editor's own interface.** TinyMCE ships its own language packs, and Grafida picks the one
 matching your interface language. If a pack exists for your language, adding it needs two small
 code changes: the pack's file name in the `tinymce-i18n` list in `composer.json`, and an entry in
-`TINYMCE_LANGS` in `assets/private/js/app.js` mapping your tag to the pack's code. Without them the
+`TINYMCE_LANGS` in `media/private/js/app.js` mapping your tag to the pack's code. Without them the
 editor's own menus stay English while the rest of Grafida is translated — which works, and is what
 happens for any language TinyMCE has no pack for.
 

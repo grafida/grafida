@@ -1,6 +1,6 @@
 # Native shell, worker process and packages
 
-Read before touching `shell.json`, `bin/worker.php`, the shell/worker wire protocol, file/folder dialogs, or the per-platform package layouts.
+Read before touching `shell.json`, `src/worker.php`, the shell/worker wire protocol, file/folder dialogs, or the per-platform package layouts.
 
 ## How the native shell works here (important)
 
@@ -17,15 +17,15 @@ migration `11_local_media_scheme_shell.sql` rewrites it in `drafts`, and `Inline
 **Two processes.** The shell owns the window and the webview (WKWebView, WebKitGTK 4.1, WebView2) and
 answers `shell://app/_native/*` itself (dialogs, open-url, window theme, quit, info); every other
 `shell://` request is a frame on the stdin of **one worker process**, Grafida's PHP back-end, and
-the answer comes back on its stdout. The worker is **`bin/worker.php`** (the container + shell-php's
+the answer comes back on its stdout. The worker is **`src/worker.php`** (the container + shell-php's
 `Worker::run()`), the only entry point: packaged, the phpmicro sibling-phar SFX stub
 (`grafida-worker`) runs it out of its sibling `grafida-worker.phar`; in dev mode it is the system
-`php bin/worker.php`. Requests are serialised in the worker, as they always were, but PHP never runs
+`php src/worker.php`. Requests are serialised in the worker, as they always were, but PHP never runs
 on the UI thread any more, so a slow request no longer freezes the window. The HTTP types, the frame
 codec, the stdio loop and `StaticFiles` come from the MIT package
 **[grafida/shell-php](https://github.com/grafida/shell-php)**, which speaks the wire protocol specified
 in **grafida/shell** (`protocol/v1.md`, with conformance fixtures). `composer test:pipe`
-(`tests/Pipe/`) spawns the worker over real pipes: every conformance fixture against `bin/worker.php`,
+(`tests/Pipe/`) spawns the worker over real pipes: every conformance fixture against `src/worker.php`,
 then Feature-suite requests replayed through a worker and through `Kernel::handle()` in process,
 which must answer byte for byte the same. shell-php is pinned to an **exact tag** (`0.2.1`) through a
 `vcs` repository entry in `composer.json`, until it is on Packagist. To change shell-php and Grafida
@@ -39,7 +39,7 @@ the Feature suite (the API contract) switch type with no assertion edits.
 `noStorePaths: ["/api/"]`, `devtools: "env:GRAFIDA_DEBUG"`, the reserved Cmd/Ctrl+Shift+V chord), read
 by the shell in dev mode and shipped beside it in every package. **Dev mode** is `composer shell:dev`
 (also `composer start`, `phing run`): it builds the sibling `../shell` clone with the debug automation
-channel and starts it with `--dev .`, which reads `shell.json` and runs `php bin/worker.php`, so a PHP
+channel and starts it with `--dev .`, which reads `shell.json` and runs `php src/worker.php`, so a PHP
 edit takes effect when the worker restarts and nothing is compiled. The automation channel
 (`composer shell:dev -- --automation`, then `../shell/scripts/dev/automation.py eval|screenshot|pick`)
 is how the real window is driven from here; see grafida/shell's CLAUDE.md. ⚠️ **No release shell
@@ -73,7 +73,7 @@ the detail, the per-platform layouts and their tests are in `.claude/rules/build
 - **Linux:** a tarball holding the static launcher (`grafida`), the shell (`grafida-shell`), the SFX
   stub and its PHAR, `shell.json`, `app.grafida.desktop` (named after the manifest id, the window's
   Wayland app_id), the icons and `install.sh`, which also removes Boson's `grafida.desktop` entry
-  (`linux.replaces`). There is no `assets/` beside it: the worker serves the SPA from inside the PHAR.
+  (`linux.replaces`). There is no `media/` beside it: the worker serves the SPA from inside the PHAR.
   Beside it, `composer build:shell-linux` (gh-87; not part of `composer build`) makes a `.deb`, an `.rpm`,
   an AppImage and an Arch `PKGBUILD`, all on the **system** WebKitGTK 4.1 and GTK 3 (never bundled; no
   Flatpak, see grafida/shell `docs/adr/0002-flatpak.md`); detail in `.claude/rules/build-and-packaging.md`.
@@ -86,12 +86,12 @@ the detail, the per-platform layouts and their tests are in `.claude/rules/build
   Trusted Signing when `windows.sign.op-item` is set (four signatures a build). There is no WebView2
   bootstrapper: the installer warns and links when the runtime is missing, and the shell alerts.
 
-Request flow: shell → frame → `bin/worker.php` → `Grafida\FrontController` →
+Request flow: shell → frame → `src/worker.php` → `Grafida\FrontController` →
 `Grafida\Application\Kernel` → either `Grafida\Http\ApiController` (paths under `/api/`) or a static
 asset / the SPA shell. **The kernel is a pure `Request → Response` function**, so the whole back-end is
 testable without a window or a process (see `tests/Feature/ApiRoutingTest.php`).
 
-**The composition root is a DI container, not the Kernel.** `bin/worker.php` builds a
+**The composition root is a DI container, not the Kernel.** `src/worker.php` builds a
 `Grafida\Application\Container` (a thin `Joomla\DI\Container` subclass — see `src/Application/`)
 via `ContainerFactory::create()` and pulls `FrontController` out of it; `Kernel` is
 `(StaticFiles $static, ApiController $api)`. Nothing is `new`ed ad-hoc and there is

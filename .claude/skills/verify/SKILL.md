@@ -9,7 +9,7 @@ Grafida is a desktop app on its own native shell: a native webview whose SPA tal
 the PHP worker over the `shell://` scheme. You can drive the real window through the
 shell's automation channel (see `AGENTS.md`), but for most changes you don't need
 to. **The `shell://` scheme handler is the only piece that has to be replaced.** Everything behind `Kernel::handle()` and everything in
-`assets/private` is the shipping code, so an HTTP bridge + Chromium gives you a
+`media/private` is the shipping code, so an HTTP bridge + Chromium gives you a
 genuine end-to-end run.
 
 Build the harness in the scratchpad directory, never in the repo.
@@ -43,7 +43,7 @@ deprecation that otherwise corrupts JSON output.
 
 1. **Bridge**: a `php -S 127.0.0.1:8793 bridge.php` router that sends **every** request —
    static assets included — through `FrontController`, with `static.provider` set to
-   `new StaticFiles([$root . '/assets/private', $root . '/assets/public'])`:
+   `new StaticFiles([$root . '/media/private', $root . '/media/public'])`:
    `new Request($_SERVER['REQUEST_METHOD'], 'shell://app' . $_SERVER['REQUEST_URI'], getallheaders(), file_get_contents('php://input'))`,
    then `http_response_code($r->status)`, `header("$name: $value", false)` for each pair, echo the
    body. Do not `return false` for assets: that lets the built-in server serve them and skips
@@ -83,7 +83,7 @@ globals (`window.openEditAiServiceModal(1)`); note `State` is a top-level
   noise, not your bug.
 - `[data-screen="requestlog"]` is `hidden` until the Request Log setting is on
   (`POST /api/settings/request-log {"enabled":true}`); default off.
-- `bin/worker.php` (the stdio worker) is covered by `composer test:pipe`, not by this skill:
+- `src/worker.php` (the stdio worker) is covered by `composer test:pipe`, not by this skill:
   a browser cannot speak the frame protocol. In the browser `underShell()` is false, so the
   file dialogs answer 503 (there is no shell to open one), and `openUrl` and the clipboard go
   through PHP.

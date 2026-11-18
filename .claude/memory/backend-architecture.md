@@ -12,7 +12,7 @@ The `src/` layout notes for the composition root, internal API, Joomla client, s
   `db.path` (default `Paths::databaseFile()`; `':memory:'` in tests), `migrations.dir`,
   `base.path`, `docs.dir` (default `Resources::docsDir()` — note it does **not** go through
   `Resources::base()`, since the docs are read straight out of the phar rather than extracted),
-  `static.provider` (a `Grafida\Shell\StaticFiles`; no default, `bin/worker.php` and the tests
+  `static.provider` (a `Grafida\Shell\StaticFiles`; no default, `src/worker.php` and the tests
   supply it), and `secret.store` — which is
   **tri-state**: `null` → `SecretStoreFactory::secureStore()` (production), `false` → no store
   (forces the insecure-plaintext fallback path), a `SecretStore` instance → used as-is.
@@ -127,7 +127,7 @@ The `src/` layout notes for the composition root, internal API, Joomla client, s
   the packaged worker writes its language files and migrations into the data folder
   (`Resources::base()`) *before* it opens the database, so there it is a
   `Support\DataDirectoryException`, and only in development is it the database that fails; the Pipe
-  test asserts each, so run it with `GRAFIDA_PIPE_WORKER` too. `bin/worker.php` catches a failure while it builds the
+  test asserts each, so run it with `GRAFIDA_PIPE_WORKER` too. `src/worker.php` catches a failure while it builds the
   container and the `FrontController`, writes that sentence to stderr, then the stack trace cut to
   20 frames, and exits `FailureReporter::EXIT_FAILED` (69) without sending `ready`. ⚠️ **The cut is
   load-bearing**: the shell's failure alert is the last 40 lines of the worker's stderr, and a
@@ -137,7 +137,7 @@ The `src/` layout notes for the composition root, internal API, Joomla client, s
   Everything that used to be here (`StartupCheck`, the native alerts, `App::MIN_MACOS`) was the
   process that owned the window, and the shell does it now (see the top of this file).
 
-- `bin/worker.php` — the entry point (gh-84, gh-92): the container + shell-php's `Worker::run()`,
+- `src/worker.php` — the entry point (gh-84, gh-92): the container + shell-php's `Worker::run()`,
   run by the packaged SFX stub out of its PHAR, or by the system PHP in dev mode. Deliberately free
   of what belongs to the process owning the window (webview checks, spelling defaults, consoles,
   dialogs: the shell opens its own and forwards `X-Shell-File-Path`; without it `POST /api/dialog/*`

@@ -1,5 +1,5 @@
 ---
-description: Grafida's internal shell:// API — the shell-php HTTP types and the entry point (bin/worker.php), the Router, the per-area controllers, exception-to-status mapping, the two-kinds-of-transport-failure rule (gh-29) and the no-store caching rule (gh-35). Lifted verbatim from AGENTS.md's Layout section.
+description: Grafida's internal shell:// API — the shell-php HTTP types and the entry point (src/worker.php), the Router, the per-area controllers, exception-to-status mapping, the two-kinds-of-transport-failure rule (gh-29) and the no-store caching rule (gh-35). Lifted verbatim from AGENTS.md's Layout section.
 paths:
   - "src/Http/**"
   - "src/Application/**"
@@ -132,7 +132,7 @@ two-space continuation indent are the original bullet formatting.
   third, independent opt-out. Note this is unrelated to
   the **`reference_cache`** SQLite cache (see `src/Reference/`), which is deliberately permanent
   and authoritative for rendering — the manual Refresh button remains — but which the SPA also
-  quietly freshens in the background since gh-42 (see `src/Reference/` and the `assets/private/`
+  quietly freshens in the background since gh-42 (see `src/Reference/` and the `media/private/`
   notes below).
   `SiteController` also exposes **Diagnose Connection** (`POST /api/sites/diagnose`, delegating
   to `Site\ConnectionDiagnostics`) alongside the existing `/api/sites/test`, and
@@ -177,7 +177,7 @@ controller take and return them. (Up to 0.3 Boson's HTTP types were adapted at `
   `share()`/`set()` as a factory, so `StaticFiles` (a `Handler`, therefore invokable) would be
   *called with the container*. `tests/Unit/Application/ContainerFactoryTest` pins it. The same
   applies to any future invokable service you register as a value.
-- **`bin/worker.php`** is the only entry point: the container, served by shell-php's `Worker::run()`
+- **`src/worker.php`** is the only entry point: the container, served by shell-php's `Worker::run()`
   over stdin/stdout in `GSF1` frames (grafida/shell `protocol/v1.md`). Exit status: 0 on
   EOF/`shutdown`, 65 on a protocol error, 74 when stdout is gone, 69 when it could not build the app
   (FailureReporter's sentence on stderr, see the `src/Startup/` bullet in `.claude/memory/backend-architecture.md`). A handler that throws is
@@ -198,7 +198,7 @@ controller take and return them. (Up to 0.3 Boson's HTTP types were adapted at `
   as the body of `GET /api/clipboard/text` with `X-Shell-Clipboard: text`.
 - **`tests/Pipe/` (`composer test:pipe`)** is the proof. It plays every grafida/shell conformance
   fixture (shipped inside shell-php, `Grafida\Shell\Testing\Fixtures`) into a real
-  `bin/worker.php`. It also runs a **differential**: Feature-suite request sequences answered by the
+  `src/worker.php`. It also runs a **differential**: Feature-suite request sequences answered by the
   same container (`PipeApp`) in process and through `feature-worker.php`, where status, every header
   and every body byte must match (JSON timestamps masked). The comparison sees what no single
   assertion looks at; a mutation check showed one injected response header failing it. When a

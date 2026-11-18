@@ -20,10 +20,10 @@ plugins or builder shortcodes.
 
 ## Layout at a glance
 
-`src/` (PHP back-end, one folder per area) · `assets/private/` (SPA) · `bin/worker.php` (the only entry point) ·
+`src/` (PHP back-end, one folder per area) · `media/private/` (SPA) and `media/public/` (static images) · `src/worker.php` (the only entry point) ·
 `shell.json` + `shell-package.json` (shell manifest / packager config) · `language/<tag>/<tag>.ini` ·
-`src/sql/*.sql` · `docs/` (user docs, shipped in-app and published) · `build/` (build inputs), `release/` (gitignored deliverables), `tmp/` (gitignored scratch), `scripts/` · `tests/`.
-Request flow: shell → frame → `bin/worker.php` → `FrontController` → `Kernel` (pure `Request → Response`) → `ApiController` / static files.
+`src/sql/*.sql` · `docs/` (user docs, shipped in-app and published) · `build/` (build inputs: `logo/` icons, `docs/` developer docs, `http/` request files, `scripts/` build helpers), `release/` (gitignored deliverables), `tmp/` (gitignored scratch) · `tests/`.
+Request flow: shell → frame → `src/worker.php` → `FrontController` → `Kernel` (pure `Request → Response`) → `ApiController` / static files.
 
 ## Commands
 
@@ -33,7 +33,7 @@ Request flow: shell → frame → `bin/worker.php` → `FrontController` → `Ke
 ## Always-on rules
 
 - Every PHP file starts with the GPLv3 copyright docblock and `declare(strict_types=1)`.
-- **Never rename the page origin `shell://app`** (stored in drafts and `.grafida` exports). stdout of `bin/worker.php` carries the frame stream; never print to it.
+- **Never rename the page origin `shell://app`** (stored in drafts and `.grafida` exports). stdout of `src/worker.php` carries the frame stream; never print to it.
 - **Never `new` a service — register it in a provider** (`src/Application/Provider/`). No global DB object. An endpoint = a handler method + one line in that controller's `registerRoutes()`.
 - Data access: `Joomla\Database\DatabaseInterface`, query-builder-first; `bind()` takes its value by reference (bind from a variable); never `insert()->set()` (use `columns()`/`values()`); `loadAssoc()`/`loadResult()` return `null` on no rows.
 - Files are picked in the shell's own dialogs, never through `<input type="file">`; no path ever comes from JS.
@@ -47,7 +47,7 @@ Request flow: shell → frame → `bin/worker.php` → `FrontController` → `Ke
 - **Commit directly on `main`. Do NOT create or switch to feature branches unless explicitly asked.** (Solo project; overrides the "branch first" default.)
 - **Every change adds its CHANGELOG entry**, terse, placed in its significance group (`!` `+` `-` `~` `# [HIGH|MEDIUM|LOW]`); the CHANGELOG is the single source of truth for the version.
 - **Keep the checked-in documentation current in the same change:** this `AGENTS.md`, the path-scoped `.claude/rules/*.md` and the matching `.claude/memory/*.md`. A new rules file's `paths:` must actually cover the code it describes.
-- Do not put a nested agent-instructions file at `assets/private/`: the worker PHAR carries it wholesale into every package.
+- Do not put a nested agent-instructions file at `media/private/`: the worker PHAR carries it wholesale into every package.
 
 ## Project memory
 
@@ -56,24 +56,24 @@ Project memory lives in `.claude/memory/`. Read the matching file before startin
 
 | File | Read it when… |
 |------|---------------|
-| [`native-shell.md`](.claude/memory/native-shell.md) | Before you touch `shell.json`, `bin/worker.php`, the shell/worker protocol, file dialogs or per-platform package layouts |
+| [`native-shell.md`](.claude/memory/native-shell.md) | Before you touch `shell.json`, `src/worker.php`, the shell/worker protocol, file dialogs or per-platform package layouts |
 | [`backend-architecture.md`](.claude/memory/backend-architecture.md) | Before you touch `src/Application/`, `src/Http/`, `src/Joomla/`, `src/Secret/`, `src/Debug/`, `src/Storage/`, `src/Support/` or `src/Startup/` |
 | [`sites-reference-and-fields.md`](.claude/memory/sites-reference-and-fields.md) | Before you touch `src/Site/`, `src/Reference/` or `src/Field/` |
 | [`drafts-media-publish-html.md`](.claude/memory/drafts-media-publish-html.md) | Before you touch `src/Article/`, `src/Media/`, `src/Publish/` or `src/Html/` |
 | [`settings-and-services.md`](.claude/memory/settings-and-services.md) | Before you touch `src/Update/`, `src/Display/`, `src/Clipboard/` or `src/Editor/` |
 | [`text-help-i18n-docs.md`](.claude/memory/text-help-i18n-docs.md) | Before you touch `src/Text/`, `src/Help/`, `src/Markdown/`, `src/I18n/`, `language/`, `docs/`, `src/sql/` or glossaries |
-| [`ai-assistant-backend.md`](.claude/memory/ai-assistant-backend.md) | Before you touch `src/Ai/`, the AI controllers or `assets/private/js/ai/` |
-| [`spa-and-branding-assets.md`](.claude/memory/spa-and-branding-assets.md) | Before you touch the `assets/private/` layout or `assets/logo/` |
+| [`ai-assistant-backend.md`](.claude/memory/ai-assistant-backend.md) | Before you touch `src/Ai/`, the AI controllers or `media/private/js/ai/` |
+| [`spa-and-branding-assets.md`](.claude/memory/spa-and-branding-assets.md) | Before you touch the `media/private/` layout or `build/logo/` |
 | [`joomla-api-key-facts.md`](.claude/memory/joomla-api-key-facts.md) | Before you build or change any request to the Joomla REST API |
 | [`build-overview.md`](.claude/memory/build-overview.md) | Before you run `composer build` or Phing targets |
 | [`release-signing-notes.md`](.claude/memory/release-signing-notes.md) | Before you verify a Windows signature on macOS or cut a release |
 | [`conventions.md`](.claude/memory/conventions.md) | Before you write PHP, tests, database code, UI strings or documentation (full conventions) |
 | [`translation-flow.md`](.claude/memory/translation-flow.md) | Before you add or change UI strings or any `language/` file |
-| [`.claude/rules/spa-frontend.md`](.claude/rules/spa-frontend.md) | Before you touch `assets/private/**` |
-| [`.claude/rules/ai-assistant.md`](.claude/rules/ai-assistant.md) | Before you touch `src/Ai/**`, `assets/private/js/ai/**` or the AI controllers |
+| [`.claude/rules/spa-frontend.md`](.claude/rules/spa-frontend.md) | Before you touch `media/private/**` |
+| [`.claude/rules/ai-assistant.md`](.claude/rules/ai-assistant.md) | Before you touch `src/Ai/**`, `media/private/js/ai/**` or the AI controllers |
 | [`.claude/rules/media-and-publish.md`](.claude/rules/media-and-publish.md) | Before you touch `src/Media/**`, `src/Publish/**`, `src/Html/**` or `tests/corpus/**` |
 | [`.claude/rules/drafts-and-articles.md`](.claude/rules/drafts-and-articles.md) | Before you touch `src/Article/**` or the draft/article controllers |
 | [`.claude/rules/joomla-api-and-references.md`](.claude/rules/joomla-api-and-references.md) | Before you touch `src/Reference/**`, `src/Joomla/**`, `src/Publish/**`, `src/Field/**` or `src/Site/**` |
 | [`.claude/rules/internal-api.md`](.claude/rules/internal-api.md) | Before you touch `src/Http/**`, `src/Application/**` or `src/Debug/**` |
-| [`.claude/rules/documentation.md`](.claude/rules/documentation.md) | Before you touch `docs/**`, `src/Help/**` or `scripts/upload-docs.sh` |
-| [`.claude/rules/build-and-packaging.md`](.claude/rules/build-and-packaging.md) | Before you touch `build/**`, `scripts/**`, `build.xml`, `shell-package.json`, `composer.json`, the CHANGELOG or release notes |
+| [`.claude/rules/documentation.md`](.claude/rules/documentation.md) | Before you touch `docs/**`, `src/Help/**` or `build/scripts/upload-docs.sh` |
+| [`.claude/rules/build-and-packaging.md`](.claude/rules/build-and-packaging.md) | Before you touch `build/**`, `build.xml`, `shell-package.json`, `composer.json`, the CHANGELOG or release notes |

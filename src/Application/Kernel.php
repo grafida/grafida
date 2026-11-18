@@ -46,7 +46,7 @@ final class Kernel
         }
 
         // Single-page-app shell for any other route.
-        $shell = @file_get_contents(\dirname(__DIR__, 2) . '/assets/private/view/index.html');
+        $shell = @file_get_contents(\dirname(__DIR__, 2) . '/media/private/view/index.html');
 
         return new Response((string) $shell, 200, ['Content-Type' => 'text/html; charset=utf-8']);
     }

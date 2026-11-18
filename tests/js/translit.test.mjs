@@ -4,7 +4,7 @@
  * @copyright Copyright (c) 2026 Nicholas K. Dionysopoulos
  * @license   GNU General Public License version 3, or later
  *
- * Unit tests for assets/private/js/util/translit.js — the per-language
+ * Unit tests for media/private/js/util/translit.js — the per-language
  * transliteration behind the alias (URL slug) preview (gh-61).
  *
  * Run with `composer test:js` (or `node --test tests/js/`). Like the other
@@ -24,7 +24,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
 
-const SOURCE = readFileSync(new URL('../../assets/private/js/util/translit.js', import.meta.url), 'utf8');
+const SOURCE = readFileSync(new URL('../../media/private/js/util/translit.js', import.meta.url), 'utf8');
 
 /** Loads translit.js into a fresh sandbox and returns its public API. */
 function load() {

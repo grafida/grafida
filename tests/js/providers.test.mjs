@@ -4,7 +4,7 @@
  * @copyright Copyright (c) 2026 Nicholas K. Dionysopoulos
  * @license   GNU General Public License version 3, or later
  *
- * Unit tests for assets/private/js/ai/providers.js — the AI transport layer.
+ * Unit tests for media/private/js/ai/providers.js — the AI transport layer.
  *
  * Run with `composer test:js` (or `node --test tests/js/`). Node's built-in test
  * runner is used deliberately: node is already a build prerequisite (it vendors
@@ -28,7 +28,7 @@ import vm from 'node:vm';
 //  Harness
 // -----------------------------------------------------------------------------
 
-const SOURCE = readFileSync(new URL('../../assets/private/js/ai/providers.js', import.meta.url), 'utf8');
+const SOURCE = readFileSync(new URL('../../media/private/js/ai/providers.js', import.meta.url), 'utf8');
 
 /**
  * Load providers.js into a fresh sandbox.

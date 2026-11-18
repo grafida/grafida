@@ -2,7 +2,7 @@
 description: Grafida AI assistant — JS-primary streaming transport, the three SSE dialects, Responses-API chaining, CORS/ATS traps, multimodal rules and the panel UI. Lifted verbatim from AGENTS.md.
 paths:
   - "src/Ai/**"
-  - "assets/private/js/ai/**"
+  - "media/private/js/ai/**"
   - "src/Http/Controller/AiServiceController.php"
   - "src/Http/Controller/AiChatController.php"
   - "tests/Integration/Ai/**"
@@ -18,7 +18,7 @@ The PHP-side service inventory is in `.claude/memory/ai-assistant-backend.md` (t
 - **Transport is inverted vs. AITiny (JS-primary, not PHP-primary).** The `shell://` kernel cannot
   stream — `Http\Json::response()` buffers the whole body and the SPA awaits `res.json()` whole — so
   the **provider call runs in the SPA's JavaScript**, which streams the SSE response token-by-token.
-  `assets/private/js/ai/providers.js` (`window.GrafidaAI`) ports AITiny's provider request builders +
+  `media/private/js/ai/providers.js` (`window.GrafidaAI`) ports AITiny's provider request builders +
   **three** wire dialects, switched on `sse_dialect` at three sites (`buildRequest`, `readSseStream`,
   `parseFullResponse`):
   **`openai_completions`** — Chat Completions (`data:` lines, `choices[].delta.content`, `[DONE]`
@@ -110,7 +110,7 @@ The PHP-side service inventory is in `.claude/memory/ai-assistant-backend.md` (t
   Security on JS-initiated `fetch()`/XHR from web content; a plain-`http://` endpoint — e.g. LM Studio
   on a LAN box (`http://192.168.x.x:1234`) — is blocked before the request leaves the process, thrown
   as a network `TypeError` just like a CORS failure, so `sendChat()` silently takes the same synchronous
-  proxy path even with CORS fully enabled server-side. `scripts/make-macos-app.sh` sets
+  proxy path even with CORS fully enabled server-side. `build/scripts/make-macos-app.sh` sets
   `NSAppTransportSecurity → NSAllowsArbitraryLoadsInWebContent` in the generated `Info.plist` to lift
   this for the webview specifically (under the native shell, gh-88, the same key comes from
   `shell-package.json`'s `macos.infoPlist`; it is deliberately not the narrower
@@ -161,7 +161,7 @@ The PHP-side service inventory is in `.claude/memory/ai-assistant-backend.md` (t
   routinely 4000px — several MB of base64 per turn, for a picture every vision model downsamples on
   arrival anyway. A decode/canvas failure falls back to the original URI: an oversized image beats
   none.
-- **UI:** a docked right-hand `#ai-panel` in the editor (`assets/private/js/ai/panel.js`) hosts the
+- **UI:** a docked right-hand `#ai-panel` in the editor (`media/private/js/ai/panel.js`) hosts the
   streaming conversation; the **document (title + HTML) is embedded as context in the first message**
   and follow-ups resend the whole history. A TinyMCE **AI Assistant** toolbar button toggles the panel
   and an **AI tools** menu button runs any configured writing tool against the document; that menu also

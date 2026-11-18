@@ -8,7 +8,7 @@
  */
 
 /*
- * The worker half of WorkerPipeTest's differential run: bin/worker.php's loop around the Feature
+ * The worker half of WorkerPipeTest's differential run: src/worker.php's loop around the Feature
  * suite's container (PipeApp) instead of the production one, so the only difference from the
  * in-process side is the pipe.
  */

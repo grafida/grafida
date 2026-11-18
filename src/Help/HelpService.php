@@ -30,7 +30,7 @@ use League\CommonMark\Node\Query;
  * Serves the documentation bundled in `docs/` to the in-app Help screen.
  *
  * The same Markdown files are published in the Grafida.app Documentation section
- * (uploaded by `scripts/upload-docs.sh`), so the website and this class share one
+ * (uploaded by `build/scripts/upload-docs.sh`), so the website and this class share one
  * predictable source format:
  *
  * - One flat directory, one file per page, the file name being the page slug

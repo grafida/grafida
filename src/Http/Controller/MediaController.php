@@ -559,7 +559,7 @@ final class MediaController extends Controller
      * picture the next time that article is opened. The response also
      * carries `oldWidth`/`oldHeight` (alongside the existing `width`/
      * `height`) so the SPA can apply the identical rule live to an
-     * **already-open** editor, via `assets/private/js/editor/localmedia.js`'s
+     * **already-open** editor, via `media/private/js/editor/localmedia.js`'s
      * `fitDimensions()`.
      *
      * @param array<string, mixed> $body

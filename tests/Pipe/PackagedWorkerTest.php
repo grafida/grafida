@@ -65,7 +65,7 @@ final class PackagedWorkerTest extends TestCase
 
     public function testItRunsFromAPhar(): void
     {
-        // The SPA shell and a static asset come out of the PHAR too (no assets/ beside it).
+        // The SPA shell and a static asset come out of the PHAR too (no media/ beside it).
         $index = $this->worker->request(new Request('GET', 'shell://app/'));
         self::assertSame(200, $index->status);
         self::assertStringContainsString('<html', $index->body);

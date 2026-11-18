@@ -18,7 +18,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 /**
  * The gh-43 sizing rule. One case per row of .plans/00-overview.md's truth
  * table, plus the "no change needed" case — must stay identical to
- * assets/private/js/editor/localmedia.js's fitDimensions()
+ * media/private/js/editor/localmedia.js's fitDimensions()
  * (tests/js/localmedia.test.mjs carries the same cases there).
  */
 final class ImageDimensionsTest extends TestCase

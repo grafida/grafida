@@ -37,7 +37,7 @@ two-space continuation indent are the original bullet formatting.
   `$revisedAt` = `updated_at ?? created_at`) rather than looked up from Joomla's own metadata,
   since there is no Joomla record yet. `LocalMediaUrl::build(id, revisedAt)` is the **only** place
   either PHP or JS should construct this URL — mirrored byte-for-byte in JS by
-  `assets/private/js/editor/localmedia.js`'s `window.GrafidaLocalMedia` (its own from-scratch
+  `media/private/js/editor/localmedia.js`'s `window.GrafidaLocalMedia` (its own from-scratch
   synchronous SHA-1, since `window.crypto.subtle` is Promise-only and this runs inside a
   synchronous TinyMCE hook), an IIFE loaded in `index.html` right after `app.js` alongside
   `slashtools.js`/`csstheme.js`. The endpoint answers **raw bytes, not JSON** — the only route in
@@ -69,7 +69,7 @@ two-space continuation indent are the original bullet formatting.
   hand-resized) → adopt the new intrinsic size wholesale; otherwise a deliberate in-article size →
   keep the attribute that is present and re-ratio the other so the picture is never distorted;
   any dimension unknown → leave alone — **implemented twice, and the two must stay in step**:
-  `ImageDimensions::fit()` in PHP and `assets/private/js/editor/localmedia.js`'s
+  `ImageDimensions::fit()` in PHP and `media/private/js/editor/localmedia.js`'s
   `GrafidaLocalMedia.fitDimensions()` in JS (same argument order, same rounding), because the rule
   has to apply in two different runtimes. The **server** half runs even with the article
   **closed** — the reported bug crops a blob from the Local Media tab, then reopens an article

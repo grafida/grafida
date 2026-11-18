@@ -20,13 +20,13 @@ Thumbs.db
 
 # Front-end libraries fetched via npm and placed by `composer run-script vendor:assets`
 # (pinned in package.json; never committed). See build/composer/InstallationScript.php.
-/assets/private/js/tinymce/
-/assets/private/js/codemirror/
-/assets/private/css/fontawesome.min.css
-/assets/private/css/solid.min.css
-/assets/private/webfonts/
+/media/private/js/tinymce/
+/media/private/js/codemirror/
+/media/private/css/fontawesome.min.css
+/media/private/css/solid.min.css
+/media/private/webfonts/
 # The page side of the native shell's endpoints, copied from grafida/shell-php by the same step.
-/assets/private/js/shell.js
+/media/private/js/shell.js
 
 # Implementation step plans (working notes, not shipped)
 /.plans
@@ -41,7 +41,7 @@ Thumbs.db
 /tests/.env
 
 # Private environment data for API testing
-/assets/http/http-client.private.env.json
+/build/http/http-client.private.env.json
 
 # A running list of things I am working on
 TODO.md

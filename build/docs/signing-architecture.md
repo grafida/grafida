@@ -66,19 +66,19 @@ grafida/phpmicro (branch sibling-phar)          ← the C patch lives here
        ▼  vendor/bin/shell-packager             ← downloads, checks the SHA-256 on every use,
        │                                           caches in ~/.cache/grafida-shell-packager
        │                                           (never in the repo); builds the worker PHAR
-       │                                           (bin/worker.php + src + assets …) behind
+       │                                           (src/worker.php + src + assets …) behind
        │                                           phpmicro's extra-INI block (`phar.ini`)
        │
        ├─▼  macos-app + macos-dmg               ← Grafida.app per arch: stub in Contents/MacOS,
        │                                           grafida-worker.phar in Contents/Resources;
        │                                           signs stub → shell → bundle, notarises the DMG
-       │                                           (scripts/make-macos-dmg.sh)
+       │                                           (build/scripts/make-macos-dmg.sh)
        ├─▼  windows-installer                   ← tree: Grafida.exe, grafida-worker.exe +
        │                                           grafida-worker.phar; resources written in PHP;
        │                                           Jsign signs shell, stub, uninstaller, installer
-       │                                           (scripts/make-windows-installer.sh)
+       │                                           (build/scripts/make-windows-installer.sh)
        └─▼  linux-tarball                       ← grafida-worker + grafida-worker.phar, unsigned
-                                                   (scripts/make-linux-tarball.sh)
+                                                   (build/scripts/make-linux-tarball.sh)
        ▼
   release/Grafida-<v>-{macos-<arm64|amd64>.dmg, windows-amd64-Setup.exe,
                           linux-<amd64|arm64>.tar.gz} (+ .sha256)
@@ -86,7 +86,7 @@ grafida/phpmicro (branch sibling-phar)          ← the C patch lives here
 
 Entry points: `phing package` (targets `package-macos-arm`, `package-macos-x86`,
 `package-windows-x86`, `package-linux-x86`, `package-linux-arm`) or `composer
-build` (`scripts/build-all.sh`); everything is built on the Mac. Details:
+build` (`build/scripts/build-all.sh`); everything is built on the Mac. Details:
 macOS in [`macos-signing.md`](macos-signing.md), Windows in
 [`windows-signing-on-macos.md`](windows-signing-on-macos.md).
 
@@ -165,7 +165,7 @@ Key properties:
    non-code file inside `Contents/MacOS` ("code object is not signed at all").
    So `Contents/MacOS` holds only the shell and the SFX stub; the PHAR,
    `shell.json` and the icon are in `Contents/Resources`. The shell build has no
-   `assets/` directory and no dylib: the worker serves the SPA from its PHAR.
+   `media/` directory and no dylib: the worker serves the SPA from its PHAR.
 3. **The `.phar` file is not a bare phar.** It starts with phpmicro's extra-INI
    block, `[\xfd\xf6\x69\xe6][4-byte big-endian len][ini]`, which shell-packager
    writes from `shell-package.json`'s `phar.ini` (`memory_limit`, `opcache`, …).

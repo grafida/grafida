@@ -9,7 +9,7 @@
  * Ported from Brian Teeman's slashtools TinyMCE plugin
  * (https://github.com/brianteeman/slashtools, GPLv3), which ships as a Joomla
  * extension loaded through TinyMCE's "External Plugin URLs" setting. Neither
- * mechanism exists here: assets/private/js/tinymce/ is npm-vendored and
+ * mechanism exists here: media/private/js/tinymce/ is npm-vendored and
  * gitignored, so a plugin file dropped in there would be untracked and wiped by
  * the next `vendor:assets`, and Grafida sets no `external_plugins`. So this is a
  * port: a plain IIFE loaded AFTER app.js, registering an autocompleter from

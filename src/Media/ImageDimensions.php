@@ -35,7 +35,7 @@ namespace Grafida\Media;
  * | width absent, height present                      | keep height, re-ratio the width     |
  * | any of old/new width/height unknown (null/0)      | leave untouched (null)              |
  *
- * Implemented twice — here and in `assets/private/js/editor/localmedia.js`'s
+ * Implemented twice — here and in `media/private/js/editor/localmedia.js`'s
  * `fitDimensions()` — because the rule applies in two different runtimes: PHP
  * resyncs a *closed* draft's stored `html` column
  * ({@see \Grafida\Html\InlineMedia::resyncLocalImage()}, via

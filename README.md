@@ -38,21 +38,21 @@ later**. See [LICENSE.txt](LICENSE.txt).
 
 ## Further information
 
-* [Key features](assets/docs/key-features.md)
-* [Requirements](assets/docs/requirements.md)
-* [Basic Usage](assets/docs/usage.md)
-* [Out of scope features](assets/docs/out-of-scope.md)
+* [Key features](build/docs/key-features.md)
+* [Requirements](build/docs/requirements.md)
+* [Basic Usage](build/docs/usage.md)
+* [Out of scope features](build/docs/out-of-scope.md)
 
 ## Developer documentation
 
-* [Build environment](assets/docs/build-environment.md)
-* [Build from source](assets/docs/build.md)
-* [Automated testing](assets/docs/testing.md)
-* [Code signing](assets/docs/code-signing.md)
-* [macOS signing and notarisation setup](assets/docs/macos-signing.md)
-* [Windows signing on macOS](assets/docs/windows-signing-on-macos.md)
-* [Signing architecture](assets/docs/signing-architecture.md)
-* [Maintaining the phpmicro runtime pins](assets/docs/sfx-maintenance.md)
-* [Publishing the documentation](assets/docs/documentation-publishing.md)
-* [Statement on the use of AI](assets/docs/ai-use.md)
+* [Build environment](build/docs/build-environment.md)
+* [Build from source](build/docs/build.md)
+* [Automated testing](build/docs/testing.md)
+* [Code signing](build/docs/code-signing.md)
+* [macOS signing and notarisation setup](build/docs/macos-signing.md)
+* [Windows signing on macOS](build/docs/windows-signing-on-macos.md)
+* [Signing architecture](build/docs/signing-architecture.md)
+* [Maintaining the phpmicro runtime pins](build/docs/sfx-maintenance.md)
+* [Publishing the documentation](build/docs/documentation-publishing.md)
+* [Statement on the use of AI](build/docs/ai-use.md)
 

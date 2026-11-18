@@ -4,7 +4,7 @@
  * @copyright Copyright (c) 2026 Nicholas K. Dionysopoulos
  * @license   GNU General Public License version 3, or later
  *
- * Unit tests for assets/private/js/editor/codeformats.js.
+ * Unit tests for media/private/js/editor/codeformats.js.
  */
 
 import { readFileSync } from 'node:fs';
@@ -13,7 +13,7 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 
 const SOURCE = readFileSync(
-    new URL('../../assets/private/js/editor/codeformats.js', import.meta.url),
+    new URL('../../media/private/js/editor/codeformats.js', import.meta.url),
     'utf8'
 );
 

@@ -3,7 +3,7 @@ description: Grafida's documentation — the docs/ Markdown shared by the in-app
 paths:
   - "docs/**"
   - "src/Help/**"
-  - "scripts/upload-docs.sh"
+  - "build/scripts/upload-docs.sh"
 ---
 
 # The documentation (`docs/`)
@@ -12,10 +12,10 @@ paths:
 
 `docs/` is a **single source with two consumers**: the in-app **Help** screen (`src/Help/`,
 `src/Http/Controller/HelpController.php`, the SPA's `help` screen), and the Grafida.app
-Documentation section, uploaded over SFTP by `scripts/upload-docs.sh` (`composer docs:publish`).
+Documentation section, uploaded over SFTP by `build/scripts/upload-docs.sh` (`composer docs:publish`).
 The upload is **verbatim** (every page, `docs/images/` and `_manifest.json`) since the website
 renders the files as-is. Run it whenever `docs/` changes — it is not a release step, and the
-procedure is `assets/docs/documentation-publishing.md`.
+procedure is `build/docs/documentation-publishing.md`.
 
 The website and app deliberately share one predictable source format.
 
@@ -165,14 +165,14 @@ their render functions (`renderMediaHeaderActions()`, `renderRequestLogScreen()`
 `renderHelpActions()`), which would destroy a static button placed within them — silently, and only
 from the second render onwards.
 
-## Publishing to Grafida.app (`scripts/upload-docs.sh`)
+## Publishing to Grafida.app (`build/scripts/upload-docs.sh`)
 
 `composer docs:publish` uploads `docs/` to the site's documentation directory over SFTP: every
 `*.md` page, everything in `docs/images/` (into an `images/` directory it creates if needed), and
 `_manifest.json`. `--dry-run` prints the destination and the whole SFTP batch without connecting to
 anything. The settings are `docs.sftp.host` / `.path` / `.user` / `.port` in
 `build/build.properties`, overridden by `DOCS_SFTP_*` in the environment;
-`assets/docs/documentation-publishing.md` is the full procedure.
+`build/docs/documentation-publishing.md` is the full procedure.
 
 ⚠️ **This is deliberately NOT a release step and must not become one.** The app serves Help out of
 its own binary, so the site and the shipped build are independent: a typo fix is worth publishing

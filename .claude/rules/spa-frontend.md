@@ -1,32 +1,32 @@
 ---
-description: Grafida SPA front-end (assets/private) — TinyMCE/CodeMirror wiring, editor gotchas, media browser, theming, layout, spell checking. Lifted verbatim from AGENTS.md's Layout section.
+description: Grafida SPA front-end (media/private) — TinyMCE/CodeMirror wiring, editor gotchas, media browser, theming, layout, spell checking. Lifted verbatim from AGENTS.md's Layout section.
 paths:
-  - "assets/private/**"
+  - "media/private/**"
 ---
 
-# Grafida SPA front-end (`assets/private/`)
+# Grafida SPA front-end (`media/private/`)
 
 These are the front-end notes from `AGENTS.md`'s `## Layout` section, moved here so they load
-only when you are working under `assets/private/`. They are **verbatim** — the leading `- ` and
+only when you are working under `media/private/`. They are **verbatim** — the leading `- ` and
 two-space continuation indent are the original bullet formatting.
 
-⚠️ Do **not** move this file to `assets/private/AGENTS.md`: the worker PHAR carries `assets/private`
+⚠️ Do **not** move this file to `media/private/AGENTS.md`: the worker PHAR carries `media/private`
 wholesale (`shell-package.json`'s `phar.include`) into every package, so a memory file placed there would
 ship inside the app.
 
-- `assets/private/` — SPA (`view/index.html`, `css/`, `js/`, `js/tinymce/`).
+- `media/private/` — SPA (`view/index.html`, `css/`, `js/`, `js/tinymce/`).
   **The three front-end libraries — TinyMCE 8, CodeMirror 5, FontAwesome 7 Free — are
   NPM-managed, not committed.** Their pinned versions live in `package.json`; running
   `composer run-script vendor:assets` (also fired automatically by `composer install`/`update`
   via `post-install-cmd`/`post-update-cmd`) does `npm install` then copies the prescribed subset
-  into `assets/private/` per the `extra.copy-static` / `extra.minify` manifests in `composer.json`
+  into `media/private/` per the `extra.copy-static` / `extra.minify` manifests in `composer.json`
   (`build/composer/InstallationScript.php` does the work). The copy targets — `js/tinymce/`,
   `js/codemirror/`, `css/{fontawesome,solid}.min.css`, `webfonts/` — are therefore **gitignored**.
   CodeMirror's npm package ships only unminified source, so the install step minifies it (terser +
   clean-css) into the `*.min.js`/`*.min.css` the HTML references. To update a library, bump its
   version in `package.json` and re-run `vendor:assets`. (`node`+`npm` are now build prerequisites;
-  `scripts/build-all.sh` and Phing's `prepare-assets` run `vendor:assets` before packaging because the
-  worker PHAR carries `assets/private`.)
+  `build/scripts/build-all.sh` and Phing's `prepare-assets` run `vendor:assets` before packaging because the
+  worker PHAR carries `media/private`.)
   ⚠️ **TinyMCE 8 requires a license key or it starts read-only** (v7 only warned when the key was
   absent). Grafida is a GPL build, so `tinymce.init()` passes `license_key: 'gpl'` (in `app.js`,
   beside `promotion`/`branding`); dropping it silently disables editing.

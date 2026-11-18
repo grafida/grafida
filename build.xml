@@ -9,10 +9,10 @@
 <project name="Grafida" description="Grafida — desktop Joomla! article editor" default="package" basedir=".">
 
 	<property name="dirs.root" value="${phing.dir}" />
-	<property name="dirs.icon" value="${dirs.root}/assets/logo" />
+	<property name="dirs.icon" value="${dirs.root}/build/logo" />
 	<property name="dirs.dist" value="${dirs.root}/release" />
 	<property name="setversion.script" value="${dirs.root}/build/tasks/set-version.php" />
-	<property name="assets.marker" value="${dirs.root}/assets/private/js/tinymce/tinymce.min.js" />
+	<property name="assets.marker" value="${dirs.root}/media/private/js/tinymce/tinymce.min.js" />
 
 	<!--
 	Private build configuration (secrets): GitHub Releases + CDN FTP credentials for publishing
@@ -27,14 +27,14 @@
 	(above); they merely default to empty so the package-macos-* targets can forward them to the build
 	scripts without leaving an unexpanded ${...} literal when build.properties omits them. Set
 	macos.sign.identity + macos.notary.profile in build.properties to sign+notarise — see
-	assets/docs/macos-signing.md.
+	build/docs/macos-signing.md.
 	-->
 	<property name="macos.sign.identity" value="" />
 	<property name="macos.notary.profile" value="" />
 
 	<!--
 	Windows code-signing defaults (Azure Artifact Signing + Jsign — see
-	assets/docs/windows-signing-on-macos.md). windows.sign.op-item empty (the default) leaves the
+	build/docs/windows-signing-on-macos.md). windows.sign.op-item empty (the default) leaves the
 	installer and everything in it unsigned, exactly like the macOS defaults above. Only set these in
 	build.properties: Azure's Basic tier is capped at 5,000 signatures a month, and a signed Windows
 	build costs four (the shell, the worker stub, the uninstaller, the installer).
@@ -63,7 +63,7 @@
 
 	<!--
 	Everything that must be on disk before a package is built. The worker PHAR that shell-packager
-	builds carries assets/private, and the packages carry the icons, so the Composer dependencies
+	builds carries media/private, and the packages carry the icons, so the Composer dependencies
 	(grafida/shell-packager among them), the npm-managed front-end libraries and the per-platform icons
 	all have to exist first. Phing runs each target at most once per invocation, so the five package
 	targets share a single preparation pass. Every sub-target is guarded — skipped when its output is
@@ -105,7 +105,7 @@
 
 	<!--
 	The per-platform icons (Grafida.icns / Grafida.ico / the PNG set) are committed, so this normally
-	no-ops; it only re-rasterises them from assets/logo/grafida.svg if they have gone missing.
+	no-ops; it only re-rasterises them from build/logo/grafida.svg if they have gone missing.
 	-->
 	<condition property="icons.present">
 		<and>
@@ -116,15 +116,15 @@
 
 	<target name="prepare-icons" unless="icons.present"
 			description="Rasterise the application icons from the master SVG (only if missing)">
-		<echo>Application icons missing — regenerating from assets/logo/grafida.svg</echo>
+		<echo>Application icons missing — regenerating from build/logo/grafida.svg</echo>
 		<exec executable="bash" dir="${dirs.root}" passthru="true" checkreturn="true">
-			<arg value="scripts/make-icons.sh" />
+			<arg value="build/scripts/make-icons.sh" />
 		</exec>
 	</target>
 
 	<!--
 	The front-end libraries (TinyMCE, CodeMirror, FontAwesome) are npm-managed and gitignored, yet the
-	worker PHAR carries assets/private — so they must be vendored first. `vendor:assets`
+	worker PHAR carries media/private — so they must be vendored first. `vendor:assets`
 	is idempotent (an mtime guard skips files already copied). We skip the whole step when the marker
 	file is already present, unless -Drefresh.assets=1 forces a re-vendor.
 	-->
@@ -165,7 +165,7 @@
 	Tasks - Run
 
 	`run` starts Grafida in the native shell's dev mode on this host: the sibling ../shell clone, built
-	with the automation channel, with the system `php bin/worker.php` as the worker, so a PHP edit
+	with the automation channel, with the system `php src/worker.php` as the worker, so a PHP edit
 	takes effect when the worker restarts and nothing is compiled or packaged (`composer shell:dev`).
 	====================================================================================================
 	-->
@@ -183,7 +183,7 @@
 
 	Each package-* target builds one distributable into release/ with grafida/shell-packager, from
 	shell-package.json (pins, names, outputs) and shell.json (the app manifest), through the
-	scripts/make-*.sh helpers that scripts/build-all.sh (`composer build`) also uses. All five are
+	build/scripts/make-*.sh helpers that build/scripts/build-all.sh (`composer build`) also uses. All five are
 	built on the Mac: the macOS bundles need codesign, notarytool and hdiutil; the Windows installer
 	needs makensis, Jsign and osslsigncode, which run there too; the Linux tarballs need nothing
 	native. Each artefact gets a .sha256 beside it.
@@ -212,7 +212,7 @@
 	<target name="package-macos-arm" depends="prepare" description="Package the macOS (Apple Silicon) .dmg">
 		<exec executable="bash" dir="${dirs.root}" passthru="true" checkreturn="true">
 			<arg value="-c" />
-			<arg value="export MACOS_SIGN_IDENTITY=&quot;$1&quot;; export MACOS_NOTARY_PROFILE=&quot;$2&quot;; exec bash scripts/make-macos-dmg.sh arm64" />
+			<arg value="export MACOS_SIGN_IDENTITY=&quot;$1&quot;; export MACOS_NOTARY_PROFILE=&quot;$2&quot;; exec bash build/scripts/make-macos-dmg.sh arm64" />
 			<arg value="phing" />
 			<arg value="${macos.sign.identity}" />
 			<arg value="${macos.notary.profile}" />
@@ -222,7 +222,7 @@
 	<target name="package-macos-x86" depends="prepare" description="Package the macOS (Intel) .dmg">
 		<exec executable="bash" dir="${dirs.root}" passthru="true" checkreturn="true">
 			<arg value="-c" />
-			<arg value="export MACOS_SIGN_IDENTITY=&quot;$1&quot;; export MACOS_NOTARY_PROFILE=&quot;$2&quot;; exec bash scripts/make-macos-dmg.sh amd64" />
+			<arg value="export MACOS_SIGN_IDENTITY=&quot;$1&quot;; export MACOS_NOTARY_PROFILE=&quot;$2&quot;; exec bash build/scripts/make-macos-dmg.sh amd64" />
 			<arg value="phing" />
 			<arg value="${macos.sign.identity}" />
 			<arg value="${macos.notary.profile}" />
@@ -240,13 +240,13 @@
 			<equals arg1="${windows.sign.op-item}" arg2="" />
 			<then>
 				<exec executable="bash" dir="${dirs.root}" passthru="true" checkreturn="true">
-					<arg value="scripts/make-windows-installer.sh" />
+					<arg value="build/scripts/make-windows-installer.sh" />
 				</exec>
 			</then>
 			<else>
 				<exec executable="bash" dir="${dirs.root}" passthru="true" checkreturn="true">
 					<arg value="-c" />
-					<arg value="export WINDOWS_SIGN_OP_ITEM=&quot;$1&quot;; export WINDOWS_SIGN_OP_FIELD_APPID=&quot;$2&quot;; export WINDOWS_SIGN_OP_FIELD_PASSWORD=&quot;$3&quot;; export WINDOWS_SIGN_OP_FIELD_TENANT=&quot;$4&quot;; export WINDOWS_SIGN_KEYSTORE=&quot;$5&quot;; export WINDOWS_SIGN_ALIAS=&quot;$6&quot;; export WINDOWS_SIGN_TSAURL=&quot;$7&quot;; exec bash scripts/make-windows-installer.sh" />
+					<arg value="export WINDOWS_SIGN_OP_ITEM=&quot;$1&quot;; export WINDOWS_SIGN_OP_FIELD_APPID=&quot;$2&quot;; export WINDOWS_SIGN_OP_FIELD_PASSWORD=&quot;$3&quot;; export WINDOWS_SIGN_OP_FIELD_TENANT=&quot;$4&quot;; export WINDOWS_SIGN_KEYSTORE=&quot;$5&quot;; export WINDOWS_SIGN_ALIAS=&quot;$6&quot;; export WINDOWS_SIGN_TSAURL=&quot;$7&quot;; exec bash build/scripts/make-windows-installer.sh" />
 					<arg value="phing" />
 					<arg value="${windows.sign.op-item}" />
 					<arg value="${windows.sign.op-field-appid}" />
@@ -262,14 +262,14 @@
 
 	<target name="package-linux-x86" depends="prepare" description="Package the Linux (x64) .tar.gz">
 		<exec executable="bash" dir="${dirs.root}" passthru="true" checkreturn="true">
-			<arg value="scripts/make-linux-tarball.sh" />
+			<arg value="build/scripts/make-linux-tarball.sh" />
 			<arg value="amd64" />
 		</exec>
 	</target>
 
 	<target name="package-linux-arm" depends="prepare" description="Package the Linux (ARM64) .tar.gz">
 		<exec executable="bash" dir="${dirs.root}" passthru="true" checkreturn="true">
-			<arg value="scripts/make-linux-tarball.sh" />
+			<arg value="build/scripts/make-linux-tarball.sh" />
 			<arg value="arm64" />
 		</exec>
 	</target>
@@ -290,10 +290,10 @@
 			description="Alias for 'package' — package every platform" />
 
 	<!--
-	Publishing docs/ to the Grafida.app Documentation section is scripts/upload-docs.sh
+	Publishing docs/ to the Grafida.app Documentation section is build/scripts/upload-docs.sh
 	(`composer docs:publish`), and it is deliberately NOT a Phing target and NOT a release step: the
 	app serves Help out of its own bundle, so the site and the shipped build are independent and a
-	typo fix should not wait for a version bump. See assets/docs/documentation-publishing.md.
+	typo fix should not wait for a version bump. See build/docs/documentation-publishing.md.
 	-->
 
 	<target name="release" depends="all"

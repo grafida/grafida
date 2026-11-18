@@ -19,7 +19,7 @@ are not configured, so a clean checkout is green.
 | **unit** (`tests/Unit/`) | Pure PHP units — the Joomla API client, HTML splitting/rebasing, secret stores, repositories, the AI provider table and proxy. Fast, no network, in-memory SQLite. |
 | **feature** (`tests/Feature/`) | The back end end-to-end through the kernel. The kernel is a pure `Request → Response` function, so the whole API is testable **without opening a window** — no shell, no webview, no worker process. |
 | **integration** (`tests/Integration/`) | The **live AI provider tests** below, skipped unless configured. |
-| **js** (`tests/js/`) | The AI transport, `assets/private/js/ai/providers.js`. |
+| **js** (`tests/js/`) | The AI transport, `media/private/js/ai/providers.js`. |
 
 ### The conformance corpus
 

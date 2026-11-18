@@ -19,7 +19,7 @@ use SplFileInfo;
 
 /**
  * Composer install hooks that place the NPM-fetched front-end libraries (TinyMCE, CodeMirror,
- * FontAwesome) into their final, gitignored locations under assets/private/.
+ * FontAwesome) into their final, gitignored locations under media/private/.
  *
  * Driven entirely by the `extra.copy-static` and `extra.minify` blocks in composer.json, so
  * adding/removing a vendored file is a data change, never a code change. Deliberately

@@ -8,7 +8,7 @@
 # PKGBUILD for the tarballs. Built by grafida/shell-packager from shell-package.json. All of them
 # run on the system's WebKitGTK 4.1 and GTK 3; none bundles them.
 #
-# Usage:  scripts/make-linux-packages.sh [arch ...]   (amd64|arm64; default: both)
+# Usage:  build/scripts/make-linux-packages.sh [arch ...]   (amd64|arm64; default: both)
 #
 # Output: release/Grafida-<version>-linux-<debarch>.deb, -linux-<arch>.rpm, -linux-<arch>.AppImage
 #         (each + .sha256) and release/PKGBUILD.
@@ -19,7 +19,7 @@
 
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 mkdir -p release   # deliverables; gitignored, created when missing
 

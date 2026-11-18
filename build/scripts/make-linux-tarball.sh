@@ -5,9 +5,9 @@
 # GNU General Public License version 3, or later.
 #
 # The Linux tarballs (gh-86, gh-92): Grafida on the native shell, built by grafida/shell-packager
-# from shell-package.json. Called by `phing package-linux-x86|-arm` and scripts/build-all.sh.
+# from shell-package.json. Called by `phing package-linux-x86|-arm` and build/scripts/build-all.sh.
 #
-# Usage:  scripts/make-linux-tarball.sh [arch ...]   (amd64|arm64; default: both)
+# Usage:  build/scripts/make-linux-tarball.sh [arch ...]   (amd64|arm64; default: both)
 #
 # Output: release/Grafida-<version>-linux-<arch>.tar.gz (+ .sha256)
 #
@@ -17,7 +17,7 @@
 
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 mkdir -p release   # deliverables; gitignored, created when missing
 

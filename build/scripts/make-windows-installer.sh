@@ -6,11 +6,11 @@
 #
 # The Windows (x64) installer (gh-91, gh-92): Grafida on the native shell, built by
 # grafida/shell-packager from shell-package.json and build/windows/shell-windows-installer.nsi. Called by
-# `phing package-windows-x86` and scripts/build-all.sh. It installs per user where Boson's build did,
+# `phing package-windows-x86` and build/scripts/build-all.sh. It installs per user where Boson's build did,
 # under its identity (Programs\Grafida, the uninstall key Grafida, its Start menu entry), removing a
 # Boson or preview install first.
 #
-# Usage:  scripts/make-windows-installer.sh [shell-packager options, e.g. --no-check]
+# Usage:  build/scripts/make-windows-installer.sh [shell-packager options, e.g. --no-check]
 #
 # Output: release/Grafida-<version>-windows-amd64-Setup.exe (+ .sha256)
 #
@@ -27,7 +27,7 @@
 
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 mkdir -p release   # deliverables; gitignored, created when missing
 

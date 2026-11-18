@@ -7,9 +7,9 @@
 # The macOS disk images (gh-88, gh-92): Grafida.app on the native shell, built by
 # grafida/shell-packager from shell-package.json, one per architecture: arm64 (Apple Silicon) and
 # amd64 (x86_64, for Intel Macs, tested under Rosetta 2 only). Called by `phing package-macos-arm`,
-# `phing package-macos-x86` and scripts/build-all.sh.
+# `phing package-macos-x86` and build/scripts/build-all.sh.
 #
-# Usage:  scripts/make-macos-dmg.sh [arm64|amd64 …] [-- shell-packager options, e.g. --no-style]
+# Usage:  build/scripts/make-macos-dmg.sh [arm64|amd64 …] [-- shell-packager options, e.g. --no-style]
 #         (no architecture: both)
 #
 # Output: release/Grafida-<version>-macos-<arm64|amd64>.dmg (+ .sha256), and the bundles in
@@ -27,7 +27,7 @@
 
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 mkdir -p release   # deliverables; gitignored, created when missing
 

@@ -21,7 +21,7 @@ use Joomla\Database\Exception\ConnectionFailureException;
  * WebKitGTK or WebView2) and reports it itself. What is left for us is the worker dying while it
  * builds the app: most often a data folder it cannot write to (not writable, under a file, a full
  * disk). In development that shows as a database it cannot open; the packaged worker writes its
- * language files and migrations into that folder first, so there it is a DataDirectoryException. `bin/worker.php` writes this text to stderr ahead of the stack trace, and the shell's alert
+ * language files and migrations into that folder first, so there it is a DataDirectoryException. `src/worker.php` writes this text to stderr ahead of the stack trace, and the shell's alert
  * is the tail of the worker's stderr, so it opens with something a person can act on.
  *
  * ⚠️ The text is **hard-coded English**: it runs before the language files are loaded, or instead

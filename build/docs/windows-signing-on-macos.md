@@ -246,7 +246,7 @@ From 0.4 (grafida/grafida#92) the Windows release build is the native shell's x6
 built **on the Mac** (Linux works too) by grafida/shell-packager's `windows-installer` from
 `shell-package.json` (its `runtimes.windows` and `windows` sections) and Grafida's own NSIS
 script, `build/windows/shell-windows-installer.nsi`. Entry points: `phing package-windows-x86` (part of
-`phing package`), `composer build` (`scripts/build-all.sh`), or `scripts/make-windows-installer.sh`
+`phing package`), `composer build` (`build/scripts/build-all.sh`), or `build/scripts/make-windows-installer.sh`
 (`composer build:windows`; its arguments go to shell-packager). Output:
 `release/Grafida-<version>-windows-amd64-Setup.exe` + `.sha256`.
 
@@ -310,7 +310,7 @@ differently.)
   `macos.sign.identity`/`macos.notary.profile` properties (see
   [`macos-signing.md`](macos-signing.md)).
 * **Set**: the target passes it and the other `windows.sign.*` properties to
-  `scripts/make-windows-installer.sh`, which reads the service principal from 1Password
+  `build/scripts/make-windows-installer.sh`, which reads the service principal from 1Password
   (`op item get`), logs `az` in, fetches an access token for `https://codesigning.azure.net`, and
   hands shell-packager `WINDOWS_SIGN_ENDPOINT` (the keystore), `WINDOWS_SIGN_PROFILE` (the alias),
   `WINDOWS_SIGN_TOKEN` and `WINDOWS_SIGN_TSAURL`. A signed build needs `az`, `jsign`, `op`,
@@ -330,7 +330,7 @@ fails the build.
 signatures/month**, and a signed build costs four. Leave `windows.sign.op-item` blank on a dev
 machine, and set it only for release builds.
 
-For a one-off `scripts/build-all.sh` or `scripts/make-windows-installer.sh` run outside Phing,
+For a one-off `build/scripts/build-all.sh` or `build/scripts/make-windows-installer.sh` run outside Phing,
 export the same settings instead of using `build.properties`:
 
 ```bash

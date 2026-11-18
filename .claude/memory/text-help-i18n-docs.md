@@ -28,7 +28,7 @@ Read before touching `src/Text/`, `src/Help/`, `src/Markdown/`, `src/I18n/`, `la
   pass cannot reformat the markup the way a parse/serialise round trip would.
 - `src/Help/HelpService.php` — the **in-app documentation** (gh-55). `docs/` is a **single source
   with two consumers**: the sidebar's **Help** screen and the Grafida.app Documentation section,
-  published by `scripts/upload-docs.sh` (`composer docs:publish`), which uploads the pages,
+  published by `build/scripts/upload-docs.sh` (`composer docs:publish`), which uploads the pages,
   `docs/images/` and `_manifest.json` over SFTP — the manifest last, so a reader loading the site
   mid-upload never sees a table of contents pointing at a page that has not arrived. It is
   deliberately **not** a release step and **not** a Phing target: the app serves Help out of its own
@@ -43,8 +43,8 @@ Read before touching `src/Text/`, `src/Help/`, `src/Markdown/`, `src/I18n/`, `la
   `/api/help/image/{file}`; none of them touches a site, the network or the database, so the Help
   screen works with nothing configured at all.
   ⚠️ **Detail is in `.claude/rules/documentation.md`** (and the procedure in
-  `assets/docs/documentation-publishing.md`), which loads when you touch `docs/`, `src/Help/` or
-  `scripts/upload-docs.sh`. Two rules worth carrying without it: **no link in a
+  `build/docs/documentation-publishing.md`), which loads when you touch `docs/`, `src/Help/` or
+  `build/scripts/upload-docs.sh`. Two rules worth carrying without it: **no link in a
   documentation page may be followed normally** — the app's webview opens no new window and a
   same-window navigation would replace the SPA with no way back, so an external URL leaves through
   `api.openUrl()` and anything unclassified has its click swallowed (`mailto:` is deliberately
@@ -78,5 +78,5 @@ Read before touching `src/Text/`, `src/Help/`, `src/Markdown/`, `src/I18n/`, `la
   only counts `language/<tag>/<tag>.ini`, and `shell-package.json` keeps `*.md` out of the PHAR.
 - `build/` holds only build inputs: `composer/` (npm-vendoring script), `tasks/` (Phing tasks), `macos/shell-worker.entitlements`,
   `windows/shell-windows-installer.nsi`, `build.sample.properties`; `build.properties` is gitignored; deliverables go to the gitignored `release/`. Build
-  documentation lives in `assets/docs/`; every scratch directory (shell-packager work trees, hand-off folders) is the
+  documentation lives in `build/docs/`; every scratch directory (shell-packager work trees, hand-off folders) is the
   gitignored `tmp/`.

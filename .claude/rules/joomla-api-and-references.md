@@ -88,7 +88,7 @@ what we cache about a site, and the API contracts that govern reading it. Verbat
   snap back to the 1-hour default with no explanation. `MetadataCacheService` is a **container
   singleton** (registered in `SiteProvider` with `share()`) — load-bearing, not stylistic, since
   `resetIfRequested()`'s once-per-process guard depends on every `container->get()` call within a
-  process returning the same instance. See the `assets/private/` SPA notes below for the
+  process returning the same instance. See the `media/private/` SPA notes below for the
   front-end half.
   `unicodeSlugs()` caches one Global Configuration value under the `config` kind — `unicodeslugs`,
   the "Unicode Aliases" option, which the alias preview needs (see `src/Article/`). It is the one

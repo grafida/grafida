@@ -2,7 +2,6 @@
 description: Grafida build, packaging, code signing (macOS notarisation + Windows Authenticode via the phpmicro sibling-phar SFX) and release process. Lifted from AGENTS.md.
 paths:
   - "build/**"
-  - "scripts/**"
   - "build.xml"
   - "shell-package.json"
   - "composer.json"
@@ -13,7 +12,7 @@ paths:
 # Grafida build & packaging
 
 Moved out of `AGENTS.md` so it loads only when you are touching the build system. Deeper signing
-documentation lives in `assets/docs/macos-signing.md`, `signing-architecture.md`,
+documentation lives in `build/docs/macos-signing.md`, `signing-architecture.md`,
 `sfx-maintenance.md` and `windows-signing-on-macos.md`.
 
 ## Build & packaging (one step)
@@ -24,15 +23,15 @@ Every release artefact is the native shell's (gh-92), built **on the Mac** by **
 
 | Artefact | Phing target | Script |
 |---|---|---|
-| `Grafida-<v>-macos-arm64.dmg` | `package-macos-arm` | `scripts/make-macos-dmg.sh arm64` |
-| `Grafida-<v>-macos-amd64.dmg` | `package-macos-x86` | `scripts/make-macos-dmg.sh amd64` |
-| `Grafida-<v>-linux-amd64.tar.gz` | `package-linux-x86` | `scripts/make-linux-tarball.sh amd64` |
-| `Grafida-<v>-linux-arm64.tar.gz` | `package-linux-arm` | `scripts/make-linux-tarball.sh arm64` |
-| `Grafida-<v>-windows-amd64-Setup.exe` | `package-windows-x86` | `scripts/make-windows-installer.sh` |
+| `Grafida-<v>-macos-arm64.dmg` | `package-macos-arm` | `build/scripts/make-macos-dmg.sh arm64` |
+| `Grafida-<v>-macos-amd64.dmg` | `package-macos-x86` | `build/scripts/make-macos-dmg.sh amd64` |
+| `Grafida-<v>-linux-amd64.tar.gz` | `package-linux-x86` | `build/scripts/make-linux-tarball.sh amd64` |
+| `Grafida-<v>-linux-arm64.tar.gz` | `package-linux-arm` | `build/scripts/make-linux-tarball.sh arm64` |
+| `Grafida-<v>-windows-amd64-Setup.exe` | `package-windows-x86` | `build/scripts/make-windows-installer.sh` |
 
 each with a `.sha256` beside it, into **`release/`** (gitignored). `phing package` (the default
 target; `all` is an alias; `composer build:package`) builds all five with signing from
-`build/build.properties`; `composer build` → `scripts/build-all.sh` runs the same scripts with
+`build/build.properties`; `composer build` → `build/scripts/build-all.sh` runs the same scripts with
 signing from the environment and a tolerant per-platform summary (one failure does not stop the
 others, the exit status reports it). `composer build:macos|build:linux|build:windows` build one
 platform. There is no compile step: the worker PHAR is built by shell-packager, the shell and the
@@ -42,16 +41,16 @@ libboson patch, `sfx/`, the `.phar` and `.zip` artefacts) was deleted in gh-92.
 **Front-end vendoring:** the build host needs `node`+`npm`. The npm-managed libraries (TinyMCE,
 CodeMirror, FontAwesome — see `.claude/rules/spa-frontend.md`) are gitignored, so `prepare-assets`
 (Phing) and `build-all.sh` run `composer run-script vendor:assets` before packaging to populate
-`assets/private`, which the worker PHAR carries.
+`media/private`, which the worker PHAR carries.
 
 **Dev mode** is not a build: `composer shell:dev` (also `composer start`, `phing run`) builds the
 sibling `../shell` clone with the automation channel and runs it with `--dev .`, so the worker is the
-system `php bin/worker.php`.
+system `php src/worker.php`.
 
 ## The Linux tarballs (gh-86, gh-92)
 
 `composer build:linux [-- amd64|arm64]` / Phing `package-linux-x86|-arm` →
-`scripts/make-linux-tarball.sh` → `vendor/bin/shell-packager linux-tarball` over
+`build/scripts/make-linux-tarball.sh` → `vendor/bin/shell-packager linux-tarball` over
 **`shell-package.json`** (repo root, beside `shell.json`, which names everything: `id`, `title`,
 `worker.binary`). It stamps `App::VERSION` first (the PHAR carries `App.php`) and sets
 `SOURCE_DATE_EPOCH` to the commit time, so **one commit builds one byte-identical tarball**. Output:
@@ -85,7 +84,7 @@ worker check (below) only runs on a Linux host of the same architecture.
   `~/.cache/grafida-shell-packager`.
 - **The Linux SFX links glibc dynamically** (2.35 floor, = the shell's), everything else static: musl
   has no NSS, so `.local`/systemd-resolved names would not resolve for sites or local AI servers.
-- **The PHAR** is `bin/worker.php` + `src`, `assets/private|public`, `docs`, `language`,
+- **The PHAR** is `src/worker.php` + `src`, `media/private|public`, `docs`, `language`,
   `src/sql`, `src/Ai/resources` and the `--no-dev` vendor `*.php`: 1,690 files against the
   Boson PHAR's 4,915. Its ini block sets `memory_limit=1G`, because a body at `shell.json`'s
   `maxBodyBytes` (128 MiB) peaks at ~600 MiB RSS (the body, the decoded JSON string, the decoded bytes,
@@ -104,7 +103,7 @@ worker check (below) only runs on a Linux host of the same architecture.
 
 ## The Linux distribution packages (gh-87)
 
-`composer build:shell-linux [-- amd64|arm64]` → `scripts/make-linux-packages.sh` builds, per architecture,
+`composer build:shell-linux [-- amd64|arm64]` → `build/scripts/make-linux-packages.sh` builds, per architecture,
 the tarball and then `linux-deb`, `linux-rpm` and `linux-appimage`, and finally `linux-pkgbuild` for the
 tarballs: `Grafida-<v>-linux-<debarch>.deb`, `-linux-<arch>.rpm`, `-linux-<arch>.AppImage` (each + `.sha256`)
 and `release/PKGBUILD`. Deliberately **not** in the Phing targets or in `composer build`: they are an extra on the tarball, built on the maintainer's hardware like everything else
@@ -135,7 +134,7 @@ runtimes (type2-runtime `20251108`).
 ## The macOS disk images (gh-88, gh-92)
 
 `composer build:macos [-- arm64|amd64] [-- --no-style]` / Phing `package-macos-arm|-x86` →
-`scripts/make-macos-dmg.sh <arch>` → `vendor/bin/shell-packager macos-app --arch=…` (into
+`build/scripts/make-macos-dmg.sh <arch>` → `vendor/bin/shell-packager macos-app --arch=…` (into
 `tmp/shell-macos/<arch>/Grafida.app`) then `macos-dmg --arch=… --app=…` →
 `release/Grafida-<v>-macos-<arm64|amd64>.dmg` + `.sha256`. It stamps `App::VERSION` and
 `SOURCE_DATE_EPOCH` as the Linux build does, but only the PHAR inside is reproducible (`codesign` and
@@ -179,7 +178,7 @@ runtimes (type2-runtime `20251108`).
 ## The Windows installer (gh-91, gh-92)
 
 `composer build:windows` / Phing `package-windows-x86` →
-`scripts/make-windows-installer.sh` → `vendor/bin/shell-packager windows-installer` over
+`build/scripts/make-windows-installer.sh` → `vendor/bin/shell-packager windows-installer` over
 `shell-package.json` (its `windows` section) and **`build/windows/shell-windows-installer.nsi`**
 → `release/Grafida-<v>-windows-amd64-Setup.exe`
 + `.sha256`. **x64 only.** It stamps `App::VERSION` and `SOURCE_DATE_EPOCH` like the others; only the
@@ -287,10 +286,10 @@ documentation upload (`docs.sftp.*`). (The root `.gitignore` ignores `build/buil
 sets `failOnEmptyTestSuite="false"` because `tests/Integration/` was originally scaffolding only;
 without that flag PHPUnit fails the whole run on an empty suite before the feature suite executes.
 - **`composer test:js`** (`node --test 'tests/js/**/*.test.mjs'`) covers the SPA modules PHPUnit
-  **cannot** reach: `assets/private/js/ai/providers.js` (the AI transport — the provider call runs in
-  the SPA, see the AI facts), `assets/private/js/editor/slashtools.js` (the slash-command menu),
-  `assets/private/js/editor/csstheme.js` (the editor colour-scheme rewriter, gh-38), and
-  `assets/private/js/editor/localmedia.js` (the `shell://app/api/media/{id}/raw?rev=…` URL
+  **cannot** reach: `media/private/js/ai/providers.js` (the AI transport — the provider call runs in
+  the SPA, see the AI facts), `media/private/js/editor/slashtools.js` (the slash-command menu),
+  `media/private/js/editor/csstheme.js` (the editor colour-scheme rewriter, gh-38), and
+  `media/private/js/editor/localmedia.js` (the `shell://app/api/media/{id}/raw?rev=…` URL
   builder/parser, gh-36 — its own synchronous SHA-1 is what the rev token is verified against —
   **plus**, since gh-43, `fitDimensions()`, the JS half of the image-resync sizing rule whose PHP
   twin is `Grafida\Media\ImageDimensions::fit()`, see `.claude/rules/media-and-publish.md`).
@@ -376,11 +375,11 @@ The version comes from the CHANGELOG's top entry; `-Dversion=X.Y.Z` overrides it
    they cannot run on a release candidate.
 
 ⚠️ **Publishing the documentation to Grafida.app is not part of this and must not be added to it.**
-`scripts/upload-docs.sh` (`composer docs:publish`) uploads `docs/` over SFTP whenever the pages
+`build/scripts/upload-docs.sh` (`composer docs:publish`) uploads `docs/` over SFTP whenever the pages
 change; the app serves Help out of its own binary, so the site and the shipped build are
 independent, and folding the upload into `release` would leave the public documentation stale
 between versions. That is also why it is not a Phing target. See
-`assets/docs/documentation-publishing.md` and `.claude/rules/documentation.md`.
+`build/docs/documentation-publishing.md` and `.claude/rules/documentation.md`.
 
 The whole flow builds no feature branch — commit on `main`.
 

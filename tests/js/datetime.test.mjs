@@ -4,7 +4,7 @@
  * @copyright Copyright (c) 2026 Nicholas K. Dionysopoulos
  * @license   GNU General Public License version 3, or later
  *
- * Unit tests for assets/private/js/util/datetime.js — the parser/formatter for
+ * Unit tests for media/private/js/util/datetime.js — the parser/formatter for
  * the naive UTC `Y-m-d H:i:s` timestamps the app stores (gh-53).
  *
  * Run with `composer test:js` (or `node --test tests/js/`). Like the
@@ -26,7 +26,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
 
-const SOURCE = readFileSync(new URL('../../assets/private/js/util/datetime.js', import.meta.url), 'utf8');
+const SOURCE = readFileSync(new URL('../../media/private/js/util/datetime.js', import.meta.url), 'utf8');
 
 /** Loads datetime.js into a fresh sandbox and returns its public API. */
 function load() {

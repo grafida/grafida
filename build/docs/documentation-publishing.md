@@ -3,7 +3,7 @@
 The pages under `docs/` are used twice. They ship inside every package's worker PHAR
 (`shell-package.json`'s `phar.include` lists `docs/`) and shown by the in-app **Help** screen, and they are the public
 documentation served in the Documentation section of [Grafida.app](https://grafida.app).
-`scripts/upload-docs.sh` mirrors the second from the first over SFTP.
+`build/scripts/upload-docs.sh` mirrors the second from the first over SFTP.
 
 **Publishing the documentation is not a release step.** An installed copy carries whatever pages it
 shipped with, so republishing the site changes nothing about a build and needs no build to have
@@ -15,7 +15,7 @@ composer docs:publish -- --dry-run    # list what would be sent, connect to noth
 composer docs:publish                 # publish
 ```
 
-`scripts/upload-docs.sh` is the same thing without Composer in the way, and takes the flags
+`build/scripts/upload-docs.sh` is the same thing without Composer in the way, and takes the flags
 directly.
 
 ## Configuration

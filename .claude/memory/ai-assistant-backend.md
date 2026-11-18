@@ -1,6 +1,6 @@
 # AI assistant: PHP side and key facts
 
-Read before touching `src/Ai/`, the AI controllers or `assets/private/js/ai/`. The detailed rules also auto-load from `.claude/rules/ai-assistant.md`.
+Read before touching `src/Ai/`, the AI controllers or `media/private/js/ai/`. The detailed rules also auto-load from `.claude/rules/ai-assistant.md`.
 
 - `src/Ai/` — the **AI chat assistant** (chat with an LLM about the open article, the document
   supplied as context; modelled on the Joomla AITiny plugin, **text only — no AI images**).
@@ -44,7 +44,7 @@ Read before touching `src/Ai/`, the AI controllers or `assets/private/js/ai/`. T
 ## Key AI assistant facts
 
 ⚠️ **These live in `.claude/rules/ai-assistant.md`**, which loads automatically when you work
-under `src/Ai/`, `assets/private/js/ai/` or the AI controllers.
+under `src/Ai/`, `media/private/js/ai/` or the AI controllers.
 
 Two things to carry around without it. **Transport is inverted vs. AITiny (JS-primary, not
 PHP-primary):** the `shell://` kernel cannot stream, so the provider call runs in the SPA's

@@ -34,7 +34,7 @@ use PHPUnit\Framework\TestCase;
  *   GRAFIDA_TEST_RESPONSES_PROVIDER   provider key (optional, default custom_responses)
  *
  * WHY THESE EXIST. The Responses transport itself lives in JavaScript
- * (assets/private/js/ai/providers.js) — PHP never speaks to the provider except
+ * (media/private/js/ai/providers.js) — PHP never speaks to the provider except
  * through the dumb AiProxy forwarder. So these tests cannot exercise providers.js;
  * what they *can* do — and what nothing else does — is pin the **wire-format
  * assumptions that providers.js is built on** against a real server. If OpenAI

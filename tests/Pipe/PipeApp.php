@@ -40,7 +40,7 @@ final class PipeApp
         $container = ContainerFactory::create([
             'db.path'         => ':memory:',
             'base.path'       => $root,
-            'static.provider' => new StaticFiles([$root . '/assets/private', $root . '/assets/public']),
+            'static.provider' => new StaticFiles([$root . '/media/private', $root . '/media/public']),
             'secret.store'    => new ArraySecretStore(),
         ]);
 

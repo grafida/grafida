@@ -5,7 +5,7 @@
 ; Copyright (c) 2026 Nicholas K. Dionysopoulos
 ; License: GNU General Public License version 3, or later
 ;
-; Compiled by grafida/shell-packager (`windows-installer`, from scripts/make-windows-installer.sh),
+; Compiled by grafida/shell-packager (`windows-installer`, from build/scripts/make-windows-installer.sh),
 ; never by hand: it passes the staged tree and these defines (see shell-packager's
 ; src/Windows/WindowsInstaller.php):
 ;

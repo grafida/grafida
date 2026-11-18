@@ -8,7 +8,7 @@
   Finder window's 640x400 content area 1:1; shell-packager's macos-dmg positions the
   app icon at {160,210} and the /Applications symlink at {480,210} (icon size
   128) ON TOP of this image, so the arrow sits in the gap between them and the
-  header stays clear of both glyphs. Run scripts/make-dmg-background.sh to
+  header stays clear of both glyphs. Run build/scripts/make-dmg-background.sh to
   rasterise this into dmg-background.png / @2x.png / .tiff, then commit them.
 -->
 <svg width="640" height="400" viewBox="0 0 640 400" xmlns="http://www.w3.org/2000/svg">
@@ -17,7 +17,7 @@
       <stop offset="0" stop-color="#f7f9fc"/>
       <stop offset="1" stop-color="#e9eefb"/>
     </linearGradient>
-    <!-- Icon gradients, mirrored from assets/logo/grafida.svg -->
+    <!-- Icon gradients, mirrored from build/logo/grafida.svg -->
     <linearGradient id="bg" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#3a7bff"/>
       <stop offset="1" stop-color="#1740c4"/>

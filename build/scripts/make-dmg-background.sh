@@ -4,16 +4,16 @@
 # Copyright (c) 2026 Nicholas K. Dionysopoulos
 # GNU General Public License version 3, or later.
 #
-# Rasterises the DMG background artwork master (assets/logo/dmg-background.svg)
+# Rasterises the DMG background artwork master (build/logo/dmg-background.svg)
 # into the assets the disk image's Finder layout uses (shell-package.json's macos.dmg, applied by
 # grafida/shell-packager's macos-dmg):
 #
-#   assets/logo/dmg-background.png     640x400  (1x)
-#   assets/logo/dmg-background@2x.png  1280x800 (2x, retina)
-#   assets/logo/dmg-background.tiff    multi-resolution TIFF combining both
+#   build/logo/dmg-background.png     640x400  (1x)
+#   build/logo/dmg-background@2x.png  1280x800 (2x, retina)
+#   build/logo/dmg-background.tiff    multi-resolution TIFF combining both
 #
 # Re-run this whenever dmg-background.svg changes, then commit the regenerated
-# assets. Mirrors scripts/make-icons.sh: the raster tools are optional (missing
+# assets. Mirrors build/scripts/make-icons.sh: the raster tools are optional (missing
 # ones only skip their step) and the whole thing is best-effort.
 #
 # Tools:
@@ -23,8 +23,8 @@
 
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-ICON_DIR="$ROOT/assets/logo"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+ICON_DIR="$ROOT/build/logo"
 SVG="$ICON_DIR/dmg-background.svg"
 
 [ -f "$SVG" ] || { echo "DMG background SVG not found: $SVG" >&2; exit 1; }

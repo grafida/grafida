@@ -26,7 +26,7 @@ use PHPUnit\Framework\TestCase;
  *
  * Two halves:
  *
- * - **`bin/worker.php` itself**: the handshake, a smoke test of the API, static assets and the SPA
+ * - **`src/worker.php` itself**: the handshake, a smoke test of the API, static assets and the SPA
  *   shell, and every wire-protocol conformance fixture from grafida/shell, played the way the shell
  *   will play them. It runs against a throwaway data directory, never the user's.
  * - **A differential run of Feature-suite request sequences**: the same container
@@ -39,7 +39,7 @@ final class WorkerPipeTest extends TestCase
 {
     private static ?string $home = null;
 
-    /** A throwaway data/config/home directory, so bin/worker.php never touches the user's database. */
+    /** A throwaway data/config/home directory, so src/worker.php never touches the user's database. */
     private static function isolatedEnv(): array
     {
         if (self::$home === null) {
@@ -77,7 +77,7 @@ final class WorkerPipeTest extends TestCase
     }
 
     /**
-     * `bin/worker.php` on this PHP, or the packaged worker named by `GRAFIDA_PIPE_WORKER` (gh-86:
+     * `src/worker.php` on this PHP, or the packaged worker named by `GRAFIDA_PIPE_WORKER` (gh-86:
      * the SFX stub of an extracted shell tarball), in which case the same handshake, smoke and
      * conformance tests run against what ships. {@see PackagedWorkerTest} has the packaged-only ones.
      */
@@ -89,7 +89,7 @@ final class WorkerPipeTest extends TestCase
             return new WorkerProcess([$packaged], \dirname($packaged), self::isolatedEnv(), 30.0);
         }
 
-        return new WorkerProcess([\PHP_BINARY, \dirname(__DIR__, 2) . '/bin/worker.php'], \dirname(__DIR__, 2), self::isolatedEnv());
+        return new WorkerProcess([\PHP_BINARY, \dirname(__DIR__, 2) . '/src/worker.php'], \dirname(__DIR__, 2), self::isolatedEnv());
     }
 
     public function testBinWorkerAnnouncesItselfAndServesTheApp(): void
@@ -110,11 +110,11 @@ final class WorkerPipeTest extends TestCase
         $css = $worker->request(new Request('GET', 'shell://app/css/app.css'));
         self::assertSame(200, $css->status);
         self::assertSame('text/css; charset=utf-8', $css->header('content-type'));
-        self::assertSame(file_get_contents(\dirname(__DIR__, 2) . '/assets/private/css/app.css'), $css->body);
+        self::assertSame(file_get_contents(\dirname(__DIR__, 2) . '/media/private/css/app.css'), $css->body);
 
         $spa = $worker->request(new Request('GET', 'shell://app/articles/42'));
         self::assertSame(200, $spa->status);
-        self::assertSame(file_get_contents(\dirname(__DIR__, 2) . '/assets/private/view/index.html'), $spa->body);
+        self::assertSame(file_get_contents(\dirname(__DIR__, 2) . '/media/private/view/index.html'), $spa->body);
 
         self::assertSame(404, $worker->request(new Request('GET', 'shell://app/api/nope'))->status);
 
@@ -144,7 +144,7 @@ final class WorkerPipeTest extends TestCase
         }
 
         $packaged = getenv('GRAFIDA_PIPE_WORKER');
-        $command  = \is_string($packaged) && $packaged !== '' ? [$packaged] : [\PHP_BINARY, \dirname(__DIR__, 2) . '/bin/worker.php'];
+        $command  = \is_string($packaged) && $packaged !== '' ? [$packaged] : [\PHP_BINARY, \dirname(__DIR__, 2) . '/src/worker.php'];
         $process  = proc_open($command, [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes, \dirname($command[\count($command) - 1]), $env);
         self::assertIsResource($process);
         fclose($pipes[0]);
