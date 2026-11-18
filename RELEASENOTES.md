@@ -5,7 +5,7 @@
 * **Grafida runs on its own native shell.** Up to 0.3 Grafida ran on Boson, a third-party PHP
   desktop runtime. It now runs in a native shell of its own, with the PHP back end as a separate
   worker process. Idle CPU use drops to near 0%, and the window stays responsive while Grafida
-  works ([gh-82](https://github.com/grafida/grafida/issues/82)).
+  works, and we now support a wider range of operating system versions! ([gh-82](https://github.com/grafida/grafida/issues/82)).
 * **The app's internal address changed from `boson://app` to `shell://app`.** Your drafts are updated
   automatically on first start, pictures included. If a local AI server only accepts requests from
   listed origins (most simply allow all, and LM Studio's *Enable CORS* does), add `shell://app`.
