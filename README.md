@@ -4,7 +4,9 @@
 
 [Download from GitHub](https://github.com/grafida/grafida/releases/latest)
 
-Grafida is also available on [iPad / iPhone](https://github.com/grafida/grafida-ipad). Learn more on [Grafida.app](https://grafida.app).
+[<img src="https://assets.holopin.io/eyJidWNrZXQiOiJob2xvcGluLWFzc2V0cyIsImtleSI6ImFzc2V0cy9jbXZucnY2cWswMDQ0bDIwN2d3aTFpNmlrIiwiZWRpdHMiOnsicm90YXRlIjpudWxsfX0=" alt="Badge for J!Awards 2026 Finalist: Workflow Tools with Joomla!" title="Grafida was a finalist for the Workflow Tool with Joomla! award at the J!Awards 2026, the Joomla! Community Choice Awards taking place during the Joomla World Conference 2026." width="120">](https://www.holopin.io/userbadge/cmw17ole50008lb08oopvs73l)
+
+Grafida is also available on [iPad / iPhone](https://github.com/grafida/grafida-ipad) (currently in development). Learn more on [Grafida.app](https://grafida.app).
 
 > [!IMPORTANT]
 > Developing and maintaining this software is neither easy, nor free. Please [support me](https://www.dionysopoulos.me/about-me.html#support-me) to keep it maintained and available free of charge.
