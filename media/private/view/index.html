@@ -446,48 +446,6 @@
             </div>
         </section>
 
-        <!-- ===== HELP SCREEN ===== -->
-        <!--
-            The documentation bundled in docs/ — the same Markdown files that are
-            published in the Grafida.app Documentation section. Two panes: the table of
-            contents on the left (with a filter box), the rendered page on the
-            right. See src/Help/HelpService.php.
-        -->
-        <section id="help-screen" class="screen" role="main">
-            <div class="screen-header">
-                <h2 data-i18n="GRAFIDA_NAV_HELP">Help</h2>
-                <div class="screen-actions">
-                    <!--
-                        Static markup, and deliberately OUTSIDE #help-actions, which
-                        renderHelpActions() clears and rebuilds on every page change —
-                        a toggle placed in there would be destroyed with it.
-                    -->
-                    <button id="help-toc-toggle" type="button" class="btn btn-secondary btn-icon-only"
-                            aria-pressed="true" aria-controls="help-toc"
-                            data-i18n-title="GRAFIDA_BTN_TOGGLE_CONTENTS">
-                        <i class="fa-solid fa-list-ul" aria-hidden="true"></i>
-                    </button>
-                    <div id="help-actions" class="screen-actions"></div>
-                </div>
-            </div>
-            <div id="help-layout">
-                <aside id="help-toc">
-                    <input type="search" id="help-filter" class="form-control"
-                           data-i18n-placeholder="GRAFIDA_LBL_HELP_FILTER"
-                           data-i18n-aria="GRAFIDA_LBL_HELP_FILTER">
-                    <nav id="help-toc-list" data-i18n-aria="GRAFIDA_NAV_HELP"></nav>
-                </aside>
-                <!--
-                    The drag handle sits in the grid gutter, positioned against
-                    #help-layout rather than inside #help-toc — the pane scrolls, and
-                    a handle inside it would scroll away and be clipped by overflow.
-                -->
-                <div id="help-toc-resizer" role="separator" aria-orientation="vertical"
-                     data-i18n-aria="GRAFIDA_BTN_RESIZE_CONTENTS"></div>
-                <article id="help-page" class="help-page" tabindex="-1"></article>
-            </div>
-        </section>
-
         <!-- ===== REQUEST LOG SCREEN (Debug, gh-37) ===== -->
         <section id="requestlog-screen" class="screen" role="main">
             <div class="screen-header">
@@ -507,6 +465,60 @@
     </div><!-- /#content -->
 
 </div><!-- /#app -->
+
+<!-- ========== HELP OVERLAY ========== -->
+<!--
+    The documentation bundled in docs/ — the same Markdown files that are
+    published in the Grafida.app Documentation section. Two panes: the table of
+    contents on the left (with a filter box), the rendered page on the
+    right. See src/Help/HelpService.php.
+
+    An overlay, not a screen: it opens over whatever is showing and closing it
+    returns there untouched, so reading the manual never costs an open article.
+    It lives OUTSIDE #app because openHelp() makes #app inert while it is up,
+    and before #modal-overlay so an app dialog (About, from the macOS menu) can
+    still appear above it. The z-index rationale is beside .help-overlay in app.css.
+-->
+<div id="help-overlay" class="help-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="help-title">
+    <div id="help-panel">
+        <div class="screen-header">
+            <h2 id="help-title" data-i18n="GRAFIDA_NAV_HELP">Help</h2>
+            <div class="screen-actions">
+                <!--
+                    Static markup, and deliberately OUTSIDE #help-actions, which
+                    renderHelpActions() clears and rebuilds on every page change —
+                    a button placed in there would be destroyed with it.
+                -->
+                <button id="help-toc-toggle" type="button" class="btn btn-secondary btn-icon-only"
+                        aria-pressed="true" aria-controls="help-toc"
+                        data-i18n-title="GRAFIDA_BTN_TOGGLE_CONTENTS">
+                    <i class="fa-solid fa-list-ul" aria-hidden="true"></i>
+                </button>
+                <div id="help-actions" class="screen-actions"></div>
+                <button id="help-close" type="button" class="btn btn-secondary btn-icon-only"
+                        data-i18n-title="GRAFIDA_BTN_CLOSE">
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
+        <div id="help-layout">
+            <aside id="help-toc">
+                <input type="search" id="help-filter" class="form-control"
+                       data-i18n-placeholder="GRAFIDA_LBL_HELP_FILTER"
+                       data-i18n-aria="GRAFIDA_LBL_HELP_FILTER">
+                <nav id="help-toc-list" data-i18n-aria="GRAFIDA_NAV_HELP"></nav>
+            </aside>
+            <!--
+                The drag handle sits in the grid gutter, positioned against
+                #help-layout rather than inside #help-toc — the pane scrolls, and
+                a handle inside it would scroll away and be clipped by overflow.
+            -->
+            <div id="help-toc-resizer" role="separator" aria-orientation="vertical"
+                 data-i18n-aria="GRAFIDA_BTN_RESIZE_CONTENTS"></div>
+            <article id="help-page" class="help-page" tabindex="-1"></article>
+        </div>
+    </div>
+</div>
 
 <!-- ========== MODAL ========== -->
 <div id="modal-overlay" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">

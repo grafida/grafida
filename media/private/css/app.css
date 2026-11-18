@@ -3337,15 +3337,44 @@ body.resizing-col {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Help screen                                                        */
+/*  Help overlay                                                       */
 /*  Two independently scrolling panes: the table of contents and the   */
-/*  rendered documentation page. The screen itself stops scrolling     */
-/*  (`.screen` is overflow:auto) so there is never a second scrollbar  */
-/*  around the one that matters.                                       */
+/*  rendered documentation page. The panel itself never scrolls, so    */
+/*  there is never a second scrollbar around the one that matters.     */
 /* ------------------------------------------------------------------ */
 
-#help-screen {
+/* An overlay, not a screen: openHelp() shows it over whatever is on display and
+   closeHelp() returns there untouched. z-index 1350 sits above TinyMCE's own
+   dialogs (1300) and below #modal-overlay (1400) and the toasts (9999), so an
+   app dialog opened while Help is up (About, from the macOS menu) and a toast
+   from Help itself (Read on the web failing) both appear on top of it. That is
+   also why this is not a native <dialog>.showModal(): the browser's top layer
+   would bury both. */
+.help-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1350;
+    display: flex;
+    padding: 24px;
+    background: rgba(0,0,0,0.6);
+    animation: modal-fade 0.15s ease;
+}
+
+.help-overlay.hidden { display: none; }
+
+/* The panel itself never scrolls (see the section note above); its two panes do. */
+#help-panel {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 24px;
     overflow: hidden;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
 }
 
 #help-layout {

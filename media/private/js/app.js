@@ -59,10 +59,10 @@ const State = {
     // in minutes. 0 means never refresh automatically. Default 1 hour.
     metadataCacheTtl: 60,
     // The bundled documentation's table of contents ({home, pages}), fetched on
-    // the first visit to the Help screen and kept for the session — it ships
-    // inside the binary and cannot change without a new build. `helpSlug` is the
-    // page currently shown, so leaving and re-entering the screen comes back to
-    // where you were.
+    // the first time Help is opened and kept for the session — it ships inside
+    // the binary and cannot change without a new build. `helpSlug` is the page
+    // currently shown, so closing Help and opening it again comes back to where
+    // you were.
     helpContents: null,
     helpSlug: null,
     secureStore: true,
@@ -969,6 +969,16 @@ function closeModal() {
  */
 function isModalOpen() {
     const overlay = document.getElementById('modal-overlay');
+    return !!overlay && !overlay.classList.contains('hidden');
+}
+
+/**
+ * True while the Help overlay is up. It is a separate layer from the modal
+ * above, sitting *under* it (see `.help-overlay` in app.css), so the two can be
+ * open at once: an app dialog over Help owns the UI until it closes.
+ */
+function isHelpOpen() {
+    const overlay = document.getElementById('help-overlay');
     return !!overlay && !overlay.classList.contains('hidden');
 }
 
@@ -8171,14 +8181,49 @@ function helpWebUrl(slug) {
     return HELP_WEB_URL + page + '.html';
 }
 
+/** Where focus goes back to when Help closes: whatever opened it. */
+let helpReturnFocus = null;
+
 /**
- * Opens the Help screen, optionally on a specific page. This is the entry point
- * the contextual help buttons use (see helpBtn()), so it does the screen switch
- * itself rather than leaving that to the caller.
+ * Opens Help, optionally on a specific page. The sidebar entry and every
+ * contextual help button come through here.
+ *
+ * Help is an overlay, not a screen, and that is the point: the screen
+ * underneath is never touched — no showScreen(), no unsaved-changes prompt —
+ * so somebody halfway through an article can read the manual and close it
+ * again without saving, leaving and finding their way back. `#app` goes inert
+ * while it is up, which keeps both the mouse and Tab out of the page behind.
+ * Already open, it only changes page.
  */
 function openHelp(slug = null) {
-    showScreen('help');
+    const overlay = document.getElementById('help-overlay');
+    const app = document.getElementById('app');
+    if (!overlay) return;
+
+    if (!isHelpOpen()) {
+        helpReturnFocus = document.activeElement;
+        overlay.classList.remove('hidden');
+        if (app) app.inert = true;
+        const pane = document.getElementById('help-page');
+        if (pane) pane.focus();
+    }
+
     loadHelpScreen(slug);
+}
+
+/** Closes Help and hands focus back to whatever opened it, if it still exists. */
+function closeHelp() {
+    const overlay = document.getElementById('help-overlay');
+    const app = document.getElementById('app');
+    if (!overlay) return;
+
+    overlay.classList.add('hidden');
+    if (app) app.inert = false;
+
+    if (helpReturnFocus && helpReturnFocus.isConnected && typeof helpReturnFocus.focus === 'function') {
+        helpReturnFocus.focus();
+    }
+    helpReturnFocus = null;
 }
 
 /**
@@ -8381,13 +8426,13 @@ function initHelpLinks() {
     });
 
     // Contextual help: anything anywhere else in the app carrying
-    // `data-help-page` opens the Help screen on that page. Making this a
+    // `data-help-page` opens Help on that page. Making this a
     // document-level delegation rather than a JS button factory means a
     // contextual help button is pure markup — it localises its tooltip through
     // applyStrings()'s existing data-i18n-title pass and needs no wiring of its
     // own. The `#help-page` exclusion is what keeps a link inside a rendered
     // page from being handled twice: the pane's own handler above already has
-    // it, and it must not also trigger a screen switch.
+    // it, and it must not also reopen the overlay.
     document.addEventListener('click', (e) => {
         const trigger = e.target.closest('[data-help-page]');
         if (!trigger || pane.contains(trigger)) return;
@@ -8397,6 +8442,21 @@ function initHelpLinks() {
 
     const filterEl = document.getElementById('help-filter');
     if (filterEl) filterEl.addEventListener('input', renderHelpToc);
+
+    const closeBtn = document.getElementById('help-close');
+    if (closeBtn) closeBtn.addEventListener('click', closeHelp);
+
+    // Escape closes Help — but only when Help is the top layer. ⚠️ This must be
+    // a CAPTURE listener: _modalEscHandler is a bubble listener on document, so
+    // in the bubble phase an Escape that closed a modal sitting over Help would
+    // reach this handler afterwards, find isModalOpen() already false, and close
+    // Help as well. In capture it runs first, sees the modal, and stands aside.
+    document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape' || !isHelpOpen() || isModalOpen()) return;
+        e.preventDefault();
+        e.stopPropagation();
+        closeHelp();
+    }, true);
 }
 
 // ============================================================
@@ -10051,12 +10111,21 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             if (link.classList.contains('disabled')) return;
             const screen = link.dataset.screen;
+
+            // Help is an overlay over the current screen, not a screen of its own,
+            // so it neither changes screen nor goes through the editor's unsaved-
+            // changes prompt below. (The entry keeps `data-screen="help"` only
+            // because syncSidebarTooltips() finds the nav items by it.)
+            if (screen === 'help') {
+                openHelp();
+                return;
+            }
+
             const go = () => {
                 showScreen(screen);
                 if (screen === 'articles') loadArticlesScreen();
                 if (screen === 'media') loadMediaScreen();
                 if (screen === 'settings') renderSettingsScreen();
-                if (screen === 'help') loadHelpScreen();
                 if (screen === 'requestlog') renderRequestLogScreen();
             };
 
@@ -10129,14 +10198,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // does not exist anywhere else, least of all in the editor, where it would
     // throw away an article somebody is writing; scoping it this way is why it
     // needs no unsaved-changes guard of its own. A modal open over the Articles
-    // screen (the site picker, a confirmation, the media browser) owns the UI, so
-    // the chord stands down for it, and preventDefault() is applied only when we
+    // screen (the site picker, a confirmation, the media browser) or the Help
+    // overlay owns the UI, so the chord stands down for it, and preventDefault()
+    // is applied only when we
     // actually act — elsewhere the key stays the webview's business.
     document.addEventListener('keydown', (e) => {
         if (!hasPrimaryModifier(e) || e.altKey || e.shiftKey) return;
         if ((e.key || '').toLowerCase() !== 'n') return;
         if (State.activeScreen !== 'articles' || !State.currentSiteId) return;
-        if (isModalOpen()) return;
+        if (isModalOpen() || isHelpOpen()) return;
         e.preventDefault();
         openNewArticle();
     });
@@ -10148,6 +10218,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('keydown', (e) => {
         if (!isSettingsShortcut(e)) return;
         e.preventDefault();
+        // Settings is a screen, and Help sits over every screen: close it first,
+        // or Settings would open hidden behind it.
+        if (isHelpOpen()) closeHelp();
         navigateToSettings();
     });
 
