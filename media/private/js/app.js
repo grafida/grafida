@@ -9343,6 +9343,21 @@ function showAboutDialog() {
     const licenseLink = iconBtn('up-right-from-square', t('GRAFIDA_ABOUT_VIEW_LICENSE'), 'btn', 'btn-link');
     licenseLink.addEventListener('click', () => openAboutUrl(app.licenseUrl));
 
+    // J!Awards 2026 finalist badge, linking to its public Holopin verification page. The image is
+    // bundled (media/public/img) rather than hot-linked: opening About must not contact Holopin.
+    let awardEl = null;
+    if (app.awardUrl) {
+        const badge = document.createElement('img');
+        badge.src = '/img/jawards-2026-finalist.webp';
+        badge.alt = t('GRAFIDA_ABOUT_AWARD_BADGE_ALT');
+        badge.width = 120;
+        badge.height = 120;
+        awardEl = el('button', 'about-award btn btn-link', badge);
+        awardEl.type = 'button';
+        awardEl.title = t('GRAFIDA_ABOUT_AWARD_BADGE_TITLE');
+        awardEl.addEventListener('click', () => openAboutUrl(app.awardUrl));
+    }
+
     // Joomla! trademark disclaimer — displayed verbatim, never translated.
     const disclaimerEl = app.disclaimer ? el('p', 'about-disclaimer', app.disclaimer) : null;
 
@@ -9351,7 +9366,7 @@ function showAboutDialog() {
 
     showModal(
         t('GRAFIDA_LBL_ABOUT'),
-        [nameEl, versionEl, copyrightEl, licenseLine, licenseLink, disclaimerEl],
+        [nameEl, versionEl, copyrightEl, licenseLine, licenseLink, awardEl, disclaimerEl],
         [closeBtn]
     );
 }

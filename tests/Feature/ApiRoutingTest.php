@@ -160,6 +160,7 @@ final class ApiRoutingTest extends TestCase
         self::assertStringContainsString('GNU General Public License', $json['data']['app']['license']);
         self::assertStringStartsWith('https://www.gnu.org/', $json['data']['app']['licenseUrl']);
         self::assertSame('https://www.dionysopoulos.me/about-me', $json['data']['app']['authorUrl']);
+        self::assertSame('https://www.holopin.io/userbadge/cmw17ole50008lb08oopvs73l', $json['data']['app']['awardUrl']);
         self::assertStringContainsString('Open Source Matters', $json['data']['app']['disclaimer']);
     }
 

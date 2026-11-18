@@ -2,6 +2,7 @@
 
 Traduzioni di riferimento per i termini ricorrenti nell'interfaccia di Grafida.
 I nomi propri non si traducono: Grafida, Joomla!, API, Markdown, HTML, TinyMCE.
+Anche i nomi dei premi restano in inglese: J!Awards, la categoria Workflow Tool with Joomla!, Joomla! Community Choice Awards, Joomla World Conference. «Badge» = «badge» (maschile).
 
 | Termine inglese   | Traduzione italiana    | Note                                                                                                    |
 |-------------------|------------------------|---------------------------------------------------------------------------------------------------------|

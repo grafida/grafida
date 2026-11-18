@@ -406,7 +406,10 @@ ship inside the app.
   **On macOS the shell has a real menu bar** (gh-88), which the page has to answer twice. Its app
   menu's **About** sends a `shell:about` DOM event instead of showing a native panel, and
   `window.addEventListener('shell:about', …)` opens `showAboutDialog()`, but never over another
-  modal (it would cut that flow short) nor before the bootstrap. **Edit ▸ Undo/Redo chosen with the
+  modal (it would cut that flow short) nor before the bootstrap. The dialog's J!Awards 2026 finalist
+  badge is **bundled** (`media/public/img/jawards-2026-finalist.webp`, served as `/img/…`), never
+  hot-linked from Holopin, so opening About makes no network request; only clicking it opens the
+  verification page (`App::AWARD_URL`, sent as `awardUrl`) via `openAboutUrl()`. **Edit ▸ Undo/Redo chosen with the
   mouse** run WebKit's native undo, which knows nothing of an edit TinyMCE made by script (a paste, a
   plain-text paste); WebKit announces them as a cancelable `beforeinput` `historyUndo`/`historyRedo`,
   and the editor's `setup` hands those to `editor.undoManager`. The keyboard never needs this: the

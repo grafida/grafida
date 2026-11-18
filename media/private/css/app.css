@@ -1036,6 +1036,17 @@ input[type="color"].form-control {
     color: var(--color-accent-text);
 }
 
+.about-award {
+    margin-top: 8px;
+    line-height: 0;
+}
+
+.about-award img {
+    display: block;
+    width: 120px;
+    height: 120px;
+}
+
 .about-disclaimer {
     margin: 8px 0 0;
     padding-top: 12px;

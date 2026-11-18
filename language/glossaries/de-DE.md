@@ -2,6 +2,7 @@
 
 Verbindliche Übersetzungen der wichtigsten Begriffe für alle deutschen Texte in Grafida.
 Eigennamen (Grafida, Joomla!, API, Markdown, HTML, TinyMCE) werden nicht übersetzt.
+Auch Preisnamen bleiben englisch: J!Awards, die Kategorie Workflow Tool with Joomla!, Joomla! Community Choice Awards, Joomla World Conference. „Badge“ = „Abzeichen“.
 
 | Englisch (Quellbegriff) | Deutsch | Anmerkungen |
 |-------------------------|---------|-------------|

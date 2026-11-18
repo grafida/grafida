@@ -2,6 +2,7 @@
 
 Terms used consistently across the Grafida UI and its Spanish (Spain) translation.
 Proper nouns kept as-is: Grafida, Joomla!, API, Markdown, HTML, TinyMCE.
+Award names are kept in English too: J!Awards, the category Workflow Tool with Joomla!, Joomla! Community Choice Awards, Joomla World Conference. «Badge» = «insignia».
 
 | English term    | Spanish translation        | Notes                                                                                    |
 |-----------------|----------------------------|------------------------------------------------------------------------------------------|
