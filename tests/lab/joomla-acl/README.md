@@ -17,6 +17,18 @@ lines are recorded, not judged.
 With `--keep`, the Super User is `admin` / `Lab-Admin-Passw0rd!` and every test user's password is
 `Lab-User-Passw0rd!`. Tear down with `docker compose -f docker-compose.yml down -v && rm -rf www`.
 
+## Remote host
+
+The lab can run on another machine over SSH instead: `./run.sh --host=HOST 6.2`, `E2E_DOCKER_HOST` in the environment,
+or `e2e.docker.host` in your `build.properties`. `--host=local` forces this machine. Every run on the host gets its own
+slot (staging tree, Compose project and port), so any number can run at once. `HTTP_PORT` applies to local runs only;
+`PHP_VERSION`, `APACHE_VERSION` and `MARIADB_VERSION` are passed on. The host downloads Joomla itself.
+
+With `--keep`, the run prints the remote port and the `ssh -L` command to reach the site. The lab has no `--down`
+option: to take a kept remote stack down, run the lab again without `--keep` (add `--slot=N` if you keep several). That
+re-provisions that slot, runs the checks and removes the stack. Interrupting a run tears its stack down, `--keep` or
+not. Details and host requirements: "Remote E2E hosts" in the `akeeba/buildfiles` README.
+
 ## The groups
 
 | Group | Parent | Permissions | User |

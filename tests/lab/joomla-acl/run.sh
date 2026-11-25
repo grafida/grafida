@@ -9,11 +9,13 @@
 # Grafida uses? See README.md for the questions it answers and how to read the output.
 #
 # Usage:
-#   ./run.sh [--keep] [VERSION ...]
+#   ./run.sh [--keep] [--host=HOST] [VERSION ...]
 #
 #   VERSION   A Joomla release or prefix: 6.2, 6.1, 5.4, 6.2.0 … (default: 6.2). A prefix resolves to
 #             the newest stable release on GitHub. Several versions run one after the other.
 #   --keep    Leave the last version's stack running at http://127.0.0.1:$HTTP_PORT for poking at.
+#   --host    Run everything on HOST over SSH, or "local" (default: see README.md "Remote host").
+#   --slot    With a remote host: the number of the slot to use again.
 #
 # Environment: HTTP_PORT (18620), PHP_VERSION (8.4), APACHE_VERSION (2.4), MARIADB_VERSION (11).
 #
@@ -24,6 +26,29 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${HERE}/../../.." && pwd)"
+
+log() { printf '\n\033[1m==> %s\033[0m\n' "$*"; }
+die() { printf '\033[31mERROR: %s\033[0m\n' "$*" >&2; exit 2; }
+
+# Local or remote host. In remote mode everything below runs on that host instead, and e2e_remote exits with its status;
+# see "Remote E2E hosts" in ../buildfiles/README.md. This comes before anything which needs Docker or sets a trap.
+E2E_REMOTE_SH="${REPO_ROOT}/../buildfiles/docker/e2e/remote.sh"
+# A nested linked worktree has no ../buildfiles of its own: use the one next to the main repository.
+[ -f "${E2E_REMOTE_SH}" ] || E2E_REMOTE_SH="$(dirname "$(git -C "${REPO_ROOT}" rev-parse --path-format=absolute --git-common-dir)")/../buildfiles/docker/e2e/remote.sh"
+[ -f "${E2E_REMOTE_SH}" ] || die "buildfiles not found. Check out akeeba/buildfiles next to this repository."
+. "${E2E_REMOTE_SH}"
+
+E2E_HARNESS_DIR="${HERE}"
+E2E_PORTS=(HTTP_PORT)
+E2E_KEEP_FLAGS=(--keep)
+# There is no --down: a run without --keep reuses the kept slot and removes its stack when it ends
+E2E_DOWN_HINT="run the lab again with the same --host and without --keep (add --slot=N if you keep several slots); it re-runs the checks, then removes the stack"
+E2E_ENV=(HTTP_PORT PHP_VERSION APACHE_VERSION MARIADB_VERSION)
+
+e2e_remote "${BASH_SOURCE[0]}" "$@"
+# On a remote E2E host: this run's own port, whatever the environment says.
+e2e_apply_overrides
+
 E2E_IMAGES="${REPO_ROOT}/../buildfiles/docker/e2e/images.sh"
 INBOX="${HERE}/inbox"
 WWW="${HERE}/www"
@@ -40,17 +65,22 @@ USER_PASSWORD='Lab-User-Passw0rd!'
 
 KEEP=0
 VERSIONS=()
+SKIP_VALUE=0
 for arg in "$@"; do
+	if [ "${SKIP_VALUE}" -eq 1 ]; then
+		SKIP_VALUE=0
+		continue
+	fi
+
 	case "${arg}" in
 		--keep) KEEP=1 ;;
-		-h|--help) sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+		--host|--slot) SKIP_VALUE=1 ;;   # read by e2e_remote above
+		--host=*|--slot=*) ;;
+		-h|--help) sed -n '2,24p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
 		*) VERSIONS+=("${arg}") ;;
 	esac
 done
 [ "${#VERSIONS[@]}" -eq 0 ] && VERSIONS=(6.2)
-
-log() { printf '\n\033[1m==> %s\033[0m\n' "$*"; }
-die() { printf '\033[31mERROR: %s\033[0m\n' "$*" >&2; exit 2; }
 
 DC() { docker compose -f "${HERE}/docker-compose.yml" "$@"; }
 php_cli() { DC exec -T -w /var/www/html php php "$@"; }
@@ -66,12 +96,17 @@ teardown() {
 on_exit() {
 	if [ "${KEEP}" -eq 1 ] && [ -d "${WWW}" ]; then
 		log "Leaving the stack running at ${SITE} (admin / ${ADMIN_PASSWORD})."
-		echo "Tear it down with: docker compose -f ${HERE}/docker-compose.yml down -v && rm -rf ${WWW}"
+		# On a remote E2E host the launching script says how to reach the stack.
+		[ "${E2E_AGENT:-}" = "1" ] \
+			|| echo "Tear it down with: docker compose -f ${HERE}/docker-compose.yml down -v && rm -rf ${WWW}"
 	else
 		teardown
 	fi
 }
 trap on_exit EXIT
+# Ctrl-C and kill: tear the stack down, --keep or not
+trap 'KEEP=0; exit 130' INT
+trap 'KEEP=0; exit 143' TERM
 
 for tool in docker curl jq unzip; do
 	command -v "${tool}" >/dev/null 2>&1 || die "${tool} is required."

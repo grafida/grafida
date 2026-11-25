@@ -60,6 +60,8 @@ tests/lab/joomla-acl/run.sh 5.4 6.1 6.2     # newest stable of each; exit 0 = ev
 tests/lab/joomla-acl/run.sh --keep 6.2      # leave the site up at http://127.0.0.1:18620 afterwards
 ```
 
+`--host=HOST` runs the whole lab on another machine over SSH (see "Remote host" in the lab's README).
+
 It needs Docker, `jq`, and the `akeeba/buildfiles` checkout at `../buildfiles` for the shared
 `akeeba-e2e/*` PHP and Apache images. See `tests/lab/joomla-acl/README.md` for what each group is
 and what the results mean.

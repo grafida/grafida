@@ -1,3 +1,5 @@
 # Joomla packages and the throwaway site run.sh unpacks them into.
 /inbox/
 /www/
+# Results brought back from a remote E2E host
+/remote-results/
